@@ -1,23 +1,150 @@
-/* Reset */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-/* Base */
 body {
   font-family: Arial, sans-serif;
   background: #f4f7fb;
   color: #1f2937;
 }
 
+.hidden {
+  display: none !important;
+}
+
+/* Login Screen */
+.login-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: linear-gradient(135deg, #eef2ff, #f8fafc);
+}
+
+.login-card {
+  width: 100%;
+  max-width: 430px;
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 36px;
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.12);
+  text-align: center;
+}
+
+.login-logo {
+  width: 68px;
+  height: 68px;
+  margin: 0 auto 18px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.login-card h1 {
+  font-size: 28px;
+  margin-bottom: 8px;
+}
+
+.login-subtitle {
+  color: #6b7280;
+  margin-bottom: 28px;
+  font-size: 15px;
+}
+
+.login-form {
+  text-align: left;
+}
+
+.form-group {
+  margin-bottom: 18px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 14px 14px;
+  border: 1px solid #dbe3ee;
+  border-radius: 14px;
+  font-size: 14px;
+  outline: none;
+}
+
+.form-group input:focus {
+  border-color: #6366f1;
+}
+
+.login-btn {
+  width: 100%;
+  border: none;
+  padding: 14px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 8px;
+}
+
+.login-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.login-message {
+  margin-top: 14px;
+  font-size: 14px;
+  min-height: 20px;
+}
+
+.login-message.success {
+  color: #166534;
+}
+
+.login-message.error {
+  color: #b91c1c;
+}
+
+.demo-box {
+  margin-top: 24px;
+  text-align: left;
+  background: #f8fafc;
+  border-radius: 16px;
+  padding: 16px;
+}
+
+.demo-box h4 {
+  margin-bottom: 10px;
+  font-size: 14px;
+}
+
+.demo-box p {
+  font-size: 13px;
+  color: #4b5563;
+  margin-bottom: 4px;
+}
+
+/* App Layout */
 .app-container {
   display: flex;
   min-height: 100vh;
 }
 
-/* Sidebar */
 .sidebar {
   width: 270px;
   background: #111827;
@@ -96,6 +223,7 @@ body {
   background: #1f2937;
   padding: 14px;
   border-radius: 14px;
+  margin-bottom: 12px;
 }
 
 .user-avatar {
@@ -119,13 +247,21 @@ body {
   color: #9ca3af;
 }
 
-/* Main content */
+.logout-btn {
+  width: 100%;
+  border: 1px solid #374151;
+  background: transparent;
+  color: #ffffff;
+  padding: 12px;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
 .main-content {
   flex: 1;
   padding: 24px;
 }
 
-/* Topbar */
 .topbar {
   background: #ffffff;
   border-radius: 18px;
@@ -171,7 +307,6 @@ body {
   font-weight: 600;
 }
 
-/* Sections */
 .content-section {
   display: none;
 }
@@ -180,7 +315,6 @@ body {
   display: block;
 }
 
-/* Dashboard */
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -286,7 +420,6 @@ body {
   gap: 12px;
 }
 
-/* Chat */
 .chat-layout {
   display: grid;
   grid-template-columns: 240px 1fr;
@@ -358,7 +491,6 @@ body {
   outline: none;
 }
 
-/* Tasks */
 .task-board {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -393,7 +525,6 @@ body {
   margin-bottom: 4px;
 }
 
-/* Notifications */
 .notification-list {
   display: flex;
   flex-direction: column;
@@ -416,7 +547,6 @@ body {
   color: #6b7280;
 }
 
-/* Team */
 .team-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -453,7 +583,6 @@ body {
   font-size: 13px;
 }
 
-/* Settings */
 .settings-box {
   padding: 16px;
   border-radius: 14px;
@@ -461,12 +590,10 @@ body {
   color: #4b5563;
 }
 
-/* Utility */
 .full-height {
   min-height: 600px;
 }
 
-/* Responsive */
 @media (max-width: 1100px) {
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
