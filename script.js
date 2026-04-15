@@ -26,9 +26,32 @@ const sendMessageBtn = document.getElementById("send-message-btn");
 const chatMessages = document.getElementById("chat-messages");
 const chatUsersList = document.getElementById("chat-users-list");
 
+// Task modal elements
+const openTaskModalBtn = document.getElementById("open-task-modal-btn");
+const closeTaskModalBtn = document.getElementById("close-task-modal-btn");
+const taskModalOverlay = document.getElementById("task-modal-overlay");
+const taskForm = document.getElementById("task-form");
+
+const taskTitleInput = document.getElementById("task-title");
+const taskDescriptionInput = document.getElementById("task-description");
+const taskSeverityInput = document.getElementById("task-severity");
+const taskStatusInput = document.getElementById("task-status");
+const taskDeadlineInput = document.getElementById("task-deadline");
+const taskAssignedToInput = document.getElementById("task-assigned-to");
+
+// Dashboard/task UI elements
+const recentTaskList = document.getElementById("recent-task-list");
+const pendingTaskColumn = document.getElementById("pending-task-column");
+const inprogressTaskColumn = document.getElementById("inprogress-task-column");
+const completedTaskColumn = document.getElementById("completed-task-column");
+
+const totalTasksCount = document.getElementById("total-tasks-count");
+const inProgressCount = document.getElementById("in-progress-count");
+const completedCount = document.getElementById("completed-count");
+const notificationsCount = document.getElementById("notifications-count");
+
 // -----------------------------------
-// DYNAMIC GROUP MEMBER MASTER LIST
-// Add new members here in future
+// DYNAMIC GROUP MEMBERS
 // -----------------------------------
 const groupMembers = [
   { name: "Rahul", role: "Project Manager", active: true },
@@ -37,7 +60,42 @@ const groupMembers = [
   { name: "Priya", role: "Designer", active: true }
 ];
 
-// Smart reply patterns
+// -----------------------------------
+// DEFAULT TASKS
+// -----------------------------------
+const defaultTasks = [
+  {
+    id: Date.now() + 1,
+    title: "Prepare sales presentation",
+    description: "Prepare the sales presentation for leadership review",
+    severity: "High",
+    deadline: "2026-04-20",
+    assignedTo: "Rahul",
+    status: "In Progress"
+  },
+  {
+    id: Date.now() + 2,
+    title: "Update product pricing sheet",
+    description: "Refresh pricing sheet with latest numbers",
+    severity: "Low",
+    deadline: "2026-04-18",
+    assignedTo: "Sneha",
+    status: "Completed"
+  },
+  {
+    id: Date.now() + 3,
+    title: "Client follow-up email",
+    description: "Send follow-up email to the client",
+    severity: "Medium",
+    deadline: "2026-04-17",
+    assignedTo: "Amit",
+    status: "Pending"
+  }
+];
+
+// -----------------------------------
+// CHAT REPLY RULES
+// -----------------------------------
 const replyRules = [
   {
     keywords: ["hello", "hi", "hey", "hellooo", "hii"],
@@ -58,7 +116,7 @@ const replyRules = [
     ]
   },
   {
-    keywords: ["report", "deck", "presentation"],
+    keywords: ["report", "deck", "presentation", "chart", "charts"],
     replies: [
       "I will share the latest version soon.",
       "The report is in progress.",
@@ -96,6 +154,9 @@ const defaultReplies = [
   "Thanks for the update."
 ];
 
+// -----------------------------------
+// LOGIN SCREEN HELPERS
+// -----------------------------------
 function showLoginScreen() {
   loginScreen.classList.remove("hidden");
   appScreen.classList.add("hidden");
@@ -142,6 +203,9 @@ function clearUserFromLocalStorage() {
   localStorage.removeItem("ttm_logged_in_user");
 }
 
+// -----------------------------------
+// NAVIGATION
+// -----------------------------------
 function setupNavigation() {
   navItems.forEach((item) => {
     item.addEventListener("click", () => {
@@ -163,7 +227,7 @@ function setupNavigation() {
 }
 
 // -----------------------------------
-// CHAT MEMBER RENDERING
+// CHAT USER LIST
 // -----------------------------------
 function renderChatUsers() {
   if (!chatUsersList) return;
@@ -239,16 +303,11 @@ function generateReplyText(userMessage) {
   return getRandomItem(defaultReplies);
 }
 
-// -----------------------------------
-// REPLY SYSTEM BASED ON ACTIVE MEMBERS
-// -----------------------------------
 function simulateGroupReplies(userMessage) {
   const activeMembers = groupMembers.filter(member => member.active);
-
   if (activeMembers.length === 0) return;
 
   const shuffledMembers = shuffleArray(activeMembers);
-
   const maxReplies = Math.min(3, shuffledMembers.length);
   const replyCount = Math.floor(Math.random() * maxReplies) + 1;
   const selectedMembers = shuffledMembers.slice(0, replyCount);
@@ -262,22 +321,234 @@ function simulateGroupReplies(userMessage) {
   });
 }
 
-// -----------------------------------
-// SEND MESSAGE
-// -----------------------------------
 function sendMessage() {
   if (!chatInput || !chatMessages) return;
 
   const messageText = chatInput.value.trim();
-
-  if (messageText === "") {
-    return;
-  }
+  if (messageText === "") return;
 
   addUserMessage(messageText);
   chatInput.value = "";
-
   simulateGroupReplies(messageText);
+}
+
+// -----------------------------------
+// TASK STORAGE HELPERS
+// -----------------------------------
+function getTasksFromStorage() {
+  const savedTasks = localStorage.getItem("ttm_tasks");
+
+  if (!savedTasks) {
+    localStorage.setItem("ttm_tasks", JSON.stringify(defaultTasks));
+    return [...defaultTasks];
+  }
+
+  try {
+    return JSON.parse(savedTasks);
+  } catch {
+    localStorage.setItem("ttm_tasks", JSON.stringify(defaultTasks));
+    return [...defaultTasks];
+  }
+}
+
+function saveTasksToStorage(tasks) {
+  localStorage.setItem("ttm_tasks", JSON.stringify(tasks));
+}
+
+function getBadgeClass(status) {
+  if (status === "In Progress") return "warning";
+  if (status === "Completed") return "success";
+  return "danger";
+}
+
+function formatDate(dateString) {
+  if (!dateString) return "No deadline";
+
+  const date = new Date(dateString);
+  if (Number.isNaN(date.getTime())) return dateString;
+
+  return date.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric"
+  });
+}
+
+// -----------------------------------
+// RENDER RECENT TASKS
+// -----------------------------------
+function renderRecentTasks() {
+  if (!recentTaskList) return;
+
+  const tasks = getTasksFromStorage();
+  recentTaskList.innerHTML = "";
+
+  tasks.slice().reverse().forEach((task) => {
+    const taskDiv = document.createElement("div");
+    taskDiv.className = "task-item";
+    taskDiv.innerHTML = `
+      <div>
+        <h4>${task.title}</h4>
+        <p>Assigned to: ${task.assignedTo}</p>
+      </div>
+      <span class="badge ${getBadgeClass(task.status)}">${task.status}</span>
+    `;
+    recentTaskList.appendChild(taskDiv);
+  });
+}
+
+// -----------------------------------
+// RENDER TASK BOARD
+// -----------------------------------
+function renderTaskBoard() {
+  if (!pendingTaskColumn || !inprogressTaskColumn || !completedTaskColumn) return;
+
+  const tasks = getTasksFromStorage();
+
+  pendingTaskColumn.innerHTML = "";
+  inprogressTaskColumn.innerHTML = "";
+  completedTaskColumn.innerHTML = "";
+
+  const pendingTasks = tasks.filter(task => task.status === "Pending");
+  const inProgressTasks = tasks.filter(task => task.status === "In Progress");
+  const completedTasks = tasks.filter(task => task.status === "Completed");
+
+  renderTaskCardsIntoColumn(pendingTaskColumn, pendingTasks);
+  renderTaskCardsIntoColumn(inprogressTaskColumn, inProgressTasks);
+  renderTaskCardsIntoColumn(completedTaskColumn, completedTasks);
+}
+
+function renderTaskCardsIntoColumn(columnElement, tasks) {
+  if (tasks.length === 0) {
+    columnElement.innerHTML = `<p class="empty-task-text">No tasks here.</p>`;
+    return;
+  }
+
+  tasks.slice().reverse().forEach((task) => {
+    const card = document.createElement("div");
+    card.className = "kanban-card";
+    card.innerHTML = `
+      <h5>${task.title}</h5>
+      <p><strong>Severity:</strong> ${task.severity}</p>
+      <p><strong>Assigned To:</strong> ${task.assignedTo}</p>
+      <p><strong>Deadline:</strong> ${formatDate(task.deadline)}</p>
+    `;
+    columnElement.appendChild(card);
+  });
+}
+
+// -----------------------------------
+// UPDATE DASHBOARD COUNTS
+// -----------------------------------
+function updateDashboardCounts() {
+  const tasks = getTasksFromStorage();
+
+  const total = tasks.length;
+  const inProgress = tasks.filter(task => task.status === "In Progress").length;
+  const completed = tasks.filter(task => task.status === "Completed").length;
+  const notifications = tasks.filter(task => task.status === "Pending").length;
+
+  if (totalTasksCount) totalTasksCount.textContent = total;
+  if (inProgressCount) inProgressCount.textContent = inProgress;
+  if (completedCount) completedCount.textContent = completed;
+  if (notificationsCount) notificationsCount.textContent = notifications;
+}
+
+// -----------------------------------
+// RENDER ALL TASK UI
+// -----------------------------------
+function renderAllTaskUI() {
+  renderRecentTasks();
+  renderTaskBoard();
+  updateDashboardCounts();
+}
+
+// -----------------------------------
+// TASK MODAL
+// -----------------------------------
+function openTaskModal() {
+  if (taskModalOverlay) {
+    taskModalOverlay.classList.remove("hidden");
+  }
+}
+
+function closeTaskModal() {
+  if (taskModalOverlay) {
+    taskModalOverlay.classList.add("hidden");
+  }
+
+  if (taskForm) {
+    taskForm.reset();
+  }
+}
+
+function createNewTask(taskData) {
+  const tasks = getTasksFromStorage();
+
+  const newTask = {
+    id: Date.now(),
+    title: taskData.title,
+    description: taskData.description,
+    severity: taskData.severity,
+    status: taskData.status,
+    deadline: taskData.deadline,
+    assignedTo: taskData.assignedTo
+  };
+
+  tasks.push(newTask);
+  saveTasksToStorage(tasks);
+  renderAllTaskUI();
+}
+
+// -----------------------------------
+// TASK FORM SUBMIT
+// -----------------------------------
+if (taskForm) {
+  taskForm.addEventListener("submit", function (event) {
+    event.preventDefault();
+
+    const title = taskTitleInput.value.trim();
+    const description = taskDescriptionInput.value.trim();
+    const severity = taskSeverityInput.value;
+    const status = taskStatusInput.value;
+    const deadline = taskDeadlineInput.value;
+    const assignedTo = taskAssignedToInput.value.trim();
+
+    if (!title || !description || !severity || !status || !deadline || !assignedTo) {
+      alert("Please fill all task fields.");
+      return;
+    }
+
+    createNewTask({
+      title,
+      description,
+      severity,
+      status,
+      deadline,
+      assignedTo
+    });
+
+    closeTaskModal();
+  });
+}
+
+// -----------------------------------
+// BUTTON EVENTS
+// -----------------------------------
+if (openTaskModalBtn) {
+  openTaskModalBtn.addEventListener("click", openTaskModal);
+}
+
+if (closeTaskModalBtn) {
+  closeTaskModalBtn.addEventListener("click", closeTaskModal);
+}
+
+if (taskModalOverlay) {
+  taskModalOverlay.addEventListener("click", function (event) {
+    if (event.target === taskModalOverlay) {
+      closeTaskModal();
+    }
+  });
 }
 
 if (sendMessageBtn) {
@@ -368,8 +639,9 @@ function checkExistingLogin() {
 }
 
 // -----------------------------------
-// INITIALIZE
+// INIT
 // -----------------------------------
 setupNavigation();
 checkExistingLogin();
 renderChatUsers();
+renderAllTaskUI();
