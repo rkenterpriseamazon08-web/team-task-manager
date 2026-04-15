@@ -1,23 +1,29 @@
-// Step 1 only: basic UI interactions placeholder
+// Get all sidebar navigation buttons
+const navItems = document.querySelectorAll(".nav-item");
 
-document.addEventListener("DOMContentLoaded", function () {
-  const menuItems = document.querySelectorAll(".menu-item");
+// Get all content sections
+const sections = document.querySelectorAll(".content-section");
 
-  menuItems.forEach((item) => {
-    item.addEventListener("click", function (e) {
-      e.preventDefault();
+// Get page title element
+const pageTitle = document.getElementById("page-title");
 
-      // Remove active class from all menu items
-      menuItems.forEach((link) => link.classList.remove("active"));
+// Add click event to each nav item
+navItems.forEach((item) => {
+  item.addEventListener("click", () => {
+    // Remove active class from all buttons
+    navItems.forEach((btn) => btn.classList.remove("active"));
 
-      // Add active class to clicked item
-      this.classList.add("active");
-    });
-  });
+    // Add active class to clicked button
+    item.classList.add("active");
 
-  const newTaskButton = document.querySelector(".primary-btn");
+    // Hide all sections
+    sections.forEach((section) => section.classList.remove("active-section"));
 
-  newTaskButton.addEventListener("click", function () {
-    alert("New Task form will be added in a later step.");
+    // Show the selected section
+    const targetSectionId = item.getAttribute("data-section");
+    document.getElementById(targetSectionId).classList.add("active-section");
+
+    // Update page title
+    pageTitle.textContent = item.textContent;
   });
 });
