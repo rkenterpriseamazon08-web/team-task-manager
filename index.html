@@ -80,32 +80,32 @@
 
         <div class="topbar-actions">
           <input type="text" placeholder="Search..." class="search-box" />
-          <button class="primary-btn">+ New Task</button>
+         <button class="primary-btn" id="open-task-modal-btn">+ New Task</button>
         </div>
       </header>
 
       <section id="dashboard-section" class="content-section active-section">
         <div class="stats-grid">
-          <div class="stat-card">
-            <h3>Total Tasks</h3>
-            <p>24</p>
-            <span>All assigned tasks</span>
-          </div>
-          <div class="stat-card">
-            <h3>In Progress</h3>
-            <p>8</p>
-            <span>Tasks being worked on</span>
-          </div>
-          <div class="stat-card">
-            <h3>Completed</h3>
-            <p>12</p>
-            <span>Finished successfully</span>
-          </div>
-          <div class="stat-card">
-            <h3>Notifications</h3>
-            <p>5</p>
-            <span>Unread alerts</span>
-          </div>
+         <div class="stat-card">
+  <h3>Total Tasks</h3>
+  <p id="total-tasks-count">0</p>
+  <span>All assigned tasks</span>
+</div>
+<div class="stat-card">
+  <h3>In Progress</h3>
+  <p id="in-progress-count">0</p>
+  <span>Tasks being worked on</span>
+</div>
+<div class="stat-card">
+  <h3>Completed</h3>
+  <p id="completed-count">0</p>
+  <span>Finished successfully</span>
+</div>
+<div class="stat-card">
+  <h3>Notifications</h3>
+  <p id="notifications-count">0</p>
+  <span>Unread alerts</span>
+</div>
         </div>
 
         <div class="dashboard-grid">
@@ -113,33 +113,7 @@
             <div class="panel-header">
               <h3>Recent Tasks</h3>
             </div>
-            <div class="task-list">
-              <div class="task-item">
-                <div>
-                  <h4>Prepare sales presentation</h4>
-                  <p>Assigned to: Rahul</p>
-                </div>
-                <span class="badge warning">In Progress</span>
-              </div>
-
-              <div class="task-item">
-                <div>
-                  <h4>Update product pricing sheet</h4>
-                  <p>Assigned to: Sneha</p>
-                </div>
-                <span class="badge success">Completed</span>
-              </div>
-
-              <div class="task-item">
-                <div>
-                  <h4>Client follow-up email</h4>
-                  <p>Assigned to: Amit</p>
-                </div>
-                <span class="badge danger">Pending</span>
-              </div>
-            </div>
-          </div>
-
+           <div class="task-list" id="recent-task-list"></div>
           <div class="panel">
             <div class="panel-header">
               <h3>Quick Team Chat Preview</h3>
@@ -189,35 +163,22 @@
             <h3>Task Board</h3>
           </div>
 
-          <div class="task-board">
-            <div class="task-column">
-              <h4>Pending</h4>
-              <div class="kanban-card">
-                <h5>Design landing page</h5>
-                <p>Severity: High</p>
-                <p>Deadline: 20 Apr 2026</p>
-              </div>
-            </div>
+         <div class="task-board">
+  <div class="task-column">
+    <h4>Pending</h4>
+    <div id="pending-task-column"></div>
+  </div>
 
-            <div class="task-column">
-              <h4>In Progress</h4>
-              <div class="kanban-card">
-                <h5>Prepare campaign report</h5>
-                <p>Severity: Medium</p>
-                <p>Deadline: 18 Apr 2026</p>
-              </div>
-            </div>
+  <div class="task-column">
+    <h4>In Progress</h4>
+    <div id="inprogress-task-column"></div>
+  </div>
 
-            <div class="task-column">
-              <h4>Completed</h4>
-              <div class="kanban-card">
-                <h5>Data cleanup task</h5>
-                <p>Severity: Low</p>
-                <p>Deadline: 14 Apr 2026</p>
-              </div>
-            </div>
-          </div>
-        </div>
+  <div class="task-column">
+    <h4>Completed</h4>
+    <div id="completed-task-column"></div>
+  </div>
+</div>
       </section>
 
       <section id="notifications-section" class="content-section">
@@ -293,6 +254,62 @@
     </main>
   </div>
 
-  <script src="script.js"></script>
+ <!-- Task Modal -->
+<div id="task-modal-overlay" class="task-modal-overlay hidden">
+  <div class="task-modal">
+    <div class="task-modal-header">
+      <h3>Create New Task</h3>
+      <button id="close-task-modal-btn" class="close-modal-btn">×</button>
+    </div>
+
+    <form id="task-form" class="task-form">
+      <div class="form-group">
+        <label for="task-title">Task Title</label>
+        <input type="text" id="task-title" placeholder="Enter task title" required />
+      </div>
+
+      <div class="form-group">
+        <label for="task-description">Description</label>
+        <textarea id="task-description" placeholder="Enter task description" rows="4" required></textarea>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="task-severity">Severity</label>
+          <select id="task-severity" required>
+            <option value="">Select severity</option>
+            <option value="High">High</option>
+            <option value="Medium">Medium</option>
+            <option value="Low">Low</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="task-status">Status</label>
+          <select id="task-status" required>
+            <option value="">Select status</option>
+            <option value="Pending">Pending</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Completed">Completed</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="task-deadline">Deadline</label>
+          <input type="date" id="task-deadline" required />
+        </div>
+
+        <div class="form-group">
+          <label for="task-assigned-to">Assigned To</label>
+          <input type="text" id="task-assigned-to" placeholder="Enter member name" required />
+        </div>
+      </div>
+
+      <button type="submit" class="primary-btn">Save Task</button>
+    </form>
+  </div>
+</div>
 </body>
 </html>
