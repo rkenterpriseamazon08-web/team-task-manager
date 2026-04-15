@@ -1,65 +1,46 @@
-// ========================================
-// IMPORTANT:
-// PASTE YOUR GOOGLE APPS SCRIPT WEB APP URL BELOW
-// ========================================
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxbH6vs-uQ6KeP-vCtV2Fz0MPF_POhFphoJKXZfOXO6iIGjdON0PAj3uuwAaC_Qrg343g/exec";
 
-// Screen elements
 const loginScreen = document.getElementById("login-screen");
 const appScreen = document.getElementById("app-screen");
 
-// Login form elements
 const loginForm = document.getElementById("login-form");
 const emailInput = document.getElementById("email");
 const passwordInput = document.getElementById("password");
 const loginBtn = document.getElementById("login-btn");
 const loginMessage = document.getElementById("login-message");
 
-// User display elements
 const sidebarUserName = document.getElementById("sidebar-user-name");
 const sidebarUserRole = document.getElementById("sidebar-user-role");
 const topbarUserName = document.getElementById("topbar-user-name");
 const userAvatar = document.getElementById("user-avatar");
 
-// Logout button
 const logoutBtn = document.getElementById("logout-btn");
 
-// Navigation elements
 const navItems = document.querySelectorAll(".nav-item");
 const sections = document.querySelectorAll(".content-section");
 const pageTitle = document.getElementById("page-title");
 
-// ----------------------------------------
-// Helper: Show login screen
-// ----------------------------------------
+// Chat elements
+const chatInput = document.getElementById("chat-message-input");
+const sendMessageBtn = document.getElementById("send-message-btn");
+const chatMessages = document.querySelector(".chat-messages");
+
 function showLoginScreen() {
   loginScreen.classList.remove("hidden");
   appScreen.classList.add("hidden");
 }
 
-// ----------------------------------------
-// Helper: Show app screen
-// ----------------------------------------
 function showAppScreen() {
   loginScreen.classList.add("hidden");
   appScreen.classList.remove("hidden");
 }
 
-// ----------------------------------------
-// Helper: Set login message
-// ----------------------------------------
 function setLoginMessage(message, type) {
   loginMessage.textContent = message;
   loginMessage.className = "login-message";
-
-  if (type) {
-    loginMessage.classList.add(type);
-  }
+  if (type) loginMessage.classList.add(type);
 }
 
-// ----------------------------------------
-// Helper: Update user info in UI
-// ----------------------------------------
 function updateUserUI(user) {
   const userName = user.name || "User";
   const userRole = user.role || "Employee";
@@ -71,40 +52,25 @@ function updateUserUI(user) {
   userAvatar.textContent = firstLetter;
 }
 
-// ----------------------------------------
-// Helper: Save user to browser
-// ----------------------------------------
 function saveUserToLocalStorage(user) {
   localStorage.setItem("ttm_logged_in_user", JSON.stringify(user));
 }
 
-// ----------------------------------------
-// Helper: Read user from browser
-// ----------------------------------------
 function getUserFromLocalStorage() {
   const savedUser = localStorage.getItem("ttm_logged_in_user");
-
-  if (!savedUser) {
-    return null;
-  }
+  if (!savedUser) return null;
 
   try {
     return JSON.parse(savedUser);
-  } catch (error) {
+  } catch {
     return null;
   }
 }
 
-// ----------------------------------------
-// Helper: Remove user from browser
-// ----------------------------------------
 function clearUserFromLocalStorage() {
   localStorage.removeItem("ttm_logged_in_user");
 }
 
-// ----------------------------------------
-// Sidebar navigation logic
-// ----------------------------------------
 function setupNavigation() {
   navItems.forEach((item) => {
     item.addEventListener("click", () => {
@@ -125,9 +91,45 @@ function setupNavigation() {
   });
 }
 
-// ----------------------------------------
-// Login form submit
-// ----------------------------------------
+// -----------------------------
+// SIMPLE CHAT SEND FUNCTION
+// -----------------------------
+function sendMessage() {
+  if (!chatInput || !chatMessages) return;
+
+  const messageText = chatInput.value.trim();
+
+  if (messageText === "") {
+    return;
+  }
+
+  const messageDiv = document.createElement("div");
+  messageDiv.classList.add("message-bubble", "sent");
+  messageDiv.textContent = messageText;
+
+  chatMessages.appendChild(messageDiv);
+
+  chatInput.value = "";
+
+  // Auto scroll to latest message
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+// Send on button click
+if (sendMessageBtn) {
+  sendMessageBtn.addEventListener("click", sendMessage);
+}
+
+// Send on Enter key
+if (chatInput) {
+  chatInput.addEventListener("keypress", function (event) {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      sendMessage();
+    }
+  });
+}
+
 loginForm.addEventListener("submit", async function (event) {
   event.preventDefault();
 
@@ -183,17 +185,11 @@ loginForm.addEventListener("submit", async function (event) {
   }
 });
 
-// ----------------------------------------
-// Logout logic
-// ----------------------------------------
 logoutBtn.addEventListener("click", function () {
   clearUserFromLocalStorage();
   showLoginScreen();
 });
 
-// ----------------------------------------
-// Check if user already logged in
-// ----------------------------------------
 function checkExistingLogin() {
   const savedUser = getUserFromLocalStorage();
 
@@ -205,8 +201,5 @@ function checkExistingLogin() {
   }
 }
 
-// ----------------------------------------
-// Initial app setup
-// ----------------------------------------
 setupNavigation();
 checkExistingLogin();
