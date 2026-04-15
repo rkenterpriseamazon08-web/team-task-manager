@@ -439,7 +439,10 @@ body {
   margin-bottom: 10px;
   background: #f8fafc;
 }
-
+.chat-user small {
+  color: #6b7280;
+  font-size: 12px;
+}
 .active-chat-user {
   background: #eef2ff;
   color: #4338ca;
@@ -457,6 +460,8 @@ body {
   flex-direction: column;
   gap: 12px;
   padding-bottom: 20px;
+  max-height: 420px;
+  overflow-y: auto;
 }
 
 .message-bubble {
