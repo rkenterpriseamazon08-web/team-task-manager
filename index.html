@@ -1,1 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Team Task Manager</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="logo-section">
+        <div class="logo-box">TT</div>
+        <div>
+          <h2>Team Task Manager</h2>
+          <p>Internal Workspace</p>
+        </div>
+      </div>
 
+      <nav class="menu">
+        <a href="#" class="menu-item active">Dashboard</a>
+        <a href="#" class="menu-item">Chat</a>
+        <a href="#" class="menu-item">Tasks</a>
+        <a href="#" class="menu-item">Notifications</a>
+        <a href="#" class="menu-item">Analytics</a>
+        <a href="#" class="menu-item">Settings</a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-mini-card">
+          <div class="avatar">A</div>
+          <div>
+            <h4>Admin User</h4>
+            <p>Active Employee</p>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Area -->
+    <main class="main-content">
+      <!-- Topbar -->
+      <header class="topbar">
+        <div>
+          <h1>Welcome back</h1>
+          <p>Manage your team chats, tasks, and productivity in one place.</p>
+        </div>
+
+        <div class="topbar-actions">
+          <button class="primary-btn">+ New Task</button>
+        </div>
+      </header>
+
+      <!-- Stats -->
+      <section class="stats-grid">
+        <div class="stat-card">
+          <h3>Total Tasks</h3>
+          <p class="stat-number">24</p>
+          <span class="stat-note">All assigned tasks</span>
+        </div>
+
+        <div class="stat-card">
+          <h3>Pending Tasks</h3>
+          <p class="stat-number">8</p>
+          <span class="stat-note">Need attention</span>
+        </div>
+
+        <div class="stat-card">
+          <h3>Team Messages</h3>
+          <p class="stat-number">136</p>
+          <span class="stat-note">Recent conversations</span>
+        </div>
+
+        <div class="stat-card">
+          <h3>Notifications</h3>
+          <p class="stat-number">5</p>
+          <span class="stat-note">Unread updates</span>
+        </div>
+      </section>
+
+      <!-- Main Panels -->
+      <section class="content-grid">
+        <!-- Left panel -->
+        <div class="panel large-panel">
+          <div class="panel-header">
+            <h2>Recent Chats</h2>
+            <button class="secondary-btn">View All</button>
+          </div>
+
+          <div class="chat-list">
+            <div class="chat-item">
+              <div class="chat-avatar">R</div>
+              <div class="chat-info">
+                <h4>Rohan</h4>
+                <p>Can you review the design task today?</p>
+              </div>
+              <span class="chat-time">10:24 AM</span>
+            </div>
+
+            <div class="chat-item">
+              <div class="chat-avatar">S</div>
+              <div class="chat-info">
+                <h4>Sales Team</h4>
+                <p>Group discussion about weekly targets</p>
+              </div>
+              <span class="chat-time">09:10 AM</span>
+            </div>
+
+            <div class="chat-item">
+              <div class="chat-avatar">M</div>
+              <div class="chat-info">
+                <h4>Meera</h4>
+                <p>Task proof link has been submitted.</p>
+              </div>
+              <span class="chat-time">Yesterday</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right top -->
+        <div class="panel">
+          <div class="panel-header">
+            <h2>Upcoming Tasks</h2>
+          </div>
+
+          <div class="task-list">
+            <div class="task-item">
+              <div>
+                <h4>Landing Page Review</h4>
+                <p>Assigned to: Rohan</p>
+              </div>
+              <span class="badge high">High</span>
+            </div>
+
+            <div class="task-item">
+              <div>
+                <h4>Client Follow-up Email</h4>
+                <p>Assigned to: Meera</p>
+              </div>
+              <span class="badge medium">Medium</span>
+            </div>
+
+            <div class="task-item">
+              <div>
+                <h4>Update Sales Sheet</h4>
+                <p>Assigned to: Amit</p>
+              </div>
+              <span class="badge low">Low</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right bottom -->
+        <div class="panel">
+          <div class="panel-header">
+            <h2>Notifications</h2>
+          </div>
+
+          <div class="notification-list">
+            <div class="notification-item">
+              <p><strong>Rohan</strong> sent a new message</p>
+            </div>
+            <div class="notification-item">
+              <p><strong>Meera</strong> completed a task</p>
+            </div>
+            <div class="notification-item">
+              <p><strong>Admin</strong> assigned a new task</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
