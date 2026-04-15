@@ -1,4 +1,4 @@
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxbH6vs-uQ6KeP-vCtV2Fz0MPF_POhFphoJKXZfOXO6iIGjdON0PAj3uuwAaC_Qrg343g/exec";
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxfqF9IkxNX0hEaBqXAA3XumeH_C05ebGFAGLfGKAxl3CgA-0W-abGLJ5UpI63pehJHfQ/exec";
 
 const loginScreen = document.getElementById("login-screen");
 const appScreen = document.getElementById("app-screen");
@@ -23,7 +23,78 @@ const pageTitle = document.getElementById("page-title");
 // Chat elements
 const chatInput = document.getElementById("chat-message-input");
 const sendMessageBtn = document.getElementById("send-message-btn");
-const chatMessages = document.querySelector(".chat-messages");
+const chatMessages = document.getElementById("chat-messages");
+const chatUsersList = document.getElementById("chat-users-list");
+
+// -----------------------------------
+// DYNAMIC GROUP MEMBER MASTER LIST
+// Add new members here in future
+// -----------------------------------
+const groupMembers = [
+  { name: "Rahul", role: "Project Manager", active: true },
+  { name: "Sneha", role: "Business Analyst", active: true },
+  { name: "Amit", role: "Developer", active: true },
+  { name: "Priya", role: "Designer", active: true }
+];
+
+// Smart reply patterns
+const replyRules = [
+  {
+    keywords: ["hello", "hi", "hey", "hellooo", "hii"],
+    replies: [
+      "Hi! I am here.",
+      "Hello, what do you need?",
+      "Hey! Any update?",
+      "Hi, how can I help?"
+    ]
+  },
+  {
+    keywords: ["task", "tasks", "status", "update"],
+    replies: [
+      "I will share the latest task update shortly.",
+      "Task status is being updated.",
+      "I am checking the current progress.",
+      "Let us sync on the task status."
+    ]
+  },
+  {
+    keywords: ["report", "deck", "presentation"],
+    replies: [
+      "I will share the latest version soon.",
+      "The report is in progress.",
+      "Let me review the deck once.",
+      "I can help finalize the presentation."
+    ]
+  },
+  {
+    keywords: ["deadline", "urgent", "priority", "high"],
+    replies: [
+      "Understood, I will prioritize this.",
+      "This looks urgent. I am checking it now.",
+      "Let us close this on priority.",
+      "I will take this up first."
+    ]
+  },
+  {
+    keywords: ["thanks", "thank you", "great"],
+    replies: [
+      "You are welcome.",
+      "Glad to help.",
+      "No problem at all.",
+      "Happy to help."
+    ]
+  }
+];
+
+const defaultReplies = [
+  "Noted.",
+  "Okay, understood.",
+  "I will check and update.",
+  "Sounds good.",
+  "Let us discuss this further.",
+  "Understood, working on it.",
+  "Thanks for the update."
+];
 
 function showLoginScreen() {
   loginScreen.classList.remove("hidden");
@@ -91,9 +162,109 @@ function setupNavigation() {
   });
 }
 
-// -----------------------------
-// SIMPLE CHAT SEND FUNCTION
-// -----------------------------
+// -----------------------------------
+// CHAT MEMBER RENDERING
+// -----------------------------------
+function renderChatUsers() {
+  if (!chatUsersList) return;
+
+  chatUsersList.innerHTML = "";
+
+  const activeMembers = groupMembers.filter(member => member.active);
+
+  activeMembers.forEach((member, index) => {
+    const userDiv = document.createElement("div");
+    userDiv.className = index === 0 ? "chat-user active-chat-user" : "chat-user";
+    userDiv.innerHTML = `
+      <strong>${member.name}</strong><br>
+      <small>${member.role}</small>
+    `;
+    chatUsersList.appendChild(userDiv);
+  });
+}
+
+// -----------------------------------
+// CHAT HELPERS
+// -----------------------------------
+function scrollChatToBottom() {
+  if (chatMessages) {
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+}
+
+function createMessageBubble(sender, text, type) {
+  const messageDiv = document.createElement("div");
+  messageDiv.classList.add("message-bubble", type);
+  messageDiv.innerHTML = `<strong>${sender}:</strong> ${text}`;
+  return messageDiv;
+}
+
+function addUserMessage(text) {
+  if (!chatMessages) return;
+  const messageDiv = createMessageBubble("You", text, "sent");
+  chatMessages.appendChild(messageDiv);
+  scrollChatToBottom();
+}
+
+function addBotMessage(sender, text) {
+  if (!chatMessages) return;
+  const messageDiv = createMessageBubble(sender, text, "received");
+  chatMessages.appendChild(messageDiv);
+  scrollChatToBottom();
+}
+
+function getRandomItem(array) {
+  return array[Math.floor(Math.random() * array.length)];
+}
+
+function shuffleArray(array) {
+  const copied = [...array];
+  for (let i = copied.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copied[i], copied[j]] = [copied[j], copied[i]];
+  }
+  return copied;
+}
+
+function generateReplyText(userMessage) {
+  const lowerMessage = userMessage.toLowerCase();
+
+  for (const rule of replyRules) {
+    const matched = rule.keywords.some((keyword) => lowerMessage.includes(keyword));
+    if (matched) {
+      return getRandomItem(rule.replies);
+    }
+  }
+
+  return getRandomItem(defaultReplies);
+}
+
+// -----------------------------------
+// REPLY SYSTEM BASED ON ACTIVE MEMBERS
+// -----------------------------------
+function simulateGroupReplies(userMessage) {
+  const activeMembers = groupMembers.filter(member => member.active);
+
+  if (activeMembers.length === 0) return;
+
+  const shuffledMembers = shuffleArray(activeMembers);
+
+  const maxReplies = Math.min(3, shuffledMembers.length);
+  const replyCount = Math.floor(Math.random() * maxReplies) + 1;
+  const selectedMembers = shuffledMembers.slice(0, replyCount);
+
+  selectedMembers.forEach((member, index) => {
+    const replyText = generateReplyText(userMessage);
+
+    setTimeout(() => {
+      addBotMessage(member.name, replyText);
+    }, 1000 + index * 1200);
+  });
+}
+
+// -----------------------------------
+// SEND MESSAGE
+// -----------------------------------
 function sendMessage() {
   if (!chatInput || !chatMessages) return;
 
@@ -103,24 +274,16 @@ function sendMessage() {
     return;
   }
 
-  const messageDiv = document.createElement("div");
-  messageDiv.classList.add("message-bubble", "sent");
-  messageDiv.textContent = messageText;
-
-  chatMessages.appendChild(messageDiv);
-
+  addUserMessage(messageText);
   chatInput.value = "";
 
-  // Auto scroll to latest message
-  chatMessages.scrollTop = chatMessages.scrollHeight;
+  simulateGroupReplies(messageText);
 }
 
-// Send on button click
 if (sendMessageBtn) {
   sendMessageBtn.addEventListener("click", sendMessage);
 }
 
-// Send on Enter key
 if (chatInput) {
   chatInput.addEventListener("keypress", function (event) {
     if (event.key === "Enter") {
@@ -130,6 +293,9 @@ if (chatInput) {
   });
 }
 
+// -----------------------------------
+// LOGIN
+// -----------------------------------
 loginForm.addEventListener("submit", async function (event) {
   event.preventDefault();
 
@@ -201,5 +367,9 @@ function checkExistingLogin() {
   }
 }
 
+// -----------------------------------
+// INITIALIZE
+// -----------------------------------
 setupNavigation();
 checkExistingLogin();
+renderChatUsers();
