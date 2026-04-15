@@ -14,159 +14,260 @@
         <div class="logo-box">TT</div>
         <div>
           <h2>Team Task Manager</h2>
-          <p>Internal Workspace</p>
+          <p>Company Workspace</p>
         </div>
       </div>
 
-      <nav class="menu">
-        <a href="#" class="menu-item active">Dashboard</a>
-        <a href="#" class="menu-item">Chat</a>
-        <a href="#" class="menu-item">Tasks</a>
-        <a href="#" class="menu-item">Notifications</a>
-        <a href="#" class="menu-item">Analytics</a>
-        <a href="#" class="menu-item">Settings</a>
+      <nav class="sidebar-nav">
+        <button class="nav-item active" data-section="dashboard-section">Dashboard</button>
+        <button class="nav-item" data-section="chat-section">Chat</button>
+        <button class="nav-item" data-section="tasks-section">Tasks</button>
+        <button class="nav-item" data-section="notifications-section">Notifications</button>
+        <button class="nav-item" data-section="team-section">Team</button>
+        <button class="nav-item" data-section="settings-section">Settings</button>
       </nav>
 
       <div class="sidebar-footer">
-        <div class="user-mini-card">
-          <div class="avatar">A</div>
+        <div class="user-card">
+          <div class="user-avatar">U</div>
           <div>
-            <h4>Admin User</h4>
-            <p>Active Employee</p>
+            <h4>Demo User</h4>
+            <p>Not logged in</p>
           </div>
         </div>
       </div>
     </aside>
 
-    <!-- Main Area -->
+    <!-- Main -->
     <main class="main-content">
       <!-- Topbar -->
       <header class="topbar">
         <div>
-          <h1>Welcome back</h1>
-          <p>Manage your team chats, tasks, and productivity in one place.</p>
+          <h1 id="page-title">Dashboard</h1>
+          <p class="topbar-subtitle">Welcome to your team workspace</p>
         </div>
 
         <div class="topbar-actions">
+          <input type="text" placeholder="Search..." class="search-box" />
           <button class="primary-btn">+ New Task</button>
         </div>
       </header>
 
-      <!-- Stats -->
-      <section class="stats-grid">
-        <div class="stat-card">
-          <h3>Total Tasks</h3>
-          <p class="stat-number">24</p>
-          <span class="stat-note">All assigned tasks</span>
+      <!-- Dashboard Section -->
+      <section id="dashboard-section" class="content-section active-section">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <h3>Total Tasks</h3>
+            <p>24</p>
+            <span>All assigned tasks</span>
+          </div>
+          <div class="stat-card">
+            <h3>In Progress</h3>
+            <p>8</p>
+            <span>Tasks being worked on</span>
+          </div>
+          <div class="stat-card">
+            <h3>Completed</h3>
+            <p>12</p>
+            <span>Finished successfully</span>
+          </div>
+          <div class="stat-card">
+            <h3>Notifications</h3>
+            <p>5</p>
+            <span>Unread alerts</span>
+          </div>
         </div>
 
-        <div class="stat-card">
-          <h3>Pending Tasks</h3>
-          <p class="stat-number">8</p>
-          <span class="stat-note">Need attention</span>
-        </div>
+        <div class="dashboard-grid">
+          <div class="panel">
+            <div class="panel-header">
+              <h3>Recent Tasks</h3>
+            </div>
+            <div class="task-list">
+              <div class="task-item">
+                <div>
+                  <h4>Prepare sales presentation</h4>
+                  <p>Assigned to: Rahul</p>
+                </div>
+                <span class="badge warning">In Progress</span>
+              </div>
 
-        <div class="stat-card">
-          <h3>Team Messages</h3>
-          <p class="stat-number">136</p>
-          <span class="stat-note">Recent conversations</span>
-        </div>
+              <div class="task-item">
+                <div>
+                  <h4>Update product pricing sheet</h4>
+                  <p>Assigned to: Sneha</p>
+                </div>
+                <span class="badge success">Completed</span>
+              </div>
 
-        <div class="stat-card">
-          <h3>Notifications</h3>
-          <p class="stat-number">5</p>
-          <span class="stat-note">Unread updates</span>
+              <div class="task-item">
+                <div>
+                  <h4>Client follow-up email</h4>
+                  <p>Assigned to: Amit</p>
+                </div>
+                <span class="badge danger">Pending</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header">
+              <h3>Quick Team Chat Preview</h3>
+            </div>
+            <div class="chat-preview">
+              <div class="message-bubble received">
+                <strong>Rahul:</strong> Please review the latest task updates.
+              </div>
+              <div class="message-bubble sent">
+                <strong>You:</strong> Sure, I will check them today.
+              </div>
+              <div class="message-bubble received">
+                <strong>Sneha:</strong> Pricing sheet has been updated.
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
-      <!-- Main Panels -->
-      <section class="content-grid">
-        <!-- Left panel -->
-        <div class="panel large-panel">
+      <!-- Chat Section -->
+      <section id="chat-section" class="content-section">
+        <div class="panel full-height">
           <div class="panel-header">
-            <h2>Recent Chats</h2>
-            <button class="secondary-btn">View All</button>
+            <h3>1-to-1 Chat</h3>
           </div>
 
-          <div class="chat-list">
-            <div class="chat-item">
-              <div class="chat-avatar">R</div>
-              <div class="chat-info">
-                <h4>Rohan</h4>
-                <p>Can you review the design task today?</p>
-              </div>
-              <span class="chat-time">10:24 AM</span>
+          <div class="chat-layout">
+            <div class="chat-users">
+              <div class="chat-user active-chat-user">Rahul</div>
+              <div class="chat-user">Sneha</div>
+              <div class="chat-user">Amit</div>
+              <div class="chat-user">Priya</div>
             </div>
 
-            <div class="chat-item">
-              <div class="chat-avatar">S</div>
-              <div class="chat-info">
-                <h4>Sales Team</h4>
-                <p>Group discussion about weekly targets</p>
+            <div class="chat-window">
+              <div class="chat-messages">
+                <div class="message-bubble received">Hi, please share the task status.</div>
+                <div class="message-bubble sent">I am working on it.</div>
+                <div class="message-bubble received">Okay, please update by evening.</div>
               </div>
-              <span class="chat-time">09:10 AM</span>
-            </div>
 
-            <div class="chat-item">
-              <div class="chat-avatar">M</div>
-              <div class="chat-info">
-                <h4>Meera</h4>
-                <p>Task proof link has been submitted.</p>
+              <div class="chat-input-row">
+                <input type="text" placeholder="Type your message..." />
+                <button class="primary-btn">Send</button>
               </div>
-              <span class="chat-time">Yesterday</span>
             </div>
           </div>
         </div>
+      </section>
 
-        <!-- Right top -->
+      <!-- Tasks Section -->
+      <section id="tasks-section" class="content-section">
         <div class="panel">
           <div class="panel-header">
-            <h2>Upcoming Tasks</h2>
+            <h3>Task Board</h3>
           </div>
 
-          <div class="task-list">
-            <div class="task-item">
-              <div>
-                <h4>Landing Page Review</h4>
-                <p>Assigned to: Rohan</p>
+          <div class="task-board">
+            <div class="task-column">
+              <h4>Pending</h4>
+              <div class="kanban-card">
+                <h5>Design landing page</h5>
+                <p>Severity: High</p>
+                <p>Deadline: 20 Apr 2026</p>
               </div>
-              <span class="badge high">High</span>
             </div>
 
-            <div class="task-item">
-              <div>
-                <h4>Client Follow-up Email</h4>
-                <p>Assigned to: Meera</p>
+            <div class="task-column">
+              <h4>In Progress</h4>
+              <div class="kanban-card">
+                <h5>Prepare campaign report</h5>
+                <p>Severity: Medium</p>
+                <p>Deadline: 18 Apr 2026</p>
               </div>
-              <span class="badge medium">Medium</span>
             </div>
 
-            <div class="task-item">
-              <div>
-                <h4>Update Sales Sheet</h4>
-                <p>Assigned to: Amit</p>
+            <div class="task-column">
+              <h4>Completed</h4>
+              <div class="kanban-card">
+                <h5>Data cleanup task</h5>
+                <p>Severity: Low</p>
+                <p>Deadline: 14 Apr 2026</p>
               </div>
-              <span class="badge low">Low</span>
             </div>
           </div>
         </div>
+      </section>
 
-        <!-- Right bottom -->
+      <!-- Notifications Section -->
+      <section id="notifications-section" class="content-section">
         <div class="panel">
           <div class="panel-header">
-            <h2>Notifications</h2>
+            <h3>Notifications</h3>
           </div>
 
           <div class="notification-list">
             <div class="notification-item">
-              <p><strong>Rohan</strong> sent a new message</p>
+              <h4>New task assigned</h4>
+              <p>You have been assigned "Prepare weekly status report"</p>
             </div>
+
             <div class="notification-item">
-              <p><strong>Meera</strong> completed a task</p>
+              <h4>Task completed</h4>
+              <p>Sneha completed "Update pricing sheet"</p>
             </div>
+
             <div class="notification-item">
-              <p><strong>Admin</strong> assigned a new task</p>
+              <h4>New message</h4>
+              <p>Rahul sent you a message</p>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Team Section -->
+      <section id="team-section" class="content-section">
+        <div class="panel">
+          <div class="panel-header">
+            <h3>Team Members</h3>
+          </div>
+
+          <div class="team-grid">
+            <div class="team-card">
+              <div class="team-avatar">R</div>
+              <h4>Rahul</h4>
+              <p>Project Manager</p>
+            </div>
+
+            <div class="team-card">
+              <div class="team-avatar">S</div>
+              <h4>Sneha</h4>
+              <p>Business Analyst</p>
+            </div>
+
+            <div class="team-card">
+              <div class="team-avatar">A</div>
+              <h4>Amit</h4>
+              <p>Developer</p>
+            </div>
+
+            <div class="team-card">
+              <div class="team-avatar">P</div>
+              <h4>Priya</h4>
+              <p>Designer</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Settings Section -->
+      <section id="settings-section" class="content-section">
+        <div class="panel">
+          <div class="panel-header">
+            <h3>Settings</h3>
+          </div>
+
+          <div class="settings-box">
+            <p>This section will be used later for app settings, profile settings, and preferences.</p>
           </div>
         </div>
       </section>
