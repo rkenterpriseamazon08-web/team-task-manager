@@ -75,16 +75,22 @@ body {
   color: #374151;
 }
 
-.form-group input {
+.form-group input,
+.form-group textarea,
+.form-group select {
   width: 100%;
   padding: 14px 14px;
   border: 1px solid #dbe3ee;
   border-radius: 14px;
   font-size: 14px;
   outline: none;
+  font-family: Arial, sans-serif;
+  background: #ffffff;
 }
 
-.form-group input:focus {
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
   border-color: #6366f1;
 }
 
@@ -257,6 +263,7 @@ body {
   cursor: pointer;
 }
 
+/* Main Content */
 .main-content {
   flex: 1;
   padding: 24px;
@@ -307,6 +314,7 @@ body {
   font-weight: 600;
 }
 
+/* Sections */
 .content-section {
   display: none;
 }
@@ -315,6 +323,7 @@ body {
   display: block;
 }
 
+/* Dashboard */
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -420,6 +429,7 @@ body {
   gap: 12px;
 }
 
+/* Chat */
 .chat-layout {
   display: grid;
   grid-template-columns: 240px 1fr;
@@ -439,10 +449,12 @@ body {
   margin-bottom: 10px;
   background: #f8fafc;
 }
+
 .chat-user small {
   color: #6b7280;
   font-size: 12px;
 }
+
 .active-chat-user {
   background: #eef2ff;
   color: #4338ca;
@@ -470,6 +482,7 @@ body {
   border-radius: 14px;
   font-size: 14px;
   line-height: 1.5;
+  word-wrap: break-word;
 }
 
 .message-bubble.received {
@@ -496,6 +509,7 @@ body {
   outline: none;
 }
 
+/* Tasks */
 .task-board {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -510,6 +524,12 @@ body {
 
 .task-column h4 {
   margin-bottom: 14px;
+}
+
+.task-column > div {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .kanban-card {
@@ -530,6 +550,13 @@ body {
   margin-bottom: 4px;
 }
 
+.empty-task-text {
+  color: #6b7280;
+  font-size: 13px;
+  padding: 10px 4px;
+}
+
+/* Notifications */
 .notification-list {
   display: flex;
   flex-direction: column;
@@ -552,6 +579,7 @@ body {
   color: #6b7280;
 }
 
+/* Team */
 .team-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -588,6 +616,7 @@ body {
   font-size: 13px;
 }
 
+/* Settings */
 .settings-box {
   padding: 16px;
   border-radius: 14px;
@@ -595,10 +624,79 @@ body {
   color: #4b5563;
 }
 
+/* Task Modal */
+.task-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 9999;
+}
+
+.task-modal {
+  width: 100%;
+  max-width: 650px;
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 24px;
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.2);
+}
+
+.task-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.task-modal-header h3 {
+  font-size: 22px;
+}
+
+.close-modal-btn {
+  border: none;
+  background: #f3f4f6;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 22px;
+  line-height: 1;
+}
+
+.task-form textarea,
+.task-form select,
+.task-form input {
+  width: 100%;
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid #dbe3ee;
+  outline: none;
+  font-size: 14px;
+  font-family: Arial, sans-serif;
+}
+
+.task-form textarea:focus,
+.task-form select:focus,
+.task-form input:focus {
+  border-color: #6366f1;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* Utility */
 .full-height {
   min-height: 600px;
 }
 
+/* Responsive */
 @media (max-width: 1100px) {
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
@@ -641,6 +739,10 @@ body {
   }
 
   .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-row {
     grid-template-columns: 1fr;
   }
 }
