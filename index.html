@@ -7,34 +7,68 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="app-container">
+  <!-- Login Screen -->
+  <div id="login-screen" class="login-screen">
+    <div class="login-card">
+      <div class="login-logo">TT</div>
+      <h1>Team Task Manager</h1>
+      <p class="login-subtitle">Sign in to continue</p>
+
+      <form id="login-form" class="login-form">
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" placeholder="Enter your email" required />
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" placeholder="Enter your password" required />
+        </div>
+
+        <button type="submit" id="login-btn" class="login-btn">Login</button>
+        <p id="login-message" class="login-message"></p>
+      </form>
+
+      <div class="demo-box">
+        <h4>Demo Credentials</h4>
+        <p><strong>Email:</strong> demo@company.com</p>
+        <p><strong>Password:</strong> 123456</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main App -->
+  <div id="app-screen" class="app-container hidden">
     <!-- Sidebar -->
     <aside class="sidebar">
-      <div class="logo-section">
-        <div class="logo-box">TT</div>
-        <div>
-          <h2>Team Task Manager</h2>
-          <p>Company Workspace</p>
+      <div>
+        <div class="logo-section">
+          <div class="logo-box">TT</div>
+          <div>
+            <h2>Team Task Manager</h2>
+            <p>Company Workspace</p>
+          </div>
         </div>
-      </div>
 
-      <nav class="sidebar-nav">
-        <button class="nav-item active" data-section="dashboard-section">Dashboard</button>
-        <button class="nav-item" data-section="chat-section">Chat</button>
-        <button class="nav-item" data-section="tasks-section">Tasks</button>
-        <button class="nav-item" data-section="notifications-section">Notifications</button>
-        <button class="nav-item" data-section="team-section">Team</button>
-        <button class="nav-item" data-section="settings-section">Settings</button>
-      </nav>
+        <nav class="sidebar-nav">
+          <button class="nav-item active" data-section="dashboard-section">Dashboard</button>
+          <button class="nav-item" data-section="chat-section">Chat</button>
+          <button class="nav-item" data-section="tasks-section">Tasks</button>
+          <button class="nav-item" data-section="notifications-section">Notifications</button>
+          <button class="nav-item" data-section="team-section">Team</button>
+          <button class="nav-item" data-section="settings-section">Settings</button>
+        </nav>
+      </div>
 
       <div class="sidebar-footer">
         <div class="user-card">
-          <div class="user-avatar">U</div>
+          <div class="user-avatar" id="user-avatar">U</div>
           <div>
-            <h4>Demo User</h4>
-            <p>Not logged in</p>
+            <h4 id="sidebar-user-name">Demo User</h4>
+            <p id="sidebar-user-role">Manager</p>
           </div>
         </div>
+        <button id="logout-btn" class="logout-btn">Logout</button>
       </div>
     </aside>
 
@@ -44,7 +78,7 @@
       <header class="topbar">
         <div>
           <h1 id="page-title">Dashboard</h1>
-          <p class="topbar-subtitle">Welcome to your team workspace</p>
+          <p class="topbar-subtitle">Welcome back, <span id="topbar-user-name">Demo User</span></p>
         </div>
 
         <div class="topbar-actions">
