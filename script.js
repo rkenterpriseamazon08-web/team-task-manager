@@ -483,17 +483,22 @@ async function handleLoginSubmit(event) {
 
   if (!loginForm) return;
 
-  const formData = new FormData(loginForm);
-  const email = String(formData.get("email") || "").trim();
-  const password = String(formData.get("password") || "").trim();
+  const emailField = document.getElementById("email");
+  const passwordField = document.getElementById("password");
+
+  const email = emailField ? emailField.value.trim() : "";
+  const password = passwordField ? passwordField.value.trim() : "";
+
+  console.log("Email entered:", email);
+  console.log("Password entered:", password);
 
   if (!email || !password) {
     setLoginMessage("Please enter both email and password.", "error");
     return;
   }
 
-  if (APPS_SCRIPT_URL === "PASTE_YOUR_WEB_APP_URL_HERE") {
-    setLoginMessage("Please paste your Apps Script Web App URL in script.js first.", "error");
+  if (APPS_SCRIPT_URL === "https://script.google.com/macros/s/AKfycbyvsOgYah2WrM4_r_yGMlZrRgg-HAs0A9_ZGt9n5yjfyxS8yhpC4eAlEDWAElJBzFKDsQ/exec") {
+    setLoginMessage("https://script.google.com/macros/s/AKfycbyvsOgYah2WrM4_r_yGMlZrRgg-HAs0A9_ZGt9n5yjfyxS8yhpC4eAlEDWAElJBzFKDsQ/exec.", "error");
     return;
   }
 
@@ -511,12 +516,14 @@ async function handleLoginSubmit(event) {
         "Content-Type": "text/plain;charset=utf-8"
       },
       body: JSON.stringify({
-        email,
-        password
+        email: email,
+        password: password
       })
     });
 
     const result = await response.json();
+
+    console.log("Login API result:", result);
 
     if (result.success) {
       const user = result.user || {
@@ -548,7 +555,6 @@ async function handleLoginSubmit(event) {
     }
   }
 }
-
 // -----------------------------
 // EVENTS
 // -----------------------------
