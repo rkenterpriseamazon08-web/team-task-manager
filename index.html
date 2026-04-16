@@ -7,10 +7,264 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <!-- Login Screen -->
+  <div id="login-screen" class="login-screen">
+    <div class="login-card">
+      <div class="login-logo">TT</div>
+      <h1>Team Task Manager</h1>
+      <p class="login-subtitle">Sign in to continue</p>
 
-  <!-- (ALL YOUR EXISTING CODE ABOVE REMAINS SAME) -->
+      <form id="login-form" class="login-form" autocomplete="off" novalidate>
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            placeholder="Enter your email"
+            autocomplete="off"
+          />
+        </div>
 
-  <!-- TASK MODAL -->
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            placeholder="Enter your password"
+            autocomplete="off"
+          />
+        </div>
+
+        <button type="submit" id="login-btn" class="login-btn">Login</button>
+        <p id="login-message" class="login-message"></p>
+      </form>
+
+      <div class="demo-box">
+        <h4>Demo Credentials</h4>
+        <p><strong>Email:</strong> demo@company.com</p>
+        <p><strong>Password:</strong> 123456</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main App -->
+  <div id="app-screen" class="app-container hidden">
+    <aside class="sidebar">
+      <div>
+        <div class="logo-section">
+          <div class="logo-box">TT</div>
+          <div>
+            <h2>Team Task Manager</h2>
+            <p>Company Workspace</p>
+          </div>
+        </div>
+
+        <nav class="sidebar-nav">
+          <button class="nav-item active" data-section="dashboard-section">Dashboard</button>
+          <button class="nav-item" data-section="chat-section">Chat</button>
+          <button class="nav-item" data-section="tasks-section">Tasks</button>
+          <button class="nav-item" data-section="notifications-section">Notifications</button>
+          <button class="nav-item" data-section="team-section">Team</button>
+          <button class="nav-item" data-section="settings-section">Settings</button>
+        </nav>
+      </div>
+
+      <div class="sidebar-footer">
+        <div class="user-card">
+          <div class="user-avatar" id="user-avatar">U</div>
+          <div>
+            <h4 id="sidebar-user-name">Demo User</h4>
+            <p id="sidebar-user-role">Manager</p>
+          </div>
+        </div>
+        <button id="logout-btn" class="logout-btn">Logout</button>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <div>
+          <h1 id="page-title">Dashboard</h1>
+          <p class="topbar-subtitle">Welcome back, <span id="topbar-user-name">Demo User</span></p>
+        </div>
+
+        <div class="topbar-actions">
+          <input type="text" placeholder="Search..." class="search-box" />
+          <button class="primary-btn" id="open-task-modal-btn">+ New Task</button>
+        </div>
+      </header>
+
+      <section id="dashboard-section" class="content-section active-section">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <h3>Total Tasks</h3>
+            <p id="total-tasks-count">0</p>
+            <span>All assigned tasks</span>
+          </div>
+
+          <div class="stat-card">
+            <h3>In Progress</h3>
+            <p id="in-progress-count">0</p>
+            <span>Tasks being worked on</span>
+          </div>
+
+          <div class="stat-card">
+            <h3>Completed</h3>
+            <p id="completed-count">0</p>
+            <span>Finished successfully</span>
+          </div>
+
+          <div class="stat-card">
+            <h3>Notifications</h3>
+            <p id="notifications-count">0</p>
+            <span>Unread alerts</span>
+          </div>
+        </div>
+
+        <div class="dashboard-grid">
+          <div class="panel">
+            <div class="panel-header">
+              <h3>Recent Tasks</h3>
+            </div>
+            <div class="task-list" id="recent-task-list"></div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header">
+              <h3>Quick Team Chat Preview</h3>
+            </div>
+            <div class="chat-preview">
+              <div class="message-bubble received">
+                <strong>Rahul:</strong> Please review the latest task updates.
+              </div>
+              <div class="message-bubble sent">
+                <strong>You:</strong> Sure, I will check them today.
+              </div>
+              <div class="message-bubble received">
+                <strong>Sneha:</strong> Pricing sheet has been updated.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="chat-section" class="content-section">
+        <div class="panel full-height">
+          <div class="panel-header">
+            <h3>1-to-1 Chat</h3>
+          </div>
+
+          <div class="chat-layout">
+            <div class="chat-users" id="chat-users-list"></div>
+
+            <div class="chat-window">
+              <div class="chat-messages" id="chat-messages">
+                <div class="message-bubble received"><strong>Rahul:</strong> Hi, please share the task status.</div>
+                <div class="message-bubble sent"><strong>You:</strong> I am working on it.</div>
+                <div class="message-bubble received"><strong>Amit:</strong> Okay, please update by evening.</div>
+              </div>
+
+              <div class="chat-input-row">
+                <input type="text" id="chat-message-input" placeholder="Type your message..." />
+                <button class="primary-btn" id="send-message-btn">Send</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="tasks-section" class="content-section">
+        <div class="panel">
+          <div class="panel-header">
+            <h3>Task Board</h3>
+          </div>
+
+          <div class="task-board">
+            <div class="task-column">
+              <h4>Pending</h4>
+              <div id="pending-task-column"></div>
+            </div>
+
+            <div class="task-column">
+              <h4>In Progress</h4>
+              <div id="inprogress-task-column"></div>
+            </div>
+
+            <div class="task-column">
+              <h4>Completed</h4>
+              <div id="completed-task-column"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="notifications-section" class="content-section">
+        <div class="panel">
+          <div class="panel-header">
+            <h3>Notifications</h3>
+          </div>
+
+          <div class="notification-list" id="notification-list"></div>
+        </div>
+      </section>
+
+      <section id="team-section" class="content-section">
+        <div class="panel">
+          <div class="panel-header">
+            <h3>Team Members</h3>
+          </div>
+
+          <div class="team-grid">
+            <div class="team-card">
+              <div class="team-avatar">R</div>
+              <h4>Rahul</h4>
+              <p>Project Manager</p>
+            </div>
+
+            <div class="team-card">
+              <div class="team-avatar">S</div>
+              <h4>Sneha</h4>
+              <p>Business Analyst</p>
+            </div>
+
+            <div class="team-card">
+              <div class="team-avatar">A</div>
+              <h4>Amit</h4>
+              <p>Developer</p>
+            </div>
+
+            <div class="team-card">
+              <div class="team-avatar">P</div>
+              <h4>Priya</h4>
+              <p>Designer</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="settings-section" class="content-section">
+        <div class="panel">
+          <div class="panel-header">
+            <h3>Settings</h3>
+          </div>
+
+          <div class="settings-box">
+            <p><strong>Browser Notifications</strong></p>
+            <p id="notification-permission-status">Permission status: Not checked</p>
+            <div style="margin-top: 14px; display: flex; gap: 10px; flex-wrap: wrap;">
+              <button class="primary-btn" id="enable-browser-notifications-btn">Enable Notifications</button>
+              <button class="logout-btn" id="disable-browser-notifications-btn" style="max-width: 220px;">
+                Disable Notifications
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
   <div id="task-modal-overlay" class="task-modal-overlay hidden">
     <div class="task-modal">
       <div class="task-modal-header">
@@ -57,7 +311,6 @@
             <input type="date" id="task-deadline" />
           </div>
 
-          <!-- ✅ FIXED SECTION -->
           <div class="form-group">
             <label for="task-assigned-to">Assigned To</label>
             <select id="task-assigned-to">
