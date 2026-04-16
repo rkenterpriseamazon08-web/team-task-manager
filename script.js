@@ -449,9 +449,22 @@ function renderAllTaskUI() {
 }
 
 function openTaskModal() {
-  if (taskModalOverlay) taskModalOverlay.classList.remove("hidden");
-}
+  if (taskModalOverlay) {
+    taskModalOverlay.classList.remove("hidden");
+  }
 
+  if (taskStatusInput && !taskStatusInput.value) {
+    taskStatusInput.value = "Pending";
+  }
+
+  if (taskSeverityInput && !taskSeverityInput.value) {
+    taskSeverityInput.value = "Medium";
+  }
+
+  setTimeout(() => {
+    taskTitleInput?.focus();
+  }, 50);
+}
 function closeTaskModal() {
   if (taskModalOverlay) taskModalOverlay.classList.add("hidden");
   if (taskForm) taskForm.reset();
@@ -462,19 +475,18 @@ function createNewTask(taskData) {
 
   const newTask = {
     id: Date.now(),
-    title: taskData.title,
-    description: taskData.description,
+    title: taskData.title.trim(),
+    description: taskData.description.trim(),
     severity: taskData.severity,
     status: taskData.status,
     deadline: taskData.deadline,
-    assignedTo: taskData.assignedTo
+    assignedTo: taskData.assignedTo.trim()
   };
 
   tasks.push(newTask);
   saveTasksToStorage(tasks);
   renderAllTaskUI();
 }
-
 // -----------------------------
 // LOGIN - FIXED VERSION
 // -----------------------------
@@ -582,32 +594,72 @@ if (chatInput) {
   });
 }
 
+function getTaskFormValues() {
+  return {
+    title: taskTitleInput?.value.trim() || "",
+    description: taskDescriptionInput?.value.trim() || "",
+    severity: taskSeverityInput?.value || "",
+    status: taskStatusInput?.value || "",
+    deadline: taskDeadlineInput?.value || "",
+    assignedTo: taskAssignedToInput?.value.trim() || ""
+  };
+}
+
+function validateTaskForm(taskData) {
+  if (!taskData.title) {
+    alert("Please enter task title.");
+    taskTitleInput?.focus();
+    return false;
+  }
+
+  if (!taskData.description) {
+    alert("Please enter task description.");
+    taskDescriptionInput?.focus();
+    return false;
+  }
+
+  if (!taskData.severity) {
+    alert("Please select severity.");
+    taskSeverityInput?.focus();
+    return false;
+  }
+
+  if (!taskData.status) {
+    alert("Please select status.");
+    taskStatusInput?.focus();
+    return false;
+  }
+
+  if (!taskData.deadline) {
+    alert("Please select deadline.");
+    taskDeadlineInput?.focus();
+    return false;
+  }
+
+  if (!taskData.assignedTo) {
+    alert("Please enter assigned member name.");
+    taskAssignedToInput?.focus();
+    return false;
+  }
+
+  return true;
+}
+
+function submitTaskForm() {
+  const taskData = getTaskFormValues();
+
+  if (!validateTaskForm(taskData)) {
+    return;
+  }
+
+  createNewTask(taskData);
+  closeTaskModal();
+}
+
 if (taskForm) {
   taskForm.addEventListener("submit", function (event) {
     event.preventDefault();
-
-    const title = taskTitleInput?.value.trim() || "";
-    const description = taskDescriptionInput?.value.trim() || "";
-    const severity = taskSeverityInput?.value || "";
-    const status = taskStatusInput?.value || "";
-    const deadline = taskDeadlineInput?.value || "";
-    const assignedTo = taskAssignedToInput?.value.trim() || "";
-
-    if (!title || !description || !severity || !status || !deadline || !assignedTo) {
-      alert("Please fill all task fields.");
-      return;
-    }
-
-    createNewTask({
-      title,
-      description,
-      severity,
-      status,
-      deadline,
-      assignedTo
-    });
-
-    closeTaskModal();
+    submitTaskForm();
   });
 }
 
@@ -626,6 +678,43 @@ if (taskModalOverlay) {
     }
   });
 }
+
+// Enter key support for task modal
+const taskModalInputs = [
+  taskTitleInput,
+  taskSeverityInput,
+  taskStatusInput,
+  taskDeadlineInput,
+  taskAssignedToInput
+];
+
+taskModalInputs.forEach((field) => {
+  if (field) {
+    field.addEventListener("keydown", function (event) {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        submitTaskForm();
+      }
+    });
+  }
+});
+
+// Ctrl + Enter inside description textarea
+if (taskDescriptionInput) {
+  taskDescriptionInput.addEventListener("keydown", function (event) {
+    if (event.key === "Enter" && event.ctrlKey) {
+      event.preventDefault();
+      submitTaskForm();
+    }
+  });
+}
+
+// Escape key closes modal
+document.addEventListener("keydown", function (event) {
+  if (event.key === "Escape" && taskModalOverlay && !taskModalOverlay.classList.contains("hidden")) {
+    closeTaskModal();
+  }
+});
 
 // -----------------------------
 // INIT
