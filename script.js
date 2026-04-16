@@ -497,10 +497,10 @@ async function handleLoginSubmit(event) {
     return;
   }
 
-  if (APPS_SCRIPT_URL === "https://script.google.com/macros/s/AKfycbyvsOgYah2WrM4_r_yGMlZrRgg-HAs0A9_ZGt9n5yjfyxS8yhpC4eAlEDWAElJBzFKDsQ/exec") {
-    setLoginMessage("https://script.google.com/macros/s/AKfycbyvsOgYah2WrM4_r_yGMlZrRgg-HAs0A9_ZGt9n5yjfyxS8yhpC4eAlEDWAElJBzFKDsQ/exec.", "error");
-    return;
-  }
+ if (APPS_SCRIPT_URL === "PASTE_YOUR_WEB_APP_URL_HERE") {
+  setLoginMessage("Please paste your Apps Script Web App URL in script.js first.", "error");
+  return;
+}
 
   try {
     if (loginBtn) {
