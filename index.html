@@ -244,24 +244,50 @@
         </div>
       </section>
 
-      <section id="settings-section" class="content-section">
-        <div class="panel">
-          <div class="panel-header">
-            <h3>Settings</h3>
-          </div>
+  <section id="settings-section" class="content-section">
+  <div class="panel">
+    <div class="panel-header">
+      <h3>Settings</h3>
+    </div>
 
-          <div class="settings-box">
-            <p><strong>Browser Notifications</strong></p>
-            <p id="notification-permission-status">Permission status: Not checked</p>
-            <div style="margin-top: 14px; display: flex; gap: 10px; flex-wrap: wrap;">
-              <button class="primary-btn" id="enable-browser-notifications-btn">Enable Notifications</button>
-              <button class="logout-btn" id="disable-browser-notifications-btn" style="max-width: 220px;">
-                Disable Notifications
-              </button>
-            </div>
-          </div>
+    <div class="settings-grid">
+      <div class="settings-card">
+        <h4>Notifications</h4>
+        <p id="notification-permission-status">Permission status: Not checked</p>
+
+        <div class="settings-actions-row">
+          <button class="primary-btn" id="enable-browser-notifications-btn">Enable Browser Notifications</button>
+          <button class="secondary-btn" id="disable-browser-notifications-btn">Disable Browser Notifications</button>
         </div>
-      </section>
+
+        <label class="settings-toggle">
+          <input type="checkbox" id="in-app-toast-toggle" />
+          <span>Show in-app popup alerts</span>
+        </label>
+
+        <label class="settings-toggle">
+          <input type="checkbox" id="notification-sound-toggle" />
+          <span>Play notification sound</span>
+        </label>
+      </div>
+
+      <div class="settings-card">
+        <h4>Storage & App Preferences</h4>
+        <p id="storage-status-text">Local storage status: Active</p>
+
+        <label class="settings-toggle">
+          <input type="checkbox" id="remember-data-toggle" checked disabled />
+          <span>Remember app data on this device</span>
+        </label>
+
+        <div class="settings-actions-row">
+          <button class="secondary-btn" id="clear-notifications-btn">Clear Notifications</button>
+          <button class="danger-btn" id="reset-app-data-btn">Reset App Data</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
     </main>
   </div>
 
@@ -327,7 +353,8 @@
       </form>
     </div>
   </div>
-
+  
+<div id="toast-container" class="toast-container"></div>
   <script src="script.js"></script>
 </body>
 </html>
