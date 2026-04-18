@@ -1,5 +1,4 @@
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyvsOgYah2WrM4_r_yGMlZrRgg-HAs0A9_ZGt9n5yjfyxS8yhpC4eAlEDWAElJBzFKDsQ/exec";
-const APP_STATE_KEY = "ttm_app_state_v3";
 
 // -----------------------------
 // BASIC ELEMENTS
@@ -61,12 +60,17 @@ const notificationList = document.getElementById("notification-list");
 const enableBrowserNotificationsBtn = document.getElementById("enable-browser-notifications-btn");
 const disableBrowserNotificationsBtn = document.getElementById("disable-browser-notifications-btn");
 const notificationPermissionStatus = document.getElementById("notification-permission-status");
-const inAppToastToggle = document.getElementById("in-app-toast-toggle");
-const notificationSoundToggle = document.getElementById("notification-sound-toggle");
-const clearNotificationsBtn = document.getElementById("clear-notifications-btn");
-const resetAppDataBtn = document.getElementById("reset-app-data-btn");
-const storageStatusText = document.getElementById("storage-status-text");
-const toastContainer = document.getElementById("toast-container");
+
+// -----------------------------
+// TOAST CONTAINER
+// -----------------------------
+let toastContainer = document.getElementById("toast-container");
+if (!toastContainer) {
+  toastContainer = document.createElement("div");
+  toastContainer.id = "toast-container";
+  toastContainer.className = "toast-container";
+  document.body.appendChild(toastContainer);
+}
 
 // -----------------------------
 // DATA
@@ -129,12 +133,6 @@ const defaultNotifications = [
   }
 ];
 
-const defaultSettings = {
-  browserNotificationsEnabled: false,
-  inAppToastsEnabled: true,
-  notificationSoundEnabled: false
-};
-
 const replyRules = [
   {
     keywords: ["hello", "hi", "hey", "hellooo", "hii"],
@@ -194,113 +192,6 @@ const defaultReplies = [
 ];
 
 // -----------------------------
-// APP STATE
-// -----------------------------
-function deepCopy(value) {
-  return JSON.parse(JSON.stringify(value));
-}
-
-function buildDefaultState() {
-  return {
-    tasks: deepCopy(defaultTasks),
-    notifications: deepCopy(defaultNotifications),
-    settings: deepCopy(defaultSettings)
-  };
-}
-
-function migrateLegacyState() {
-  const legacyTasks = localStorage.getItem("ttm_tasks");
-  const legacyNotifications = localStorage.getItem("ttm_notifications");
-  const legacyBrowserToggle = localStorage.getItem("ttm_browser_notifications_enabled");
-
-  const state = buildDefaultState();
-
-  if (legacyTasks) {
-    try {
-      state.tasks = JSON.parse(legacyTasks);
-    } catch {}
-  }
-
-  if (legacyNotifications) {
-    try {
-      state.notifications = JSON.parse(legacyNotifications);
-    } catch {}
-  }
-
-  if (legacyBrowserToggle !== null) {
-    state.settings.browserNotificationsEnabled = legacyBrowserToggle === "true";
-  }
-
-  return state;
-}
-
-function loadAppState() {
-  const savedState = localStorage.getItem(APP_STATE_KEY);
-
-  if (savedState) {
-    try {
-      const parsed = JSON.parse(savedState);
-      return {
-        tasks: Array.isArray(parsed.tasks) ? parsed.tasks : deepCopy(defaultTasks),
-        notifications: Array.isArray(parsed.notifications) ? parsed.notifications : deepCopy(defaultNotifications),
-        settings: {
-          ...deepCopy(defaultSettings),
-          ...(parsed.settings || {})
-        }
-      };
-    } catch {}
-  }
-
-  const migratedState = migrateLegacyState();
-  localStorage.setItem(APP_STATE_KEY, JSON.stringify(migratedState));
-  return migratedState;
-}
-
-let appState = loadAppState();
-
-function persistAppState() {
-  localStorage.setItem(APP_STATE_KEY, JSON.stringify(appState));
-
-  // backward compatibility
-  localStorage.setItem("ttm_tasks", JSON.stringify(appState.tasks));
-  localStorage.setItem("ttm_notifications", JSON.stringify(appState.notifications));
-  localStorage.setItem(
-    "ttm_browser_notifications_enabled",
-    appState.settings.browserNotificationsEnabled ? "true" : "false"
-  );
-}
-
-function getTasksFromStorage() {
-  return appState.tasks;
-}
-
-function saveTasksToStorage(tasks) {
-  appState.tasks = tasks;
-  persistAppState();
-}
-
-function getNotificationsFromStorage() {
-  return appState.notifications;
-}
-
-function saveNotificationsToStorage(notifications) {
-  appState.notifications = notifications;
-  persistAppState();
-}
-
-function getSettingsFromStorage() {
-  return appState.settings;
-}
-
-function saveSettingsToStorage(settings) {
-  appState.settings = {
-    ...appState.settings,
-    ...settings
-  };
-  persistAppState();
-}
-
-// -----------------------------
 // UI HELPERS
 // -----------------------------
 function showLoginScreen() {
@@ -331,8 +222,29 @@ function updateUserUI(user) {
   if (userAvatar) userAvatar.textContent = firstLetter;
 }
 
+function showToast(title, message) {
+  if (!toastContainer) return;
+
+  const toast = document.createElement("div");
+  toast.className = "toast-item";
+  toast.innerHTML = `
+    <h4>${title}</h4>
+    <p>${message}</p>
+  `;
+
+  toastContainer.appendChild(toast);
+
+  setTimeout(() => {
+    toast.style.opacity = "0";
+    toast.style.transform = "translateX(18px)";
+    setTimeout(() => {
+      toast.remove();
+    }, 250);
+  }, 3500);
+}
+
 // -----------------------------
-// LOGIN USER STORAGE
+// LOCAL STORAGE HELPERS
 // -----------------------------
 function saveUserToLocalStorage(user) {
   localStorage.setItem("ttm_logged_in_user", JSON.stringify(user));
@@ -351,6 +263,46 @@ function getUserFromLocalStorage() {
 
 function clearUserFromLocalStorage() {
   localStorage.removeItem("ttm_logged_in_user");
+}
+
+function getTasksFromStorage() {
+  const savedTasks = localStorage.getItem("ttm_tasks");
+
+  if (!savedTasks) {
+    localStorage.setItem("ttm_tasks", JSON.stringify(defaultTasks));
+    return [...defaultTasks];
+  }
+
+  try {
+    return JSON.parse(savedTasks);
+  } catch {
+    localStorage.setItem("ttm_tasks", JSON.stringify(defaultTasks));
+    return [...defaultTasks];
+  }
+}
+
+function saveTasksToStorage(tasks) {
+  localStorage.setItem("ttm_tasks", JSON.stringify(tasks));
+}
+
+function getNotificationsFromStorage() {
+  const savedNotifications = localStorage.getItem("ttm_notifications");
+
+  if (!savedNotifications) {
+    localStorage.setItem("ttm_notifications", JSON.stringify(defaultNotifications));
+    return [...defaultNotifications];
+  }
+
+  try {
+    return JSON.parse(savedNotifications);
+  } catch {
+    localStorage.setItem("ttm_notifications", JSON.stringify(defaultNotifications));
+    return [...defaultNotifications];
+  }
+}
+
+function saveNotificationsToStorage(notifications) {
+  localStorage.setItem("ttm_notifications", JSON.stringify(notifications));
 }
 
 // -----------------------------
@@ -463,7 +415,7 @@ function simulateGroupReplies(userMessage) {
     const replyText = generateReplyText(userMessage);
     setTimeout(() => {
       addBotMessage(member.name, replyText);
-      addNotification("Group reply", `${member.name}: ${replyText}`);
+      addNotification("New group reply", `${member.name}: ${replyText}`);
     }, 1000 + index * 1200);
   });
 }
@@ -527,46 +479,13 @@ function renderNotifications() {
   });
 }
 
-function showInAppToast(title, message) {
-  if (!toastContainer) return;
-  if (!getSettingsFromStorage().inAppToastsEnabled) return;
-
-  const toast = document.createElement("div");
-  toast.className = "toast-item";
-  toast.innerHTML = `
-    <h4>${title}</h4>
-    <p>${message}</p>
-  `;
-
-  toastContainer.appendChild(toast);
-
-  setTimeout(() => {
-    toast.remove();
-  }, 4000);
-}
-
-function playNotificationSound() {
-  if (!getSettingsFromStorage().notificationSoundEnabled) return;
-
-  try {
-    const context = new (window.AudioContext || window.webkitAudioContext)();
-    const oscillator = context.createOscillator();
-    const gainNode = context.createGain();
-
-    oscillator.type = "sine";
-    oscillator.frequency.setValueAtTime(880, context.currentTime);
-    gainNode.gain.setValueAtTime(0.03, context.currentTime);
-
-    oscillator.connect(gainNode);
-    gainNode.connect(context.destination);
-
-    oscillator.start();
-    oscillator.stop(context.currentTime + 0.12);
-  } catch {}
-}
-
 function isBrowserNotificationEnabled() {
-  return getSettingsFromStorage().browserNotificationsEnabled === true;
+  return localStorage.getItem("ttm_browser_notifications_enabled") === "true";
+}
+
+function setBrowserNotificationEnabled(value) {
+  localStorage.setItem("ttm_browser_notifications_enabled", value ? "true" : "false");
+  updateNotificationPermissionUI();
 }
 
 function updateNotificationPermissionUI() {
@@ -577,22 +496,8 @@ function updateNotificationPermissionUI() {
     permissionText = `Permission status: ${Notification.permission}`;
   }
 
-  const settings = getSettingsFromStorage();
-  const enabledText = settings.browserNotificationsEnabled ? "Enabled" : "Disabled";
-
+  const enabledText = isBrowserNotificationEnabled() ? "Enabled" : "Disabled";
   notificationPermissionStatus.textContent = `${permissionText} | App notifications: ${enabledText}`;
-
-  if (inAppToastToggle) {
-    inAppToastToggle.checked = settings.inAppToastsEnabled;
-  }
-
-  if (notificationSoundToggle) {
-    notificationSoundToggle.checked = settings.notificationSoundEnabled;
-  }
-
-  if (storageStatusText) {
-    storageStatusText.textContent = "Local storage status: Active and persistent on this browser/device";
-  }
 }
 
 async function enableBrowserNotifications() {
@@ -604,32 +509,29 @@ async function enableBrowserNotifications() {
   const permission = await Notification.requestPermission();
 
   if (permission === "granted") {
-    saveSettingsToStorage({ browserNotificationsEnabled: true });
-    updateNotificationPermissionUI();
-    showInAppToast("Notifications enabled", "Browser notifications have been enabled.");
+    setBrowserNotificationEnabled(true);
+    alert("Browser notifications enabled.");
   } else {
-    saveSettingsToStorage({ browserNotificationsEnabled: false });
-    updateNotificationPermissionUI();
+    setBrowserNotificationEnabled(false);
     alert("Notification permission was not granted.");
   }
 }
 
 function disableBrowserNotifications() {
-  saveSettingsToStorage({ browserNotificationsEnabled: false });
-  updateNotificationPermissionUI();
-  showInAppToast("Notifications disabled", "Browser notifications have been turned off.");
+  setBrowserNotificationEnabled(false);
+  alert("Browser notifications disabled for this app.");
 }
 
 function triggerBrowserNotification(title, message) {
   if (!("Notification" in window)) return;
   if (Notification.permission !== "granted") return;
   if (!isBrowserNotificationEnabled()) return;
+  if (document.visibilityState === "visible") return;
 
-  try {
-    new Notification(title, {
-      body: message
-    });
-  } catch {}
+  new Notification(title, {
+    body: message,
+    icon: ""
+  });
 }
 
 function addNotification(title, message) {
@@ -646,16 +548,8 @@ function addNotification(title, message) {
   saveNotificationsToStorage(notifications);
   renderNotifications();
   updateDashboardCounts();
-  showInAppToast(title, message);
   triggerBrowserNotification(title, message);
-  playNotificationSound();
-}
-
-function clearAllNotifications() {
-  saveNotificationsToStorage([]);
-  renderNotifications();
-  updateDashboardCounts();
-  showInAppToast("Notifications cleared", "All notifications have been removed.");
+  showToast(title, message);
 }
 
 // -----------------------------
@@ -776,4 +670,304 @@ function openTaskModal() {
 }
 
 function closeTaskModal() {
-  if (
+  if (taskModalOverlay) taskModalOverlay.classList.add("hidden");
+  if (taskForm) taskForm.reset();
+}
+
+function createNewTask(taskData) {
+  const tasks = getTasksFromStorage();
+
+  const newTask = {
+    id: Date.now(),
+    title: taskData.title.trim(),
+    description: taskData.description.trim(),
+    severity: taskData.severity,
+    status: taskData.status,
+    deadline: taskData.deadline,
+    assignedTo: taskData.assignedTo.trim()
+  };
+
+  tasks.push(newTask);
+  saveTasksToStorage(tasks);
+  renderAllTaskUI();
+
+  addNotification(
+    "New task created",
+    `${taskData.title} was assigned to ${taskData.assignedTo}`
+  );
+}
+
+function getTaskFormValues() {
+  return {
+    title: taskTitleInput?.value.trim() || "",
+    description: taskDescriptionInput?.value.trim() || "",
+    severity: taskSeverityInput?.value || "",
+    status: taskStatusInput?.value || "",
+    deadline: taskDeadlineInput?.value || "",
+    assignedTo: taskAssignedToInput?.value.trim() || ""
+  };
+}
+
+function validateTaskForm(taskData) {
+  if (!taskData.title) {
+    alert("Please enter task title.");
+    taskTitleInput?.focus();
+    return false;
+  }
+
+  if (!taskData.description) {
+    alert("Please enter task description.");
+    taskDescriptionInput?.focus();
+    return false;
+  }
+
+  if (!taskData.severity) {
+    alert("Please select severity.");
+    taskSeverityInput?.focus();
+    return false;
+  }
+
+  if (!taskData.status) {
+    alert("Please select status.");
+    taskStatusInput?.focus();
+    return false;
+  }
+
+  if (!taskData.deadline) {
+    alert("Please select deadline.");
+    taskDeadlineInput?.focus();
+    return false;
+  }
+
+  if (!taskData.assignedTo) {
+    alert("Please enter assigned member name.");
+    taskAssignedToInput?.focus();
+    return false;
+  }
+
+  return true;
+}
+
+function submitTaskForm() {
+  const taskData = getTaskFormValues();
+
+  if (!validateTaskForm(taskData)) {
+    return;
+  }
+
+  createNewTask(taskData);
+  closeTaskModal();
+}
+
+// -----------------------------
+// LOGIN
+// -----------------------------
+async function handleLoginSubmit(event) {
+  if (event && typeof event.preventDefault === "function") {
+    event.preventDefault();
+  }
+
+  const emailField = document.getElementById("email");
+  const passwordField = document.getElementById("password");
+
+  const email = emailField ? emailField.value.trim() : "";
+  const password = passwordField ? passwordField.value.trim() : "";
+
+  console.log("Email entered:", email);
+  console.log("Password entered:", password);
+
+  if (!email || !password) {
+    setLoginMessage("Please enter both email and password.", "error");
+    return;
+  }
+
+  if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL === "PASTE_YOUR_WEB_APP_URL_HERE") {
+    setLoginMessage("Apps Script URL is missing in script.js.", "error");
+    return;
+  }
+
+  try {
+    if (loginBtn) {
+      loginBtn.disabled = true;
+      loginBtn.textContent = "Logging in...";
+    }
+
+    setLoginMessage("Checking your credentials...");
+
+    const response = await fetch(APPS_SCRIPT_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "text/plain;charset=utf-8"
+      },
+      body: JSON.stringify({
+        email: email,
+        password: password
+      })
+    });
+
+    const result = await response.json();
+    console.log("Login API result:", result);
+
+    if (result.success) {
+      const user = result.user || {
+        email,
+        name: "User",
+        role: "Employee",
+        status: "Active"
+      };
+
+      saveUserToLocalStorage(user);
+      updateUserUI(user);
+      setLoginMessage("Login successful!", "success");
+
+      setTimeout(() => {
+        showAppScreen();
+        if (loginForm) loginForm.reset();
+        setLoginMessage("");
+      }, 400);
+    } else {
+      setLoginMessage(result.message || "Login failed.", "error");
+    }
+  } catch (error) {
+    console.error("Login error:", error);
+    setLoginMessage("Unable to connect to server. Please check your Apps Script URL and deployment.", "error");
+  } finally {
+    if (loginBtn) {
+      loginBtn.disabled = false;
+      loginBtn.textContent = "Login";
+    }
+  }
+}
+
+// -----------------------------
+// EVENTS
+// -----------------------------
+if (loginBtn) {
+  loginBtn.addEventListener("click", function () {
+    handleLoginSubmit({
+      preventDefault: function () {}
+    });
+  });
+}
+
+const loginEmailInput = document.getElementById("email");
+const loginPasswordInput = document.getElementById("password");
+
+[loginEmailInput, loginPasswordInput].forEach((field) => {
+  if (field) {
+    field.addEventListener("keydown", function (event) {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        handleLoginSubmit({
+          preventDefault: function () {}
+        });
+      }
+    });
+  }
+});
+
+if (logoutBtn) {
+  logoutBtn.addEventListener("click", function () {
+    clearUserFromLocalStorage();
+    showLoginScreen();
+  });
+}
+
+if (sendMessageBtn) {
+  sendMessageBtn.addEventListener("click", sendMessage);
+}
+
+if (chatInput) {
+  chatInput.addEventListener("keypress", function (event) {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      sendMessage();
+    }
+  });
+}
+
+if (taskForm) {
+  taskForm.addEventListener("submit", function (event) {
+    event.preventDefault();
+    submitTaskForm();
+  });
+}
+
+if (openTaskModalBtn) {
+  openTaskModalBtn.addEventListener("click", openTaskModal);
+}
+
+if (closeTaskModalBtn) {
+  closeTaskModalBtn.addEventListener("click", closeTaskModal);
+}
+
+if (taskModalOverlay) {
+  taskModalOverlay.addEventListener("click", function (event) {
+    if (event.target === taskModalOverlay) {
+      closeTaskModal();
+    }
+  });
+}
+
+const taskModalInputs = [
+  taskTitleInput,
+  taskSeverityInput,
+  taskStatusInput,
+  taskDeadlineInput,
+  taskAssignedToInput
+];
+
+taskModalInputs.forEach((field) => {
+  if (field) {
+    field.addEventListener("keydown", function (event) {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        submitTaskForm();
+      }
+    });
+  }
+});
+
+if (taskDescriptionInput) {
+  taskDescriptionInput.addEventListener("keydown", function (event) {
+    if (event.key === "Enter" && event.ctrlKey) {
+      event.preventDefault();
+      submitTaskForm();
+    }
+  });
+}
+
+document.addEventListener("keydown", function (event) {
+  if (event.key === "Escape" && taskModalOverlay && !taskModalOverlay.classList.contains("hidden")) {
+    closeTaskModal();
+  }
+});
+
+if (enableBrowserNotificationsBtn) {
+  enableBrowserNotificationsBtn.addEventListener("click", enableBrowserNotifications);
+}
+
+if (disableBrowserNotificationsBtn) {
+  disableBrowserNotificationsBtn.addEventListener("click", disableBrowserNotifications);
+}
+
+// -----------------------------
+// INIT
+// -----------------------------
+function checkExistingLogin() {
+  const savedUser = getUserFromLocalStorage();
+
+  if (savedUser) {
+    updateUserUI(savedUser);
+    showAppScreen();
+  } else {
+    showLoginScreen();
+  }
+}
+
+setupNavigation();
+checkExistingLogin();
+renderChatUsers();
+renderAllTaskUI();
+renderNotifications();
+updateNotificationPermissionUI();
