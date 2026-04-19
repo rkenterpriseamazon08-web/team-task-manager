@@ -125,33 +125,34 @@ function startGroupChatListener(room) {
     orderBy("timestamp", "asc")
   );
 
-  unsubscribeGroupListener = onSnapshot(
-    q,
-    (snapshot) => {
-      const messages = [];
+  unsubscribeGroupListener =onSnapshot(
+  q,
+  (snapshot) => {
+    const messages = [];
 
-      snapshot.forEach((doc) => {
-        const data = doc.data();
-        messages.push({
-          sender: data.sender || "Unknown",
-          email: data.email || "",
-          text: data.text || "",
-          room: data.room || "general",
-          timestamp: data.timestamp || null
-        });
+    snapshot.forEach((doc) => {
+      const data = doc.data();
+      messages.push({
+        sender: data.sender || "Unknown",
+        email: data.email || "",
+        text: data.text || "",
+        room: data.room || "general",
+        timestamp: data.timestamp || null
       });
+    });
 
-      renderGroupChatMessages(messages);
-    },
-    (error) => {
-      console.error("Group chat listener error:", error);
-      groupChatMessages.innerHTML = `
-        <div class="message-bubble received">
-          <strong>System:</strong> Unable to load group chat messages.
-        </div>
-      `;
-    }
-  );
+    renderGroupChatMessages(messages);
+  },
+  (error) => {
+    console.error("Group chat listener error:", error);
+
+    groupChatMessages.innerHTML = `
+      <div class="message-bubble received">
+        <strong>System:</strong> ${error.message}
+      </div>
+    `;
+  }
+);
 }
 
 // -----------------------------
