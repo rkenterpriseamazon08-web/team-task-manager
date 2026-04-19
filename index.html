@@ -92,7 +92,10 @@
         </div>
 
         <div class="topbar-actions">
-          <input type="text" placeholder="Search..." class="search-box" />
+          <div class="search-wrap">
+            <input type="text" id="task-search-input" placeholder="Search tasks, assignees..." class="search-box" />
+            <div id="task-search-results" class="search-results hidden"></div>
+          </div>
           <button class="primary-btn" id="open-task-modal-btn">+ New Task</button>
         </div>
       </header>
@@ -121,6 +124,29 @@
             <h3>Notifications</h3>
             <p id="notifications-count">0</p>
             <span>Unread alerts</span>
+          </div>
+        </div>
+
+        <div class="focus-grid">
+          <div class="focus-card">
+            <span>Due Soon</span>
+            <strong id="due-soon-count">0</strong>
+            <p>Tasks due in the next 3 days</p>
+          </div>
+          <div class="focus-card">
+            <span>High Priority</span>
+            <strong id="high-priority-count">0</strong>
+            <p>Important tasks needing attention</p>
+          </div>
+          <div class="focus-card">
+            <span>Completion Rate</span>
+            <strong id="completion-rate">0%</strong>
+            <p>Finished tasks across the board</p>
+          </div>
+          <div class="focus-card">
+            <span>Team Load</span>
+            <strong id="team-load-summary">0</strong>
+            <p>Active assignments still open</p>
           </div>
         </div>
 

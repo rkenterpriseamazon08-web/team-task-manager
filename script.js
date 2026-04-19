@@ -53,6 +53,12 @@ const totalTasksCount = document.getElementById("total-tasks-count");
 const inProgressCount = document.getElementById("in-progress-count");
 const completedCount = document.getElementById("completed-count");
 const notificationsCount = document.getElementById("notifications-count");
+const dueSoonCount = document.getElementById("due-soon-count");
+const highPriorityCount = document.getElementById("high-priority-count");
+const completionRate = document.getElementById("completion-rate");
+const teamLoadSummary = document.getElementById("team-load-summary");
+const taskSearchInput = document.getElementById("task-search-input");
+const taskSearchResults = document.getElementById("task-search-results");
 
 // -----------------------------
 // NOTIFICATION ELEMENTS
@@ -671,6 +677,19 @@ function formatDate(dateString) {
   });
 }
 
+function isTaskDueSoon(task) {
+  if (!task.deadline || task.status === "Completed") return false;
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const deadline = new Date(`${task.deadline}T00:00:00`);
+  if (Number.isNaN(deadline.getTime())) return false;
+
+  const diffInDays = Math.ceil((deadline - today) / (1000 * 60 * 60 * 24));
+  return diffInDays >= 0 && diffInDays <= 3;
+}
+
 function renderRecentTasks() {
   if (!recentTaskList) return;
 
@@ -735,17 +754,58 @@ function updateDashboardCounts() {
   const inProgress = tasks.filter((task) => task.status === "In Progress").length;
   const completed = tasks.filter((task) => task.status === "Completed").length;
   const notifications = getNotificationsFromStorage().length;
+  const dueSoon = tasks.filter(isTaskDueSoon).length;
+  const highPriority = tasks.filter((task) => task.severity === "High" && task.status !== "Completed").length;
+  const activeAssignments = tasks.filter((task) => task.status !== "Completed").length;
+  const completionPercentage = total ? Math.round((completed / total) * 100) : 0;
 
   if (totalTasksCount) totalTasksCount.textContent = total;
   if (inProgressCount) inProgressCount.textContent = inProgress;
   if (completedCount) completedCount.textContent = completed;
   if (notificationsCount) notificationsCount.textContent = notifications;
+  if (dueSoonCount) dueSoonCount.textContent = dueSoon;
+  if (highPriorityCount) highPriorityCount.textContent = highPriority;
+  if (completionRate) completionRate.textContent = `${completionPercentage}%`;
+  if (teamLoadSummary) teamLoadSummary.textContent = activeAssignments;
 }
 
 function renderAllTaskUI() {
   renderRecentTasks();
   renderTaskBoard();
   updateDashboardCounts();
+}
+
+function renderTaskSearchResults(query) {
+  if (!taskSearchResults) return;
+
+  const normalizedQuery = query.trim().toLowerCase();
+  if (!normalizedQuery) {
+    taskSearchResults.classList.add("hidden");
+    taskSearchResults.innerHTML = "";
+    return;
+  }
+
+  const matches = getTasksFromStorage()
+    .filter((task) => (
+      task.title.toLowerCase().includes(normalizedQuery) ||
+      task.status.toLowerCase().includes(normalizedQuery) ||
+      task.severity.toLowerCase().includes(normalizedQuery) ||
+      task.assignedTo.toLowerCase().includes(normalizedQuery)
+    ))
+    .slice(0, 6);
+
+  if (matches.length === 0) {
+    taskSearchResults.innerHTML = `<div class="search-result-item">No tasks found</div>`;
+  } else {
+    taskSearchResults.innerHTML = matches.map((task) => `
+      <div class="search-result-item">
+        <strong>${task.title}</strong>
+        <span>${task.status} - ${task.assignedTo} - ${formatDate(task.deadline)}</span>
+      </div>
+    `).join("");
+  }
+
+  taskSearchResults.classList.remove("hidden");
 }
 
 function openTaskModal() {
@@ -1096,6 +1156,18 @@ if (resetAppDataBtn) {
     showToast("App data reset", "Default tasks, chats, and notifications were restored.");
   });
 }
+
+if (taskSearchInput) {
+  taskSearchInput.addEventListener("input", function () {
+    renderTaskSearchResults(taskSearchInput.value);
+  });
+}
+
+document.addEventListener("click", function (event) {
+  if (!taskSearchResults || !taskSearchInput) return;
+  if (event.target === taskSearchInput || taskSearchResults.contains(event.target)) return;
+  taskSearchResults.classList.add("hidden");
+});
 
 // -----------------------------
 // INIT
