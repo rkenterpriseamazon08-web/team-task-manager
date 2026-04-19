@@ -1,37 +1,35 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
-import {
-  getFirestore,
-  collection,
-  addDoc,
-  onSnapshot,
-  query,
-  orderBy,
-  where,
-  serverTimestamp,
-  doc,
-  setDoc,
-  deleteDoc
-} from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+// -----------------------------
+// LOCAL REAL-TIME GROUP CHAT
+// -----------------------------
+// Uses localStorage for persistence and BroadcastChannel for same-browser-tab
+// real-time updates. This avoids external Firebase import failures breaking the UI.
 
-// -----------------------------
-// FIREBASE CONFIG
-// -----------------------------
-const firebaseConfig = {
-  apiKey: "AIzaSyDZWGaDwj3K6ofuTyBMUIjEUg0jn37iSwI",
-  authDomain: "team-task-manager-chat.firebaseapp.com",
-  projectId: "team-task-manager-chat",
-  storageBucket: "team-task-manager-chat.firebasestorage.app",
-  messagingSenderId: "958317121497",
-  appId: "1:958317121497:web:7abd2d7ae0207d344dd3c8",
-  measurementId: "G-3CVLV0J9RP"
+const GROUP_ROOMS = {
+  general: {
+    label: "General",
+    seed: [
+      { sender: "Rahul", text: "Please review the latest task updates." },
+      { sender: "Sneha", text: "Pricing sheet has been updated." }
+    ]
+  },
+  tasks: {
+    label: "Tasks",
+    seed: [
+      { sender: "Rahul", text: "Please update your task status before EOD." },
+      { sender: "Amit", text: "Development tasks are on track." }
+    ]
+  },
+  announcements: {
+    label: "Announcements",
+    seed: [
+      { sender: "Rahul", text: "Sprint review is scheduled for Friday at 3 PM." }
+    ]
+  }
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+const GROUP_STORAGE_KEY = "ttm_group_messages";
+const GROUP_CHANNEL_NAME = "ttm_group_chat_channel";
 
-// -----------------------------
-// GROUP CHAT ELEMENTS
-// -----------------------------
 const groupChatMessages = document.getElementById("group-chat-messages");
 const groupChatInput = document.getElementById("group-chat-input");
 const groupSendBtn = document.getElementById("group-send-btn");
@@ -39,159 +37,122 @@ const groupRoomButtons = document.querySelectorAll(".group-room-btn");
 const activeGroupRoomLabel = document.getElementById("active-group-room-label");
 const groupTypingIndicator = document.getElementById("group-typing-indicator");
 
-// -----------------------------
-// CONFIG
-// -----------------------------
-const GROUP_CHAT_COLLECTION = "groupMessages";
-const GROUP_TYPING_COLLECTION = "groupTypingStatus";
-
-let activeRoom = "general";
-let unsubscribeGroupListener = null;
-let unsubscribeTypingListener = null;
-let typingTimeout = null;
-let isCurrentlyTyping = false;
-
-// -----------------------------
-// HELPERS
-// -----------------------------
-function getCurrentUser() {
-  try {
-    const raw = localStorage.getItem("ttm_logged_in_user");
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
-}
-
-function getCurrentUserName() {
-  const user = getCurrentUser();
-  return (
-    user?.name ||
-    document.getElementById("sidebar-user-name")?.textContent?.trim() ||
-    localStorage.getItem("userName") ||
-    "Demo User"
-  );
-}
-
-function getCurrentUserEmail() {
-  const user = getCurrentUser();
-  return user?.email || "";
-}
-
-function safeNotify(title, message) {
-  if (typeof window.addAppNotification === "function") {
-    window.addAppNotification(title, message);
-  }
-}
-
-function formatRoomName(room) {
-  if (room === "general") return "General";
-  if (room === "tasks") return "Tasks";
-  if (room === "announcements") return "Announcements";
-  return room;
-}
-
-function setActiveRoomUI(room) {
-  groupRoomButtons.forEach((btn) => {
-    btn.classList.toggle("active-room-btn", btn.dataset.room === room);
-  });
-
-  if (activeGroupRoomLabel) {
-    activeGroupRoomLabel.textContent = `Active room: ${formatRoomName(room)}`;
-  }
-}
-
-function escapeHTML(value) {
-  return String(value)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
-}
+let activeGroupRoom = "general";
+let groupChannel = null;
 
 function getInitial(name) {
   return (name || "U").trim().charAt(0).toUpperCase() || "U";
 }
 
-function formatMessageTime(timestamp) {
+function escapeHTML(value) {
+  return String(value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function getCurrentUserName() {
   try {
-    if (!timestamp) return "";
-    const date = typeof timestamp.toDate === "function" ? timestamp.toDate() : new Date(timestamp);
-    return date.toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit"
-    });
+    const savedUser = localStorage.getItem("ttm_logged_in_user");
+    const user = savedUser ? JSON.parse(savedUser) : null;
+    return user?.name || "Demo User";
   } catch {
-    return "";
+    return "Demo User";
   }
 }
 
-function renderTypingIndicator(typingUsers) {
+function saveGroupMessages(messages) {
+  localStorage.setItem(GROUP_STORAGE_KEY, JSON.stringify(messages));
+}
+
+function getSeedMessages() {
+  const initialMessages = {};
+  Object.entries(GROUP_ROOMS).forEach(([room, config]) => {
+    initialMessages[room] = config.seed.map((message, index) => ({
+      id: `${room}-${index + 1}`,
+      sender: message.sender,
+      text: message.text,
+      timestamp: new Date(Date.now() - (config.seed.length - index) * 60000).toISOString()
+    }));
+  });
+  return initialMessages;
+}
+
+function getGroupMessages() {
+  try {
+    const saved = localStorage.getItem(GROUP_STORAGE_KEY);
+    if (saved) return JSON.parse(saved);
+  } catch {
+    // Fall through to defaults.
+  }
+
+  const initialMessages = getSeedMessages();
+  saveGroupMessages(initialMessages);
+  return initialMessages;
+}
+
+function formatMessageTime(timestamp) {
+  const date = new Date(timestamp);
+  if (Number.isNaN(date.getTime())) return "";
+
+  return date.toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+}
+
+function renderTypingIndicator(name = "") {
   if (!groupTypingIndicator) return;
 
-  if (!typingUsers.length) {
+  if (!name) {
     groupTypingIndicator.classList.add("hidden");
     groupTypingIndicator.innerHTML = "";
     return;
   }
 
-  const names = typingUsers.map((name) => escapeHTML(name));
-
-  let label = "";
-  if (names.length === 1) {
-    label = `${names[0]} is typing`;
-  } else if (names.length === 2) {
-    label = `${names[0]} and ${names[1]} are typing`;
-  } else {
-    label = `${names[0]} and ${names.length - 1} others are typing`;
-  }
-
   groupTypingIndicator.classList.remove("hidden");
   groupTypingIndicator.innerHTML = `
     <div class="typing-indicator-inner">
-      <span class="typing-dots">
-        <span></span><span></span><span></span>
-      </span>
-      <span class="typing-indicator-text">${label}...</span>
+      <span class="typing-dots"><span></span><span></span><span></span></span>
+      <span class="typing-indicator-text">${escapeHTML(name)} is typing...</span>
     </div>
   `;
 }
 
-function renderGroupChatMessages(messages) {
+function renderGroupMessages() {
   if (!groupChatMessages) return;
 
-  const myEmail = getCurrentUserEmail();
+  const messagesByRoom = getGroupMessages();
+  const messages = messagesByRoom[activeGroupRoom] || [];
+  const currentUserName = getCurrentUserName();
 
   groupChatMessages.innerHTML = "";
 
   if (messages.length === 0) {
     groupChatMessages.innerHTML = `
       <div class="message-bubble received">
-        <strong>System:</strong> No messages yet in ${formatRoomName(activeRoom)}.
+        <strong>System:</strong> No messages yet in ${escapeHTML(GROUP_ROOMS[activeGroupRoom].label)}.
       </div>
     `;
     return;
   }
 
-  messages.forEach((msg) => {
-    const isMine = msg.email === myEmail;
-    const senderName = msg.sender || "Unknown";
-    const senderLabel = isMine ? `You - ${senderName}` : senderName;
-    const timeLabel = formatMessageTime(msg.timestamp);
-
+  messages.forEach((message) => {
+    const isMine = message.sender === currentUserName || message.sender === "You";
     const row = document.createElement("div");
     row.className = `group-message-row ${isMine ? "mine" : "other"}`;
 
     row.innerHTML = `
-      <div class="group-chat-avatar">${escapeHTML(getInitial(senderName))}</div>
+      <div class="group-chat-avatar">${escapeHTML(getInitial(message.sender))}</div>
       <div class="group-chat-content">
         <div class="group-chat-meta">
-          <span class="group-chat-sender">${escapeHTML(senderLabel)}</span>
-          ${timeLabel ? `<span class="group-chat-time">${escapeHTML(timeLabel)}</span>` : ""}
+          <span class="group-chat-sender">${isMine ? "You" : escapeHTML(message.sender)}</span>
+          <span class="group-chat-time">${escapeHTML(formatMessageTime(message.timestamp))}</span>
         </div>
         <div class="message-bubble ${isMine ? "sent" : "received"}">
-          ${escapeHTML(msg.text)}
+          ${escapeHTML(message.text)}
         </div>
       </div>
     `;
@@ -202,223 +163,106 @@ function renderGroupChatMessages(messages) {
   groupChatMessages.scrollTop = groupChatMessages.scrollHeight;
 }
 
-// -----------------------------
-// REAL-TIME MESSAGE LISTENER
-// -----------------------------
-function startGroupChatListener(room) {
-  if (!groupChatMessages) return;
+function setActiveRoom(room) {
+  if (!GROUP_ROOMS[room]) return;
 
-  if (unsubscribeGroupListener) {
-    unsubscribeGroupListener();
+  activeGroupRoom = room;
+
+  groupRoomButtons.forEach((button) => {
+    button.classList.toggle("active-room-btn", button.dataset.room === room);
+  });
+
+  if (activeGroupRoomLabel) {
+    activeGroupRoomLabel.textContent = `Active room: ${GROUP_ROOMS[room].label}`;
   }
 
-  const q = query(
-    collection(db, GROUP_CHAT_COLLECTION),
-    where("room", "==", room),
-    orderBy("timestamp", "asc")
-  );
-
-  unsubscribeGroupListener = onSnapshot(
-    q,
-    (snapshot) => {
-      const messages = [];
-
-      snapshot.forEach((docSnap) => {
-        const data = docSnap.data();
-        messages.push({
-          sender: data.sender || "Unknown",
-          email: data.email || "",
-          text: data.text || "",
-          room: data.room || "general",
-          timestamp: data.timestamp || null
-        });
-      });
-
-      renderGroupChatMessages(messages);
-    },
-    (error) => {
-      console.error("Group chat listener error:", error);
-
-      groupChatMessages.innerHTML = `
-        <div class="message-bubble received">
-          <strong>System:</strong> ${error.message}
-        </div>
-      `;
-    }
-  );
-}
-
-// -----------------------------
-// REAL-TIME TYPING LISTENER
-// -----------------------------
-function startTypingListener(room) {
-  if (unsubscribeTypingListener) {
-    unsubscribeTypingListener();
+  if (groupChatInput) {
+    groupChatInput.placeholder = `Type ${GROUP_ROOMS[room].label.toLowerCase()} message...`;
   }
 
-  const myEmail = getCurrentUserEmail();
-
-  const q = query(
-    collection(db, GROUP_TYPING_COLLECTION),
-    where("room", "==", room)
-  );
-
-  unsubscribeTypingListener = onSnapshot(
-    q,
-    (snapshot) => {
-      const typingUsers = [];
-
-      snapshot.forEach((docSnap) => {
-        const data = docSnap.data();
-        if (data?.email && data.email !== myEmail && data.isTyping) {
-          typingUsers.push(data.sender || "Someone");
-        }
-      });
-
-      renderTypingIndicator(typingUsers);
-    },
-    (error) => {
-      console.error("Typing listener error:", error);
-    }
-  );
+  renderTypingIndicator("");
+  renderGroupMessages();
 }
 
-// -----------------------------
-// TYPING STATUS
-// -----------------------------
-async function setTypingStatus(isTyping) {
-  const user = getCurrentUser();
-  if (!user?.email) return;
+function appendGroupMessage(room, message, shouldBroadcast = true) {
+  const messagesByRoom = getGroupMessages();
+  if (!messagesByRoom[room]) messagesByRoom[room] = [];
 
-  const typingDocId = `${activeRoom}_${user.email.replace(/[^a-zA-Z0-9]/g, "_")}`;
-  const typingDocRef = doc(db, GROUP_TYPING_COLLECTION, typingDocId);
+  if (messagesByRoom[room].some((item) => item.id === message.id)) return;
 
-  try {
-    if (isTyping) {
-      await setDoc(typingDocRef, {
-        room: activeRoom,
-        sender: user.name || "User",
-        email: user.email || "",
-        isTyping: true,
-        updatedAt: serverTimestamp()
-      });
-      isCurrentlyTyping = true;
-    } else {
-      await deleteDoc(typingDocRef);
-      isCurrentlyTyping = false;
-    }
-  } catch (error) {
-    console.error("Typing status update error:", error);
+  messagesByRoom[room].push(message);
+  saveGroupMessages(messagesByRoom);
+
+  if (room === activeGroupRoom) renderGroupMessages();
+
+  if (shouldBroadcast && groupChannel) {
+    groupChannel.postMessage({ room, message });
   }
 }
 
-async function stopTypingNow() {
-  if (typingTimeout) {
-    clearTimeout(typingTimeout);
-    typingTimeout = null;
-  }
-
-  if (isCurrentlyTyping) {
-    await setTypingStatus(false);
-  }
-}
-
-function handleTypingInput() {
-  const text = groupChatInput?.value?.trim() || "";
-
-  if (!text) {
-    stopTypingNow();
-    return;
-  }
-
-  setTypingStatus(true);
-
-  if (typingTimeout) {
-    clearTimeout(typingTimeout);
-  }
-
-  typingTimeout = setTimeout(() => {
-    setTypingStatus(false);
-  }, 1500);
-}
-
-// -----------------------------
-// SEND MESSAGE
-// -----------------------------
-async function sendGroupMessage() {
+function sendGroupMessage() {
   if (!groupChatInput) return;
 
   const text = groupChatInput.value.trim();
   if (!text) return;
 
-  const user = getCurrentUser();
+  const sender = getCurrentUserName();
+  const room = activeGroupRoom;
+  const message = {
+    id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    sender,
+    text,
+    timestamp: new Date().toISOString()
+  };
 
-  if (!user) {
-    alert("Please log in first.");
-    return;
-  }
+  appendGroupMessage(room, message);
+  groupChatInput.value = "";
+  renderTypingIndicator("");
 
-  try {
-    await addDoc(collection(db, GROUP_CHAT_COLLECTION), {
-      room: activeRoom,
-      sender: user.name || "User",
-      email: user.email || "",
-      text: text,
-      timestamp: serverTimestamp()
-    });
-
-    groupChatInput.value = "";
-    await stopTypingNow();
-    safeNotify("Group chat", `Message sent in ${formatRoomName(activeRoom)}.`);
-  } catch (error) {
-    console.error("Error sending group message:", error);
-    alert("Unable to send group message.");
+  if (typeof window.addAppNotification === "function") {
+    window.addAppNotification("Group chat", `Message sent in ${GROUP_ROOMS[room].label}.`);
   }
 }
 
-// -----------------------------
-// ROOM SWITCHING
-// -----------------------------
-groupRoomButtons.forEach((btn) => {
-  btn.addEventListener("click", async () => {
-    const selectedRoom = btn.dataset.room;
-    await stopTypingNow();
-    activeRoom = selectedRoom;
-    setActiveRoomUI(activeRoom);
-    startGroupChatListener(activeRoom);
-    startTypingListener(activeRoom);
+function setupGroupChannel() {
+  if (!("BroadcastChannel" in window)) return;
+
+  groupChannel = new BroadcastChannel(GROUP_CHANNEL_NAME);
+  groupChannel.addEventListener("message", (event) => {
+    const { room, message } = event.data || {};
+    if (!room || !message) return;
+    appendGroupMessage(room, message, false);
+  });
+}
+
+groupRoomButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    setActiveRoom(button.dataset.room);
   });
 });
 
-// -----------------------------
-// EVENTS
-// -----------------------------
 if (groupSendBtn) {
   groupSendBtn.addEventListener("click", sendGroupMessage);
 }
 
 if (groupChatInput) {
-  groupChatInput.addEventListener("keydown", function (event) {
+  groupChatInput.addEventListener("keydown", (event) => {
     if (event.key === "Enter") {
       event.preventDefault();
       sendGroupMessage();
     }
   });
 
-  groupChatInput.addEventListener("input", handleTypingInput);
-
-  groupChatInput.addEventListener("blur", () => {
-    stopTypingNow();
+  groupChatInput.addEventListener("input", () => {
+    if (groupChatInput.value.trim()) {
+      renderTypingIndicator(getCurrentUserName());
+    } else {
+      renderTypingIndicator("");
+    }
   });
+
+  groupChatInput.addEventListener("blur", () => renderTypingIndicator(""));
 }
 
-window.addEventListener("beforeunload", () => {
-  stopTypingNow();
-});
-
-// -----------------------------
-// INIT
-// -----------------------------
-setActiveRoomUI(activeRoom);
-startGroupChatListener(activeRoom);
-startTypingListener(activeRoom);
+setupGroupChannel();
+setActiveRoom(activeGroupRoom);

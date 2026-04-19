@@ -9,7 +9,7 @@
 <body>
   <!-- Login Screen -->
   <div id="login-screen" class="login-screen">
-    <div class="login-card">
+    <form id="login-form" class="login-card">
       <div class="login-logo">TT</div>
       <h1>Team Task Manager</h1>
       <p class="login-subtitle">Sign in to continue</p>
@@ -44,7 +44,7 @@
         <p><strong>Email:</strong> demo@company.com</p>
         <p><strong>Password:</strong> 123456</p>
       </div>
-    </div>
+    </form>
   </div>
 
   <!-- Main App -->
@@ -62,7 +62,6 @@
         <nav class="sidebar-nav">
           <button class="nav-item active" data-section="dashboard-section">Dashboard</button>
           <button class="nav-item" data-section="chat-section">Chat</button>
-          <button class="nav-item" data-section="group-chat-section">Group Chat</button>
           <button class="nav-item" data-section="tasks-section">Tasks</button>
           <button class="nav-item" data-section="notifications-section">Notifications</button>
           <button class="nav-item" data-section="team-section">Team</button>
@@ -325,7 +324,7 @@
     <div class="task-modal">
       <div class="task-modal-header">
         <h3>Create New Task</h3>
-        <button id="close-task-modal-btn" class="close-modal-btn">×</button>
+        <button id="close-task-modal-btn" class="close-modal-btn">&times;</button>
       </div>
 
       <form id="task-form" class="task-form">
@@ -386,6 +385,6 @@
 
   <div id="toast-container" class="toast-container"></div>
   <script src="script.js"></script>
-  <script type="module" src="group-chat.js"></script>
+  <script src="group-chat.js"></script>
 </body>
 </html>

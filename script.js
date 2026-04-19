@@ -1,4 +1,5 @@
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyvsOgYah2WrM4_r_yGMlZrRgg-HAs0A9_ZGt9n5yjfyxS8yhpC4eAlEDWAElJBzFKDsQ/exec";
+const APP_STORAGE_VERSION = "team-task-manager-dashboard-2026-04-19";
 
 // -----------------------------
 // BASIC ELEMENTS
@@ -60,6 +61,10 @@ const notificationList = document.getElementById("notification-list");
 const enableBrowserNotificationsBtn = document.getElementById("enable-browser-notifications-btn");
 const disableBrowserNotificationsBtn = document.getElementById("disable-browser-notifications-btn");
 const notificationPermissionStatus = document.getElementById("notification-permission-status");
+const inAppToastToggle = document.getElementById("in-app-toast-toggle");
+const notificationSoundToggle = document.getElementById("notification-sound-toggle");
+const clearNotificationsBtn = document.getElementById("clear-notifications-btn");
+const resetAppDataBtn = document.getElementById("reset-app-data-btn");
 
 // -----------------------------
 // TOAST CONTAINER
@@ -109,6 +114,24 @@ const defaultTasks = [
     deadline: "2026-04-17",
     assignedTo: "Amit",
     status: "Pending"
+  },
+  {
+    id: 4,
+    title: "Prepare charts",
+    description: "Prepare charts for the team dashboard",
+    severity: "Medium",
+    deadline: "2026-04-22",
+    assignedTo: "Priya",
+    status: "Pending"
+  },
+  {
+    id: 5,
+    title: "Prepare charts",
+    description: "Prepare charts for the manager dashboard",
+    severity: "Medium",
+    deadline: "2026-04-23",
+    assignedTo: "priya",
+    status: "In Progress"
   }
 ];
 
@@ -129,6 +152,18 @@ const defaultNotifications = [
     id: 3,
     title: "New message",
     message: "Rahul sent you a message",
+    timestamp: new Date().toISOString()
+  },
+  {
+    id: 4,
+    title: "Task due soon",
+    message: '"Prepare sales presentation" is due soon',
+    timestamp: new Date().toISOString()
+  },
+  {
+    id: 5,
+    title: "Task updated",
+    message: 'Priya updated "Prepare charts"',
     timestamp: new Date().toISOString()
   }
 ];
@@ -162,6 +197,7 @@ function showLoginScreen() {
 function showAppScreen() {
   if (loginScreen) loginScreen.classList.add("hidden");
   if (appScreen) appScreen.classList.remove("hidden");
+  showDashboardSection();
 }
 
 function setLoginMessage(message, type = "") {
@@ -182,8 +218,51 @@ function updateUserUI(user) {
   if (userAvatar) userAvatar.textContent = firstLetter;
 }
 
+function isInAppToastEnabled() {
+  return localStorage.getItem("ttm_in_app_toast_enabled") !== "false";
+}
+
+function setInAppToastEnabled(value) {
+  localStorage.setItem("ttm_in_app_toast_enabled", value ? "true" : "false");
+}
+
+function isNotificationSoundEnabled() {
+  return localStorage.getItem("ttm_notification_sound_enabled") === "true";
+}
+
+function setNotificationSoundEnabled(value) {
+  localStorage.setItem("ttm_notification_sound_enabled", value ? "true" : "false");
+}
+
+function playNotificationSound() {
+  if (!isNotificationSoundEnabled()) return;
+
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return;
+
+    const context = new AudioContext();
+    const oscillator = context.createOscillator();
+    const gain = context.createGain();
+
+    oscillator.type = "sine";
+    oscillator.frequency.value = 820;
+    gain.gain.setValueAtTime(0.001, context.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.08, context.currentTime + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.001, context.currentTime + 0.18);
+
+    oscillator.connect(gain);
+    gain.connect(context.destination);
+    oscillator.start();
+    oscillator.stop(context.currentTime + 0.2);
+  } catch (error) {
+    console.warn("Notification sound could not be played:", error);
+  }
+}
+
 function showToast(title, message) {
   if (!toastContainer) return;
+  if (!isInAppToastEnabled()) return;
 
   const toast = document.createElement("div");
   toast.className = "toast-item";
@@ -223,19 +302,66 @@ function clearUserFromLocalStorage() {
   localStorage.removeItem("ttm_logged_in_user");
 }
 
+function cloneDefaultTasks() {
+  return JSON.parse(JSON.stringify(defaultTasks));
+}
+
+function cloneDefaultNotifications() {
+  return JSON.parse(JSON.stringify(defaultNotifications));
+}
+
+function isValidTaskList(tasks) {
+  if (!Array.isArray(tasks)) return false;
+  if (tasks.length === 0) return true;
+
+  return tasks.every((task) => (
+    task &&
+    typeof task.title === "string" &&
+    typeof task.status === "string" &&
+    ["Pending", "In Progress", "Completed"].includes(task.status)
+  ));
+}
+
+function isValidNotificationList(notifications) {
+  if (!Array.isArray(notifications)) return false;
+  if (notifications.length === 0) return true;
+
+  return notifications.every((notification) => (
+    notification &&
+    typeof notification.title === "string" &&
+    typeof notification.message === "string"
+  ));
+}
+
+function showDashboardSection() {
+  navItems.forEach((item) => {
+    item.classList.toggle("active", item.getAttribute("data-section") === "dashboard-section");
+  });
+
+  sections.forEach((section) => {
+    section.classList.toggle("active-section", section.id === "dashboard-section");
+  });
+
+  if (pageTitle) pageTitle.textContent = "Dashboard";
+}
+
 function getTasksFromStorage() {
   const savedTasks = localStorage.getItem("ttm_tasks");
 
   if (!savedTasks) {
-    localStorage.setItem("ttm_tasks", JSON.stringify(defaultTasks));
-    return [...defaultTasks];
+    const tasks = cloneDefaultTasks();
+    localStorage.setItem("ttm_tasks", JSON.stringify(tasks));
+    return tasks;
   }
 
   try {
-    return JSON.parse(savedTasks);
+    const tasks = JSON.parse(savedTasks);
+    if (!isValidTaskList(tasks)) throw new Error("Invalid task storage");
+    return tasks;
   } catch {
-    localStorage.setItem("ttm_tasks", JSON.stringify(defaultTasks));
-    return [...defaultTasks];
+    const tasks = cloneDefaultTasks();
+    localStorage.setItem("ttm_tasks", JSON.stringify(tasks));
+    return tasks;
   }
 }
 
@@ -247,15 +373,19 @@ function getNotificationsFromStorage() {
   const savedNotifications = localStorage.getItem("ttm_notifications");
 
   if (!savedNotifications) {
-    localStorage.setItem("ttm_notifications", JSON.stringify(defaultNotifications));
-    return [...defaultNotifications];
+    const notifications = cloneDefaultNotifications();
+    localStorage.setItem("ttm_notifications", JSON.stringify(notifications));
+    return notifications;
   }
 
   try {
-    return JSON.parse(savedNotifications);
+    const notifications = JSON.parse(savedNotifications);
+    if (!isValidNotificationList(notifications)) throw new Error("Invalid notification storage");
+    return notifications;
   } catch {
-    localStorage.setItem("ttm_notifications", JSON.stringify(defaultNotifications));
-    return [...defaultNotifications];
+    const notifications = cloneDefaultNotifications();
+    localStorage.setItem("ttm_notifications", JSON.stringify(notifications));
+    return notifications;
   }
 }
 
@@ -281,6 +411,16 @@ function getChatsFromStorage() {
 
 function saveChatsToStorage(chats) {
   localStorage.setItem("ttm_chats", JSON.stringify(chats));
+}
+
+function migrateAppStorageIfNeeded() {
+  if (localStorage.getItem("ttm_app_storage_version") === APP_STORAGE_VERSION) return;
+
+  localStorage.setItem("ttm_tasks", JSON.stringify(cloneDefaultTasks()));
+  localStorage.setItem("ttm_notifications", JSON.stringify(cloneDefaultNotifications()));
+  localStorage.setItem("ttm_chats", JSON.stringify(defaultChatConversations));
+  localStorage.removeItem("ttm_group_messages");
+  localStorage.setItem("ttm_app_storage_version", APP_STORAGE_VERSION);
 }
 
 // -----------------------------
@@ -503,8 +643,11 @@ function addNotification(title, message) {
   renderNotifications();
   updateDashboardCounts();
   triggerBrowserNotification(title, message);
+  playNotificationSound();
   showToast(title, message);
 }
+
+window.addAppNotification = addNotification;
 
 // -----------------------------
 // TASKS
@@ -725,6 +868,25 @@ async function handleLoginSubmit(event) {
     return;
   }
 
+  if (email.toLowerCase() === "demo@company.com" && password === "123456") {
+    const user = {
+      email,
+      name: "Demo User",
+      role: "Manager",
+      status: "Active"
+    };
+
+    saveUserToLocalStorage(user);
+    updateUserUI(user);
+    setLoginMessage("Login successful!", "success");
+
+    setTimeout(() => {
+      showAppScreen();
+      setLoginMessage("");
+    }, 200);
+    return;
+  }
+
   if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL === "PASTE_YOUR_WEB_APP_URL_HERE") {
     setLoginMessage("Apps Script URL is missing in script.js.", "error");
     return;
@@ -894,6 +1056,47 @@ if (disableBrowserNotificationsBtn) {
   disableBrowserNotificationsBtn.addEventListener("click", disableBrowserNotifications);
 }
 
+if (inAppToastToggle) {
+  inAppToastToggle.checked = isInAppToastEnabled();
+  inAppToastToggle.addEventListener("change", function () {
+    setInAppToastEnabled(inAppToastToggle.checked);
+  });
+}
+
+if (notificationSoundToggle) {
+  notificationSoundToggle.checked = isNotificationSoundEnabled();
+  notificationSoundToggle.addEventListener("change", function () {
+    setNotificationSoundEnabled(notificationSoundToggle.checked);
+  });
+}
+
+if (clearNotificationsBtn) {
+  clearNotificationsBtn.addEventListener("click", function () {
+    saveNotificationsToStorage([]);
+    renderNotifications();
+    updateDashboardCounts();
+    showToast("Notifications cleared", "All notifications have been removed.");
+  });
+}
+
+if (resetAppDataBtn) {
+  resetAppDataBtn.addEventListener("click", function () {
+    const confirmed = window.confirm("Reset all app data on this device?");
+    if (!confirmed) return;
+
+    localStorage.removeItem("ttm_tasks");
+    localStorage.removeItem("ttm_notifications");
+    localStorage.removeItem("ttm_chats");
+    localStorage.removeItem("ttm_group_messages");
+
+    renderChatUsers();
+    renderSelectedChatMessages();
+    renderAllTaskUI();
+    renderNotifications();
+    showToast("App data reset", "Default tasks, chats, and notifications were restored.");
+  });
+}
+
 // -----------------------------
 // INIT
 // -----------------------------
@@ -908,6 +1111,7 @@ function checkExistingLogin() {
   }
 }
 
+migrateAppStorageIfNeeded();
 setupNavigation();
 checkExistingLogin();
 renderChatUsers();
