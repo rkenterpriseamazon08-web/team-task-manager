@@ -1,6 +1,13 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
-
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  onSnapshot,
+  query,
+  orderBy,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js"
 const firebaseConfig = {
   apiKey: "AIzaSyDZWGaDwj3K6ofuTyBMUIjEUg0jn37iSwI",
   authDomain: "team-task-manager-chat.firebaseapp.com",
