@@ -726,7 +726,10 @@ body {
 
   .form-row {
     grid-template-columns: 1fr;
-    /* ================= SETTINGS PANEL STYLES ================= */
+  }
+}
+
+/* ================= SETTINGS PANEL STYLES ================= */
 
 .settings-grid {
   display: grid;
@@ -837,6 +840,31 @@ body {
   }
 }
 
+/* ================= GROUP CHAT ROOM STYLES ================= */
+
+.group-room-tabs {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.group-room-btn {
+  background: #ffffff;
+  border: 1px solid #dbe3ee;
+  color: #374151;
+  padding: 10px 14px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.active-room-btn {
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  color: #ffffff;
+  border-color: transparent;
+}
+
 /* ================= RESPONSIVE ================= */
 
 @media (max-width: 900px) {
@@ -852,7 +880,5 @@ body {
   .toast-item {
     min-width: auto;
     max-width: none;
-  }
-}
   }
 }
