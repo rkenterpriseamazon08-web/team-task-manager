@@ -1,130 +1,26 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Team Task Manager</title>
-  <link rel="stylesheet" href="style.css" />
-</head>
-<body>
+<section id="group-chat-section" class="content-section">
+  <div class="panel" style="margin-top:20px;">
+    <div class="panel-header">
+      <h3>Group Chat (Real-Time)</h3>
+    </div>
 
-  <!-- Login Screen -->
-  <div id="login-screen" class="login-screen">
-    <div class="login-card">
-      <div class="login-logo">TT</div>
-      <h1>Team Task Manager</h1>
-      <p class="login-subtitle">Sign in to continue</p>
+    <div class="group-room-tabs">
+      <button class="group-room-btn active-room-btn" data-room="general">General</button>
+      <button class="group-room-btn" data-room="tasks">Tasks</button>
+      <button class="group-room-btn" data-room="announcements">Announcements</button>
+    </div>
 
-      <div class="form-group">
-        <label>Email</label>
-        <input type="email" id="email" placeholder="Enter your email" />
-      </div>
+    <div id="active-group-room-label" style="margin: 10px 0 14px; font-size: 14px; color: #6b7280;">
+      Active room: General
+    </div>
 
-      <div class="form-group">
-        <label>Password</label>
-        <input type="password" id="password" placeholder="Enter your password" />
-      </div>
+    <div id="group-chat-messages" class="chat-messages"></div>
 
-      <button id="login-btn" class="login-btn">Login</button>
-      <p id="login-message" class="login-message"></p>
+    <div id="group-typing-indicator" class="group-typing-indicator hidden"></div>
 
-      <div class="demo-box">
-        <h4>Demo Credentials</h4>
-        <p><strong>Email:</strong> demo@company.com</p>
-        <p><strong>Password:</strong> 123456</p>
-      </div>
+    <div class="chat-input-row">
+      <input type="text" id="group-chat-input" placeholder="Type group message..." />
+      <button class="primary-btn" id="group-send-btn">Send</button>
     </div>
   </div>
-
-  <!-- Main App -->
-  <div id="app-screen" class="app-container hidden">
-
-    <!-- Sidebar -->
-    <aside class="sidebar">
-      <div>
-        <div class="logo-section">
-          <div class="logo-box">TT</div>
-          <div>
-            <h2>Team Task Manager</h2>
-            <p>Company Workspace</p>
-          </div>
-        </div>
-
-        <nav class="sidebar-nav">
-          <button class="nav-item active" data-section="dashboard-section">Dashboard</button>
-          <button class="nav-item" data-section="chat-section">Chat</button>
-          <button class="nav-item" data-section="group-chat-section">Group Chat</button>
-          <button class="nav-item" data-section="tasks-section">Tasks</button>
-          <button class="nav-item" data-section="notifications-section">Notifications</button>
-          <button class="nav-item" data-section="team-section">Team</button>
-          <button class="nav-item" data-section="settings-section">Settings</button>
-        </nav>
-      </div>
-
-      <div class="sidebar-footer">
-        <div class="user-card">
-          <div class="user-avatar" id="user-avatar">U</div>
-          <div>
-            <h4 id="sidebar-user-name">Demo User</h4>
-            <p id="sidebar-user-role">Manager</p>
-          </div>
-        </div>
-        <button id="logout-btn" class="logout-btn">Logout</button>
-      </div>
-    </aside>
-
-    <!-- Main Content -->
-    <main class="main-content">
-
-      <header class="topbar">
-        <div>
-          <h1 id="page-title">Dashboard</h1>
-          <p class="topbar-subtitle">Welcome back, <span id="topbar-user-name">Demo User</span></p>
-        </div>
-
-        <div class="topbar-actions">
-          <input type="text" placeholder="Search..." class="search-box" />
-          <button class="primary-btn" id="open-task-modal-btn">+ New Task</button>
-        </div>
-      </header>
-
-      <!-- ================= GROUP CHAT ================= -->
-      <section id="group-chat-section" class="content-section">
-        <div class="panel" style="margin-top:20px;">
-          <div class="panel-header">
-            <h3>Group Chat (Real-Time)</h3>
-          </div>
-
-          <div class="group-room-tabs">
-            <button class="group-room-btn active-room-btn" data-room="general">General</button>
-            <button class="group-room-btn" data-room="tasks">Tasks</button>
-            <button class="group-room-btn" data-room="announcements">Announcements</button>
-          </div>
-
-          <div id="active-group-room-label" style="margin: 10px 0 14px; font-size: 14px; color: #6b7280;">
-            Active room: General
-          </div>
-
-          <!-- Messages -->
-          <div id="group-chat-messages" class="chat-messages"></div>
-
-          <!-- ✅ NEW (Typing Indicator - SAFE ADDITION) -->
-          <div id="group-typing-indicator" class="group-typing-indicator hidden"></div>
-
-          <!-- Input -->
-          <div class="chat-input-row">
-            <input type="text" id="group-chat-input" placeholder="Type group message..." />
-            <button class="primary-btn" id="group-send-btn">Send</button>
-          </div>
-        </div>
-      </section>
-
-    </main>
-  </div>
-
-  <!-- Scripts -->
-  <script src="script.js"></script>
-  <script type="module" src="group-chat.js"></script>
-
-</body>
-</html>
+</section>
