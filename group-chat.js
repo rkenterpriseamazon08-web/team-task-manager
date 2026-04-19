@@ -6,6 +6,7 @@ import {
   onSnapshot,
   query,
   orderBy,
+  where,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
 
@@ -18,7 +19,8 @@ const firebaseConfig = {
   projectId: "team-task-manager-chat",
   storageBucket: "team-task-manager-chat.firebasestorage.app",
   messagingSenderId: "958317121497",
-  appId: "1:958317121497:web:7abd2d7ae0207d344dd3c8"
+  appId: "1:958317121497:web:7abd2d7ae0207d344dd3c8",
+  measurementId: "G-3CVLV0J9RP"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -30,49 +32,191 @@ const db = getFirestore(app);
 const groupChatMessages = document.getElementById("group-chat-messages");
 const groupChatInput = document.getElementById("group-chat-input");
 const groupSendBtn = document.getElementById("group-send-btn");
+const groupRoomButtons = document.querySelectorAll(".group-room-btn");
+const activeGroupRoomLabel = document.getElementById("active-group-room-label");
 
 // -----------------------------
-// SEND MESSAGE
+// CONFIG
 // -----------------------------
-async function sendGroupMessage() {
-  const text = groupChatInput.value.trim();
-  if (!text) return;
+const GROUP_CHAT_COLLECTION = "groupMessages";
+let activeRoom = "general";
+let unsubscribeGroupListener = null;
 
-  await addDoc(collection(db, "groupMessages"), {
-    sender: "You",
-    text: text,
-    createdAt: serverTimestamp()
-  });
-
-  groupChatInput.value = "";
+// -----------------------------
+// HELPERS
+// -----------------------------
+function getCurrentUser() {
+  try {
+    const raw = localStorage.getItem("ttm_logged_in_user");
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
 }
 
-// -----------------------------
-// REALTIME LISTENER
-// -----------------------------
-const q = query(collection(db, "groupMessages"), orderBy("createdAt"));
+function safeNotify(title, message) {
+  if (typeof window.addAppNotification === "function") {
+    window.addAppNotification(title, message);
+  }
+}
 
-onSnapshot(q, (snapshot) => {
+function formatRoomName(room) {
+  if (room === "general") return "General";
+  if (room === "tasks") return "Tasks";
+  if (room === "announcements") return "Announcements";
+  return room;
+}
+
+function setActiveRoomUI(room) {
+  groupRoomButtons.forEach((btn) => {
+    btn.classList.toggle("active-room-btn", btn.dataset.room === room);
+  });
+
+  if (activeGroupRoomLabel) {
+    activeGroupRoomLabel.textContent = `Active room: ${formatRoomName(room)}`;
+  }
+}
+
+function renderGroupChatMessages(messages) {
+  if (!groupChatMessages) return;
+
+  const currentUser = getCurrentUser();
+  const myEmail = currentUser?.email || "";
+
   groupChatMessages.innerHTML = "";
 
-  snapshot.forEach((doc) => {
-    const msg = doc.data();
+  if (messages.length === 0) {
+    groupChatMessages.innerHTML = `
+      <div class="message-bubble received">
+        <strong>System:</strong> No messages yet in ${formatRoomName(activeRoom)}.
+      </div>
+    `;
+    return;
+  }
+
+  messages.forEach((msg) => {
+    const isMine = msg.email === myEmail;
 
     const div = document.createElement("div");
-    div.className = "message-bubble received";
-    div.innerHTML = `<strong>${msg.sender}:</strong> ${msg.text}`;
+    div.className = `message-bubble ${isMine ? "sent" : "received"}`;
+    div.innerHTML = `
+      <strong>${isMine ? "You" : msg.sender}:</strong> ${msg.text}
+    `;
 
     groupChatMessages.appendChild(div);
   });
 
   groupChatMessages.scrollTop = groupChatMessages.scrollHeight;
+}
+
+// -----------------------------
+// REAL-TIME LISTENER
+// -----------------------------
+function startGroupChatListener(room) {
+  if (!groupChatMessages) return;
+
+  if (unsubscribeGroupListener) {
+    unsubscribeGroupListener();
+  }
+
+  const q = query(
+    collection(db, GROUP_CHAT_COLLECTION),
+    where("room", "==", room),
+    orderBy("timestamp", "asc")
+  );
+
+  unsubscribeGroupListener = onSnapshot(
+    q,
+    (snapshot) => {
+      const messages = [];
+
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+        messages.push({
+          sender: data.sender || "Unknown",
+          email: data.email || "",
+          text: data.text || "",
+          room: data.room || "general",
+          timestamp: data.timestamp || null
+        });
+      });
+
+      renderGroupChatMessages(messages);
+    },
+    (error) => {
+      console.error("Group chat listener error:", error);
+      groupChatMessages.innerHTML = `
+        <div class="message-bubble received">
+          <strong>System:</strong> Unable to load group chat messages.
+        </div>
+      `;
+    }
+  );
+}
+
+// -----------------------------
+// SEND MESSAGE
+// -----------------------------
+async function sendGroupMessage() {
+  if (!groupChatInput) return;
+
+  const text = groupChatInput.value.trim();
+  if (!text) return;
+
+  const user = getCurrentUser();
+
+  if (!user) {
+    alert("Please log in first.");
+    return;
+  }
+
+  try {
+    await addDoc(collection(db, GROUP_CHAT_COLLECTION), {
+      room: activeRoom,
+      sender: user.name || "User",
+      email: user.email || "",
+      text: text,
+      timestamp: serverTimestamp()
+    });
+
+    groupChatInput.value = "";
+    safeNotify("Group chat", `Message sent in ${formatRoomName(activeRoom)}.`);
+  } catch (error) {
+    console.error("Error sending group message:", error);
+    alert("Unable to send group message.");
+  }
+}
+
+// -----------------------------
+// ROOM SWITCHING
+// -----------------------------
+groupRoomButtons.forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const selectedRoom = btn.dataset.room;
+    activeRoom = selectedRoom;
+    setActiveRoomUI(activeRoom);
+    startGroupChatListener(activeRoom);
+  });
 });
 
 // -----------------------------
 // EVENTS
 // -----------------------------
-groupSendBtn.addEventListener("click", sendGroupMessage);
+if (groupSendBtn) {
+  groupSendBtn.addEventListener("click", sendGroupMessage);
+}
 
-groupChatInput.addEventListener("keypress", (e) => {
-  if (e.key === "Enter") sendGroupMessage();
-});
+if (groupChatInput) {
+  groupChatInput.addEventListener("keydown", function (event) {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      sendGroupMessage();
+    }
+  });
+}
+
+// -----------------------------
+// INIT
+// -----------------------------
+setActiveRoomUI(activeRoom);
+startGroupChatListener(activeRoom);
