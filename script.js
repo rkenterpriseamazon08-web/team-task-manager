@@ -1,21 +1,19 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics"
 const firebaseConfig = {
-  apiKey: "AIzaSyDZWGaDwj3K6ofuTyBMUIjEUg0jn37iSwI",
+  apiKey: "AIzaSyDZWGaDwj3K6ofuTyBMUIEJ0gjn37iSwI",
   authDomain: "team-task-manager-chat.firebaseapp.com",
   projectId: "team-task-manager-chat",
   storageBucket: "team-task-manager-chat.firebasestorage.app",
   messagingSenderId: "958317121497",
   appId: "1:958317121497:web:7abd2d7ae0207d344dd3c8",
-  measurementId: "G-3CVLV0J9RP"
+  measurementId: "G-3CVLVOJ9RP"
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
-// 👇 YOUR EXISTING CODE STARTS (DO NOT TOUCH)
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/...";
+const firebaseApp = initializeApp(firebaseConfig);
+const db = getFirestore(firebaseApp);
+
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyvsOgYah2WrM4_r_yGMlZrRgg-HAs0A9_ZGt9n5yjfyxS8yhpC4eAlEDWAElJBzFKDsQ/exec";
 
 // -----------------------------
@@ -151,67 +149,6 @@ const defaultNotifications = [
   }
 ];
 
-const replyRules = [
-  {
-    keywords: ["hello", "hi", "hey", "hellooo", "hii"],
-    replies: [
-      "Hi! I am here.",
-      "Hello, what do you need?",
-      "Hey! Any update?",
-      "Hi, how can I help?"
-    ]
-  },
-  {
-    keywords: ["task", "tasks", "status", "update"],
-    replies: [
-      "I will share the latest task update shortly.",
-      "Task status is being updated.",
-      "I am checking the current progress.",
-      "Let us sync on the task status."
-    ]
-  },
-  {
-    keywords: ["report", "deck", "presentation", "chart", "charts"],
-    replies: [
-      "I will share the latest version soon.",
-      "The report is in progress.",
-      "Let me review the deck once.",
-      "I can help finalize the presentation."
-    ]
-  },
-  {
-    keywords: ["deadline", "urgent", "priority", "high"],
-    replies: [
-      "Understood, I will prioritize this.",
-      "This looks urgent. I am checking it now.",
-      "Let us close this on priority.",
-      "I will take this up first."
-    ]
-  },
-  {
-    keywords: ["thanks", "thank you", "great"],
-    replies: [
-      "You are welcome.",
-      "Glad to help.",
-      "No problem at all.",
-      "Happy to help."
-    ]
-  }
-];
-
-const defaultReplies = [
-  "Noted.",
-  "Okay, understood.",
-  "I will check and update.",
-  "Sounds good.",
-  "Let us discuss this further.",
-  "Understood, working on it.",
-  "Thanks for the update."
-];
-
-// -----------------------------
-// ONE-TO-ONE CHAT STATE
-// -----------------------------
 let selectedChatMember = "Rahul";
 
 const defaultChatConversations = {
@@ -276,9 +213,7 @@ function showToast(title, message) {
   setTimeout(() => {
     toast.style.opacity = "0";
     toast.style.transform = "translateX(18px)";
-    setTimeout(() => {
-      toast.remove();
-    }, 250);
+    setTimeout(() => toast.remove(), 250);
   }, 3500);
 }
 
@@ -363,6 +298,7 @@ function getChatsFromStorage() {
 function saveChatsToStorage(chats) {
   localStorage.setItem("ttm_chats", JSON.stringify(chats));
 }
+
 // -----------------------------
 // NAVIGATION
 // -----------------------------
@@ -381,9 +317,7 @@ function setupNavigation() {
         targetSection.classList.add("active-section");
       }
 
-      if (pageTitle) {
-        pageTitle.textContent = item.textContent;
-      }
+      if (pageTitle) pageTitle.textContent = item.textContent;
     });
   });
 }
@@ -401,9 +335,7 @@ function renderChatUsers() {
   activeMembers.forEach((member) => {
     const userDiv = document.createElement("div");
     userDiv.className =
-      member.name === selectedChatMember
-        ? "chat-user active-chat-user"
-        : "chat-user";
+      member.name === selectedChatMember ? "chat-user active-chat-user" : "chat-user";
 
     userDiv.innerHTML = `
       <strong>${member.name}</strong><br>
@@ -421,9 +353,7 @@ function renderChatUsers() {
 }
 
 function scrollChatToBottom() {
-  if (chatMessages) {
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-  }
+  if (chatMessages) chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
 function createMessageBubble(sender, text, type) {
@@ -471,10 +401,7 @@ function sendMessage() {
   chatInput.value = "";
   renderSelectedChatMessages();
 
-  addNotification(
-    "New chat message",
-    `You sent a message to ${selectedChatMember}`
-  );
+  addNotification("New chat message", `You sent a message to ${selectedChatMember}`);
 }
 
 // -----------------------------
@@ -482,7 +409,6 @@ function sendMessage() {
 // -----------------------------
 function formatNotificationTime(timestamp) {
   const date = new Date(timestamp);
-
   if (Number.isNaN(date.getTime())) return "";
 
   return date.toLocaleString("en-GB", {
@@ -574,8 +500,7 @@ function triggerBrowserNotification(title, message) {
   if (document.visibilityState === "visible") return;
 
   new Notification(title, {
-    body: message,
-    icon: ""
+    body: message
   });
 }
 
@@ -697,9 +622,7 @@ function renderAllTaskUI() {
 }
 
 function openTaskModal() {
-  if (taskModalOverlay) {
-    taskModalOverlay.classList.remove("hidden");
-  }
+  if (taskModalOverlay) taskModalOverlay.classList.remove("hidden");
 
   if (taskStatusInput && !taskStatusInput.value) {
     taskStatusInput.value = "Pending";
@@ -736,10 +659,7 @@ function createNewTask(taskData) {
   saveTasksToStorage(tasks);
   renderAllTaskUI();
 
-  addNotification(
-    "New task created",
-    `${taskData.title} was assigned to ${taskData.assignedTo}`
-  );
+  addNotification("New task created", `${taskData.title} was assigned to ${taskData.assignedTo}`);
 }
 
 function getTaskFormValues() {
@@ -796,9 +716,7 @@ function validateTaskForm(taskData) {
 function submitTaskForm() {
   const taskData = getTaskFormValues();
 
-  if (!validateTaskForm(taskData)) {
-    return;
-  }
+  if (!validateTaskForm(taskData)) return;
 
   createNewTask(taskData);
   closeTaskModal();
@@ -817,9 +735,6 @@ async function handleLoginSubmit(event) {
 
   const email = emailField ? emailField.value.trim() : "";
   const password = passwordField ? passwordField.value.trim() : "";
-
-  console.log("Email entered:", email);
-  console.log("Password entered:", password);
 
   if (!email || !password) {
     setLoginMessage("Please enter both email and password.", "error");
@@ -845,13 +760,12 @@ async function handleLoginSubmit(event) {
         "Content-Type": "text/plain;charset=utf-8"
       },
       body: JSON.stringify({
-        email: email,
-        password: password
+        email,
+        password
       })
     });
 
     const result = await response.json();
-    console.log("Login API result:", result);
 
     if (result.success) {
       const user = result.user || {
