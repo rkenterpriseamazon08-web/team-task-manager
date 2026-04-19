@@ -7,379 +7,139 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+
   <!-- Login Screen -->
   <div id="login-screen" class="login-screen">
     <div class="login-card">
       <div class="login-logo">TT</div>
       <h1>Team Task Manager</h1>
       <p class="login-subtitle">Sign in to continue</p>
-        <div class="form-group">
-          <label for="email">Email</label>
-          <input
-            type="email"
-            id="email"
-            name="email"
-            placeholder="Enter your email"
-            autocomplete="off"
-          />
-        </div>
 
-        <div class="form-group">
-          <label for="password">Password</label>
-          <input
-            type="password"
-            id="password"
-            name="password"
-            placeholder="Enter your password"
-            autocomplete="off"
-          />
-        </div>
-
-       <button type="button" id="login-btn" class="login-btn">Login</button>
-        <p id="login-message" class="login-message"></p>
-      </form>
-
-      <div class="demo-box">
-        <h4>Demo Credentials</h4>
-        <p><strong>Email:</strong> demo@company.com</p>
-        <p><strong>Password:</strong> 123456</p>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="email" placeholder="Enter your email" />
       </div>
+
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="password" placeholder="Enter your password" />
+      </div>
+
+      <button id="login-btn" class="login-btn">Login</button>
+      <p id="login-message" class="login-message"></p>
     </div>
   </div>
 
-  <!-- Main App -->
+  <!-- App -->
   <div id="app-screen" class="app-container hidden">
+
+    <!-- Sidebar -->
     <aside class="sidebar">
-      <div>
-        <div class="logo-section">
-          <div class="logo-box">TT</div>
-          <div>
-            <h2>Team Task Manager</h2>
-            <p>Company Workspace</p>
-          </div>
+      <div class="logo-section">
+        <div class="logo-box">TT</div>
+        <div>
+          <h2>Team Task Manager</h2>
+          <p>Company Workspace</p>
         </div>
-
-        <nav class="sidebar-nav">
-          <button class="nav-item active" data-section="dashboard-section">Dashboard</button>
-          <button class="nav-item" data-section="chat-section">Chat</button>
-          <button class="nav-item" data-section="tasks-section">Tasks</button>
-          <button class="nav-item" data-section="notifications-section">Notifications</button>
-          <button class="nav-item" data-section="team-section">Team</button>
-          <button class="nav-item" data-section="settings-section">Settings</button>
-          <button class="nav-item" data-section="group-chat-section">Group Chat</button>
-        </nav>
       </div>
 
-      <div class="sidebar-footer">
-        <div class="user-card">
-          <div class="user-avatar" id="user-avatar">U</div>
-          <div>
-            <h4 id="sidebar-user-name">Demo User</h4>
-            <p id="sidebar-user-role">Manager</p>
-          </div>
-        </div>
-        <button id="logout-btn" class="logout-btn">Logout</button>
-      </div>
+      <nav class="sidebar-nav">
+        <button class="nav-item active" data-section="dashboard-section">Dashboard</button>
+        <button class="nav-item" data-section="chat-section">Chat</button>
+        <button class="nav-item" data-section="group-chat-section">Group Chat</button>
+        <button class="nav-item" data-section="tasks-section">Tasks</button>
+        <button class="nav-item" data-section="notifications-section">Notifications</button>
+        <button class="nav-item" data-section="team-section">Team</button>
+        <button class="nav-item" data-section="settings-section">Settings</button>
+      </nav>
     </aside>
 
+    <!-- Main -->
     <main class="main-content">
-      <header class="topbar">
-        <div>
-          <h1 id="page-title">Dashboard</h1>
-          <p class="topbar-subtitle">Welcome back, <span id="topbar-user-name">Demo User</span></p>
-        </div>
 
-        <div class="topbar-actions">
-          <input type="text" placeholder="Search..." class="search-box" />
-          <button class="primary-btn" id="open-task-modal-btn">+ New Task</button>
-        </div>
-      </header>
-
+      <!-- Dashboard -->
       <section id="dashboard-section" class="content-section active-section">
-        <div class="stats-grid">
-          <div class="stat-card">
-            <h3>Total Tasks</h3>
-            <p id="total-tasks-count">0</p>
-            <span>All assigned tasks</span>
-          </div>
-
-          <div class="stat-card">
-            <h3>In Progress</h3>
-            <p id="in-progress-count">0</p>
-            <span>Tasks being worked on</span>
-          </div>
-
-          <div class="stat-card">
-            <h3>Completed</h3>
-            <p id="completed-count">0</p>
-            <span>Finished successfully</span>
-          </div>
-
-          <div class="stat-card">
-            <h3>Notifications</h3>
-            <p id="notifications-count">0</p>
-            <span>Unread alerts</span>
-          </div>
-        </div>
-
-        <div class="dashboard-grid">
-          <div class="panel">
-            <div class="panel-header">
-              <h3>Recent Tasks</h3>
-            </div>
-            <div class="task-list" id="recent-task-list"></div>
-          </div>
-
-          <div class="panel">
-            <div class="panel-header">
-              <h3>Quick Team Chat Preview</h3>
-            </div>
-            <div class="chat-preview">
-              <div class="message-bubble received">
-                <strong>Rahul:</strong> Please review the latest task updates.
-              </div>
-              <div class="message-bubble sent">
-                <strong>You:</strong> Sure, I will check them today.
-              </div>
-              <div class="message-bubble received">
-                <strong>Sneha:</strong> Pricing sheet has been updated.
-              </div>
-            </div>
-          </div>
-        </div>
+        <h1>Dashboard</h1>
       </section>
 
+      <!-- Chat (ONLY 1-to-1 now) -->
       <section id="chat-section" class="content-section">
         <div class="panel full-height">
           <div class="panel-header">
             <h3>1-to-1 Chat</h3>
           </div>
 
-    <div class="panel" style="margin-top:20px;">
-  <div class="panel-header">
-    
           <div class="chat-layout">
             <div class="chat-users" id="chat-users-list"></div>
 
             <div class="chat-window">
-              <div class="chat-messages" id="chat-messages">
-                <div class="message-bubble received"><strong>Rahul:</strong> Hi, please share the task status.</div>
-                <div class="message-bubble sent"><strong>You:</strong> I am working on it.</div>
-                <div class="message-bubble received"><strong>Amit:</strong> Okay, please update by evening.</div>
-              </div>
+              <div class="chat-messages" id="chat-messages"></div>
 
               <div class="chat-input-row">
-                <input type="text" id="chat-message-input" placeholder="Type your message..." />
-                <button class="primary-btn" id="send-message-btn">Send</button>
+                <input type="text" id="chat-message-input" placeholder="Type message..." />
+                <button id="send-message-btn">Send</button>
               </div>
             </div>
           </div>
         </div>
-     <div class="panel" style="margin-top:20px;">
-  <div class="panel-header">
-    <h3>Group Chat (Real-Time)</h3>
-  </div>
-
-  <div class="group-room-tabs">
-    <button class="group-room-btn active-room-btn" data-room="general">General</button>
-    <button class="group-room-btn" data-room="tasks">Tasks</button>
-    <button class="group-room-btn" data-room="announcements">Announcements</button>
-  </div>
-
-  <div id="active-group-room-label" style="margin: 10px 0 14px; font-size: 14px; color: #6b7280;">
-    Active room: General
-  </div>
-
-  <div id="group-chat-messages" class="chat-messages"></div>
-
-  <div class="chat-input-row">
-    <input type="text" id="group-chat-input" placeholder="Type group message..." />
-    <button class="primary-btn" id="group-send-btn">Send</button>
-  </div>
-</div>
       </section>
 
+      <!-- ✅ NEW GROUP CHAT SECTION -->
+      <section id="group-chat-section" class="content-section" style="display:none;">
+        <div class="panel full-height">
+
+          <div class="panel-header">
+            <h3>Group Chat (Real-Time)</h3>
+          </div>
+
+          <div class="group-chat-wrapper">
+
+            <div class="group-chat-tabs">
+              <button class="room-tab active" data-room="general">General</button>
+              <button class="room-tab" data-room="tasks">Tasks</button>
+              <button class="room-tab" data-room="announcements">Announcements</button>
+            </div>
+
+            <div class="active-room-label">
+              Active room: <span id="active-room-name">General</span>
+            </div>
+
+            <div id="group-chat-messages" class="group-chat-messages"></div>
+
+            <div class="group-chat-input-row">
+              <input type="text" id="group-message-input" placeholder="Type group message..." />
+              <button id="send-group-message-btn">Send</button>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- Tasks -->
       <section id="tasks-section" class="content-section">
-        <div class="panel">
-          <div class="panel-header">
-            <h3>Task Board</h3>
-          </div>
-
-          <div class="task-board">
-            <div class="task-column">
-              <h4>Pending</h4>
-              <div id="pending-task-column"></div>
-            </div>
-
-            <div class="task-column">
-              <h4>In Progress</h4>
-              <div id="inprogress-task-column"></div>
-            </div>
-
-            <div class="task-column">
-              <h4>Completed</h4>
-              <div id="completed-task-column"></div>
-            </div>
-          </div>
-        </div>
+        <h1>Tasks</h1>
       </section>
 
+      <!-- Notifications -->
       <section id="notifications-section" class="content-section">
-        <div class="panel">
-          <div class="panel-header">
-            <h3>Notifications</h3>
-          </div>
-
-          <div class="notification-list" id="notification-list"></div>
-        </div>
+        <h1>Notifications</h1>
       </section>
 
+      <!-- Team -->
       <section id="team-section" class="content-section">
-        <div class="panel">
-          <div class="panel-header">
-            <h3>Team Members</h3>
-          </div>
-
-          <div class="team-grid">
-            <div class="team-card">
-              <div class="team-avatar">R</div>
-              <h4>Rahul</h4>
-              <p>Project Manager</p>
-            </div>
-
-            <div class="team-card">
-              <div class="team-avatar">S</div>
-              <h4>Sneha</h4>
-              <p>Business Analyst</p>
-            </div>
-
-            <div class="team-card">
-              <div class="team-avatar">A</div>
-              <h4>Amit</h4>
-              <p>Developer</p>
-            </div>
-
-            <div class="team-card">
-              <div class="team-avatar">P</div>
-              <h4>Priya</h4>
-              <p>Designer</p>
-            </div>
-          </div>
-        </div>
+        <h1>Team</h1>
       </section>
 
-  <section id="settings-section" class="content-section">
-  <div class="panel">
-    <div class="panel-header">
-      <h3>Settings</h3>
-    </div>
+      <!-- Settings -->
+      <section id="settings-section" class="content-section">
+        <h1>Settings</h1>
+      </section>
 
-    <div class="settings-grid">
-      <div class="settings-card">
-        <h4>Notifications</h4>
-        <p id="notification-permission-status">Permission status: Not checked</p>
-
-        <div class="settings-actions-row">
-          <button class="primary-btn" id="enable-browser-notifications-btn">Enable Browser Notifications</button>
-          <button class="secondary-btn" id="disable-browser-notifications-btn">Disable Browser Notifications</button>
-        </div>
-
-        <label class="settings-toggle">
-          <input type="checkbox" id="in-app-toast-toggle" />
-          <span>Show in-app popup alerts</span>
-        </label>
-
-        <label class="settings-toggle">
-          <input type="checkbox" id="notification-sound-toggle" />
-          <span>Play notification sound</span>
-        </label>
-      </div>
-
-      <div class="settings-card">
-        <h4>Storage & App Preferences</h4>
-        <p id="storage-status-text">Local storage status: Active</p>
-
-        <label class="settings-toggle">
-          <input type="checkbox" id="remember-data-toggle" checked disabled />
-          <span>Remember app data on this device</span>
-        </label>
-
-        <div class="settings-actions-row">
-          <button class="secondary-btn" id="clear-notifications-btn">Clear Notifications</button>
-          <button class="danger-btn" id="reset-app-data-btn">Reset App Data</button>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
     </main>
   </div>
 
-  <div id="task-modal-overlay" class="task-modal-overlay hidden">
-    <div class="task-modal">
-      <div class="task-modal-header">
-        <h3>Create New Task</h3>
-        <button id="close-task-modal-btn" class="close-modal-btn">×</button>
-      </div>
+  <script src="script.js"></script>
+  <script type="module" src="group-chat.js"></script>
 
-      <form id="task-form" class="task-form">
-        <div class="form-group">
-          <label for="task-title">Task Title</label>
-          <input type="text" id="task-title" placeholder="Enter task title" />
-        </div>
-
-        <div class="form-group">
-          <label for="task-description">Description</label>
-          <textarea id="task-description" placeholder="Enter task description" rows="4"></textarea>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label for="task-severity">Severity</label>
-            <select id="task-severity">
-              <option value="">Select severity</option>
-              <option value="High">High</option>
-              <option value="Medium">Medium</option>
-              <option value="Low">Low</option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label for="task-status">Status</label>
-            <select id="task-status">
-              <option value="">Select status</option>
-              <option value="Pending">Pending</option>
-              <option value="In Progress">In Progress</option>
-              <option value="Completed">Completed</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label for="task-deadline">Deadline</label>
-            <input type="date" id="task-deadline" />
-          </div>
-
-          <div class="form-group">
-            <label for="task-assigned-to">Assigned To</label>
-            <select id="task-assigned-to">
-              <option value="">Select member</option>
-              <option value="Rahul">Rahul</option>
-              <option value="Sneha">Sneha</option>
-              <option value="Amit">Amit</option>
-              <option value="Priya">Priya</option>
-            </select>
-          </div>
-        </div>
-
-        <button type="submit" class="primary-btn">Save Task</button>
-      </form>
-    </div>
-  </div>
-  
-<div id="toast-container" class="toast-container"></div>
-<script src="script.js"></script>
-<script type="module" src="group-chat.js"></script>
 </body>
 </html>
