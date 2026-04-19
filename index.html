@@ -174,9 +174,19 @@
             </div>
           </div>
         </div>
-      <div class="panel" style="margin-top:20px;">
+     <div class="panel" style="margin-top:20px;">
   <div class="panel-header">
     <h3>Group Chat (Real-Time)</h3>
+  </div>
+
+  <div class="group-room-tabs">
+    <button class="group-room-btn active-room-btn" data-room="general">General</button>
+    <button class="group-room-btn" data-room="tasks">Tasks</button>
+    <button class="group-room-btn" data-room="announcements">Announcements</button>
+  </div>
+
+  <div id="active-group-room-label" style="margin: 10px 0 14px; font-size: 14px; color: #6b7280;">
+    Active room: General
   </div>
 
   <div id="group-chat-messages" class="chat-messages"></div>
