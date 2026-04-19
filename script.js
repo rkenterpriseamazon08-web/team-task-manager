@@ -192,6 +192,27 @@ const defaultReplies = [
 ];
 
 // -----------------------------
+// ONE-TO-ONE CHAT STATE
+// -----------------------------
+let selectedChatMember = "Rahul";
+
+const defaultChatConversations = {
+  Rahul: [
+    { sender: "Rahul", text: "Hi, please share the task status.", type: "received" },
+    { sender: "You", text: "I am working on it.", type: "sent" }
+  ],
+  Sneha: [
+    { sender: "Sneha", text: "Pricing sheet has been updated.", type: "received" }
+  ],
+  Amit: [
+    { sender: "Amit", text: "Okay, please update by evening.", type: "received" }
+  ],
+  Priya: [
+    { sender: "Priya", text: "Please share the latest design version.", type: "received" }
+  ]
+};
+
+// -----------------------------
 // UI HELPERS
 // -----------------------------
 function showLoginScreen() {
@@ -305,6 +326,25 @@ function saveNotificationsToStorage(notifications) {
   localStorage.setItem("ttm_notifications", JSON.stringify(notifications));
 }
 
+function getChatsFromStorage() {
+  const savedChats = localStorage.getItem("ttm_chats");
+
+  if (!savedChats) {
+    localStorage.setItem("ttm_chats", JSON.stringify(defaultChatConversations));
+    return JSON.parse(JSON.stringify(defaultChatConversations));
+  }
+
+  try {
+    return JSON.parse(savedChats);
+  } catch {
+    localStorage.setItem("ttm_chats", JSON.stringify(defaultChatConversations));
+    return JSON.parse(JSON.stringify(defaultChatConversations));
+  }
+}
+
+function saveChatsToStorage(chats) {
+  localStorage.setItem("ttm_chats", JSON.stringify(chats));
+}
 // -----------------------------
 // NAVIGATION
 // -----------------------------
@@ -340,13 +380,24 @@ function renderChatUsers() {
 
   const activeMembers = groupMembers.filter((member) => member.active);
 
-  activeMembers.forEach((member, index) => {
+  activeMembers.forEach((member) => {
     const userDiv = document.createElement("div");
-    userDiv.className = index === 0 ? "chat-user active-chat-user" : "chat-user";
+    userDiv.className =
+      member.name === selectedChatMember
+        ? "chat-user active-chat-user"
+        : "chat-user";
+
     userDiv.innerHTML = `
       <strong>${member.name}</strong><br>
       <small>${member.role}</small>
     `;
+
+    userDiv.addEventListener("click", function () {
+      selectedChatMember = member.name;
+      renderChatUsers();
+      renderSelectedChatMessages();
+    });
+
     chatUsersList.appendChild(userDiv);
   });
 }
@@ -364,60 +415,20 @@ function createMessageBubble(sender, text, type) {
   return messageDiv;
 }
 
-function addUserMessage(text) {
+function renderSelectedChatMessages() {
   if (!chatMessages) return;
-  chatMessages.appendChild(createMessageBubble("You", text, "sent"));
-  scrollChatToBottom();
-}
 
-function addBotMessage(sender, text) {
-  if (!chatMessages) return;
-  chatMessages.appendChild(createMessageBubble(sender, text, "received"));
-  scrollChatToBottom();
-}
+  const chats = getChatsFromStorage();
+  const selectedConversation = chats[selectedChatMember] || [];
 
-function getRandomItem(array) {
-  return array[Math.floor(Math.random() * array.length)];
-}
+  chatMessages.innerHTML = "";
 
-function shuffleArray(array) {
-  const copied = [...array];
-  for (let i = copied.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [copied[i], copied[j]] = [copied[j], copied[i]];
-  }
-  return copied;
-}
-
-function generateReplyText(userMessage) {
-  const lowerMessage = userMessage.toLowerCase();
-
-  for (const rule of replyRules) {
-    const matched = rule.keywords.some((keyword) => lowerMessage.includes(keyword));
-    if (matched) {
-      return getRandomItem(rule.replies);
-    }
-  }
-
-  return getRandomItem(defaultReplies);
-}
-
-function simulateGroupReplies(userMessage) {
-  const activeMembers = groupMembers.filter((member) => member.active);
-  if (activeMembers.length === 0) return;
-
-  const shuffledMembers = shuffleArray(activeMembers);
-  const maxReplies = Math.min(3, shuffledMembers.length);
-  const replyCount = Math.floor(Math.random() * maxReplies) + 1;
-  const selectedMembers = shuffledMembers.slice(0, replyCount);
-
-  selectedMembers.forEach((member, index) => {
-    const replyText = generateReplyText(userMessage);
-    setTimeout(() => {
-      addBotMessage(member.name, replyText);
-      addNotification("New group reply", `${member.name}: ${replyText}`);
-    }, 1000 + index * 1200);
+  selectedConversation.forEach((message) => {
+    const bubble = createMessageBubble(message.sender, message.text, message.type);
+    chatMessages.appendChild(bubble);
   });
+
+  scrollChatToBottom();
 }
 
 function sendMessage() {
@@ -426,10 +437,26 @@ function sendMessage() {
   const messageText = chatInput.value.trim();
   if (!messageText) return;
 
-  addUserMessage(messageText);
+  const chats = getChatsFromStorage();
+
+  if (!chats[selectedChatMember]) {
+    chats[selectedChatMember] = [];
+  }
+
+  chats[selectedChatMember].push({
+    sender: "You",
+    text: messageText,
+    type: "sent"
+  });
+
+  saveChatsToStorage(chats);
   chatInput.value = "";
-  simulateGroupReplies(messageText);
-  addNotification("New chat message", `You sent: "${messageText}"`);
+  renderSelectedChatMessages();
+
+  addNotification(
+    "New chat message",
+    `You sent a message to ${selectedChatMember}`
+  );
 }
 
 // -----------------------------
@@ -968,6 +995,7 @@ function checkExistingLogin() {
 setupNavigation();
 checkExistingLogin();
 renderChatUsers();
+renderSelectedChatMessages();
 renderAllTaskUI();
 renderNotifications();
 updateNotificationPermissionUI();
