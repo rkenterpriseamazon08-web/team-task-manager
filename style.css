@@ -880,7 +880,10 @@ body {
   .toast-item {
     min-width: auto;
     max-width: none;
-    /* ================= GROUP CHAT ENHANCEMENTS ================= */
+  }
+}
+
+/* ================= GROUP CHAT ENHANCEMENTS ================= */
 
 .group-message-row {
   display: flex;
@@ -996,7 +999,5 @@ body {
   40% {
     transform: scale(1);
     opacity: 1;
-  }
-}
   }
 }
