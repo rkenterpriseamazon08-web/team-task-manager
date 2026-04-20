@@ -61,6 +61,7 @@ const dueSoonCount = document.getElementById("due-soon-count");
 const highPriorityCount = document.getElementById("high-priority-count");
 const completionRate = document.getElementById("completion-rate");
 const teamLoadSummary = document.getElementById("team-load-summary");
+const upcomingEventsList = document.getElementById("upcoming-events-list");
 const taskSearchInput = document.getElementById("task-search-input");
 const taskSearchResults = document.getElementById("task-search-results");
 const completionDonut = document.getElementById("completion-donut");
@@ -701,7 +702,7 @@ function setupNavigation() {
         targetSection.classList.add("active-section");
       }
 
-      if (pageTitle) pageTitle.textContent = item.textContent;
+      if (pageTitle) pageTitle.textContent = item.querySelector(".nav-label")?.textContent || item.textContent.trim();
     });
   });
 }
@@ -1171,6 +1172,67 @@ function renderRecentTasks() {
   });
 }
 
+function getUpcomingTimelineTasks(tasks) {
+  return tasks
+    .filter((task) => task.deadline && task.status !== "Completed")
+    .map((task) => ({
+      ...task,
+      dueDate: new Date(`${task.deadline}T00:00:00`)
+    }))
+    .filter((task) => !Number.isNaN(task.dueDate.getTime()))
+    .sort((a, b) => a.dueDate - b.dueDate)
+    .slice(0, 5);
+}
+
+function formatTimelineDay(date) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const target = new Date(date);
+  target.setHours(0, 0, 0, 0);
+
+  const diffDays = Math.round((target - today) / (1000 * 60 * 60 * 24));
+  if (diffDays === 0) return "Today";
+  if (diffDays === 1) return "Tomorrow";
+  if (diffDays < 0) return "Overdue";
+
+  return target.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short"
+  });
+}
+
+function renderUpcomingTimeline() {
+  if (!upcomingEventsList) return;
+
+  const timelineTasks = getUpcomingTimelineTasks(getTasksFromStorage());
+
+  if (timelineTasks.length === 0) {
+    upcomingEventsList.innerHTML = `
+      <div class="timeline-empty">
+        <h4>No upcoming deadlines</h4>
+        <p>Your task timeline is clear for now.</p>
+      </div>
+    `;
+    return;
+  }
+
+  upcomingEventsList.innerHTML = timelineTasks.map((task) => `
+    <div class="timeline-item">
+      <div class="timeline-marker"></div>
+      <div class="timeline-content">
+        <div class="timeline-meta">
+          <span>${formatTimelineDay(task.dueDate)}</span>
+          <span>${formatDate(task.deadline)}</span>
+        </div>
+        <h4>${escapeHTML(task.title)}</h4>
+        <p>${escapeHTML(formatTaskAssignees(task))}</p>
+        <span class="badge ${getBadgeClass(task.status)}">${escapeHTML(task.status)}</span>
+      </div>
+    </div>
+  `).join("");
+}
+
 function renderTaskCardsIntoColumn(columnElement, tasks) {
   if (!columnElement) return;
 
@@ -1319,6 +1381,7 @@ function updateDashboardInsights() {
 
 function renderAllTaskUI() {
   renderRecentTasks();
+  renderUpcomingTimeline();
   renderTaskBoard();
   updateDashboardCounts();
   updateDashboardInsights();

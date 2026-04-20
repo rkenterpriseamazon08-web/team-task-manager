@@ -63,12 +63,34 @@
         </div>
 
         <nav class="sidebar-nav">
-          <button class="nav-item active" data-section="dashboard-section">Dashboard</button>
-          <button class="nav-item" data-section="chat-section">Chat</button>
-          <button class="nav-item" data-section="group-chat-section">Group Chat</button>
-          <button class="nav-item" data-section="notifications-section">Notifications</button>
-          <button class="nav-item" data-section="team-section">Team</button>
-          <button class="nav-item" data-section="settings-section">Settings</button>
+          <button class="nav-item active" data-section="dashboard-section">
+            <span class="nav-icon nav-dashboard" aria-hidden="true"></span>
+            <span class="nav-label">Dashboard</span>
+          </button>
+          <button class="nav-item" data-section="chat-section">
+            <span class="nav-icon nav-chat" aria-hidden="true"></span>
+            <span class="nav-label">Chat</span>
+          </button>
+          <button class="nav-item" data-section="group-chat-section">
+            <span class="nav-icon nav-group-chat" aria-hidden="true"></span>
+            <span class="nav-label">Group Chat</span>
+          </button>
+          <button class="nav-item" data-section="tasks-section">
+            <span class="nav-icon nav-task" aria-hidden="true"></span>
+            <span class="nav-label">Task</span>
+          </button>
+          <button class="nav-item" data-section="notifications-section">
+            <span class="nav-icon nav-notifications" aria-hidden="true"></span>
+            <span class="nav-label">Notifications</span>
+          </button>
+          <button class="nav-item" data-section="team-section">
+            <span class="nav-icon nav-team" aria-hidden="true"></span>
+            <span class="nav-label">Team</span>
+          </button>
+          <button class="nav-item" data-section="settings-section">
+            <span class="nav-icon nav-settings" aria-hidden="true"></span>
+            <span class="nav-label">Settings</span>
+          </button>
         </nav>
       </div>
 
@@ -89,7 +111,7 @@
       <header class="topbar">
         <div>
           <h1 id="page-title">Dashboard</h1>
-          <p class="topbar-subtitle">Welcome back, <span id="topbar-user-name">Demo User</span></p>
+          <p class="topbar-subtitle">Welcome Back <span id="topbar-user-name">Demo User</span></p>
         </div>
 
         <div class="topbar-actions">
@@ -152,11 +174,11 @@
         </div>
 
         <div class="dashboard-grid">
-          <div class="panel">
+          <div class="panel timeline-panel">
             <div class="panel-header">
-              <h3>Recent Tasks</h3>
+              <h3>Today's Timeline</h3>
             </div>
-            <div class="task-list" id="recent-task-list"></div>
+            <div class="timeline-list" id="upcoming-events-list"></div>
           </div>
 
           <div class="panel team-insights-panel">
@@ -268,25 +290,34 @@
       </section>
 
       <section id="tasks-section" class="content-section">
-        <div class="panel">
-          <div class="panel-header">
-            <h3>Task Board</h3>
+        <div class="task-workspace-grid">
+          <div class="panel">
+            <div class="panel-header">
+              <h3>Task List</h3>
+            </div>
+            <div class="task-list" id="recent-task-list"></div>
           </div>
 
-          <div class="task-board">
-            <div class="task-column">
-              <h4>Pending</h4>
-              <div id="pending-task-column"></div>
+          <div class="panel">
+            <div class="panel-header">
+              <h3>Task Board</h3>
             </div>
 
-            <div class="task-column">
-              <h4>In Progress</h4>
-              <div id="inprogress-task-column"></div>
-            </div>
+            <div class="task-board">
+              <div class="task-column">
+                <h4>Pending</h4>
+                <div id="pending-task-column"></div>
+              </div>
 
-            <div class="task-column">
-              <h4>Completed</h4>
-              <div id="completed-task-column"></div>
+              <div class="task-column">
+                <h4>In Progress</h4>
+                <div id="inprogress-task-column"></div>
+              </div>
+
+              <div class="task-column">
+                <h4>Completed</h4>
+                <div id="completed-task-column"></div>
+              </div>
             </div>
           </div>
         </div>
