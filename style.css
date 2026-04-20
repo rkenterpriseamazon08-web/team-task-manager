@@ -2333,11 +2333,12 @@ html[data-theme="dark"] .mini-progress {
   }
 }
 
-/* Final KPI sizing guard: keep hover details from changing dashboard tile size. */
+/* Final KPI sizing guard: keep hover details floating outside compact tiles. */
 .stats-grid,
 .focus-grid {
   align-items: start;
   grid-auto-rows: max-content;
+  overflow: visible;
 }
 
 .stats-grid > .stat-card.kpi-card {
@@ -2345,6 +2346,7 @@ html[data-theme="dark"] .mini-progress {
   height: 132px !important;
   min-height: 132px;
   max-height: 132px;
+  overflow: visible;
 }
 
 .focus-grid > .focus-card.kpi-card {
@@ -2352,29 +2354,47 @@ html[data-theme="dark"] .mini-progress {
   height: 118px !important;
   min-height: 118px;
   max-height: 118px;
+  overflow: visible;
 }
 
 .stats-grid > .kpi-card > .kpi-hover-card,
 .focus-grid > .kpi-card > .kpi-hover-card {
   position: absolute !important;
-  left: 10px;
-  right: 10px;
-  bottom: 10px;
-  max-height: calc(100% - 20px);
+  left: 18px;
+  right: auto;
+  top: calc(100% + 10px);
+  bottom: auto;
+  width: min(340px, calc(100vw - 36px));
+  max-height: 280px;
   overflow-y: auto;
-  z-index: 4;
+  z-index: 30;
+  padding: 16px;
+  border-radius: 16px;
+  opacity: 0;
+  transform: translateY(10px);
+  pointer-events: none;
+  box-shadow: 0 22px 54px rgba(15, 23, 42, 0.2);
+}
+
+.stats-grid > .kpi-card:hover,
+.stats-grid > .kpi-card:focus,
+.stats-grid > .kpi-card:focus-within,
+.focus-grid > .kpi-card:hover,
+.focus-grid > .kpi-card:focus,
+.focus-grid > .kpi-card:focus-within {
+  z-index: 40;
 }
 
 .kpi-card .kpi-hover-card h4 {
-  font-size: 11px !important;
+  font-size: 13px !important;
   font-weight: 800 !important;
   line-height: 1.25 !important;
-  margin: 0 0 7px !important;
+  margin: 0 0 10px !important;
   text-transform: none !important;
 }
 
 .kpi-card .kpi-detail-list strong {
-  font-size: 11px !important;
+  font-size: 13px !important;
   font-weight: 700 !important;
   line-height: 1.25 !important;
   margin: 0 !important;
@@ -2384,17 +2404,64 @@ html[data-theme="dark"] .mini-progress {
 .kpi-card .kpi-detail-list span,
 .kpi-card .kpi-empty,
 .kpi-card .kpi-mini-chart p {
-  font-size: 10px !important;
+  font-size: 12px !important;
   font-weight: 500 !important;
   line-height: 1.35 !important;
-  margin: 2px 0 0 !important;
+  margin: 4px 0 0 !important;
   text-transform: none !important;
 }
 
 .kpi-card .mini-donut span {
-  font-size: 11px !important;
+  font-size: 13px !important;
   font-weight: 800 !important;
   line-height: 1 !important;
   margin: 0 !important;
   text-transform: none !important;
+}
+
+.kpi-card:hover > .kpi-hover-card,
+.kpi-card:focus > .kpi-hover-card,
+.kpi-card:focus-within > .kpi-hover-card {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.stats-grid > .kpi-card:nth-child(4n) > .kpi-hover-card,
+.focus-grid > .kpi-card:nth-child(4n) > .kpi-hover-card {
+  left: auto;
+  right: 18px;
+}
+
+.kpi-card .kpi-detail-list {
+  gap: 10px;
+}
+
+.kpi-card .kpi-detail-list li {
+  padding-bottom: 9px;
+}
+
+.kpi-card .kpi-mini-chart {
+  gap: 12px;
+}
+
+.kpi-card .mini-donut {
+  width: 58px;
+  height: 58px;
+  flex-basis: 58px;
+}
+
+@media (max-width: 768px) {
+  .stats-grid > .kpi-card > .kpi-hover-card,
+  .focus-grid > .kpi-card > .kpi-hover-card {
+    left: 12px;
+    right: 12px;
+    width: auto;
+  }
+
+  .stats-grid > .kpi-card:nth-child(4n) > .kpi-hover-card,
+  .focus-grid > .kpi-card:nth-child(4n) > .kpi-hover-card {
+    left: 12px;
+    right: 12px;
+  }
 }
