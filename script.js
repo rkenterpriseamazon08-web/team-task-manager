@@ -403,20 +403,74 @@ function getChatsFromStorage() {
   const savedChats = localStorage.getItem("ttm_chats");
 
   if (!savedChats) {
-    localStorage.setItem("ttm_chats", JSON.stringify(defaultChatConversations));
-    return JSON.parse(JSON.stringify(defaultChatConversations));
+    const chats = normalizeChatConversations(defaultChatConversations);
+    localStorage.setItem("ttm_chats", JSON.stringify(chats));
+    return chats;
   }
 
   try {
-    return JSON.parse(savedChats);
+    const chats = normalizeChatConversations(JSON.parse(savedChats));
+    localStorage.setItem("ttm_chats", JSON.stringify(chats));
+    return chats;
   } catch {
-    localStorage.setItem("ttm_chats", JSON.stringify(defaultChatConversations));
-    return JSON.parse(JSON.stringify(defaultChatConversations));
+    const chats = normalizeChatConversations(defaultChatConversations);
+    localStorage.setItem("ttm_chats", JSON.stringify(chats));
+    return chats;
   }
 }
 
 function saveChatsToStorage(chats) {
   localStorage.setItem("ttm_chats", JSON.stringify(chats));
+}
+
+function normalizeChatConversations(chats) {
+  const normalizedChats = {};
+  const sourceChats = chats && typeof chats === "object" ? chats : {};
+
+  groupMembers.forEach((member) => {
+    const messages = Array.isArray(sourceChats[member.name])
+      ? sourceChats[member.name]
+      : (defaultChatConversations[member.name] || []);
+
+    normalizedChats[member.name] = messages.map((message, index) => normalizeChatMessage(message, index));
+  });
+
+  return normalizedChats;
+}
+
+function normalizeChatMessage(message, index) {
+  const messageType = message?.type === "sent" ? "sent" : "received";
+  const fallbackTime = new Date(Date.now() - (index + 1) * 60000).toISOString();
+
+  return {
+    sender: message?.sender || (messageType === "sent" ? "You" : "Team"),
+    text: message?.text || "",
+    type: messageType,
+    timestamp: message?.timestamp || fallbackTime,
+    read: messageType === "sent" ? true : message?.read === true
+  };
+}
+
+function getUnreadChatCount(memberName) {
+  const chats = getChatsFromStorage();
+  const conversation = chats[memberName] || [];
+
+  return conversation.filter((message) => message.type === "received" && !message.read).length;
+}
+
+function markConversationAsRead(memberName) {
+  const chats = getChatsFromStorage();
+  const conversation = chats[memberName] || [];
+  let changed = false;
+
+  conversation.forEach((message) => {
+    if (message.type === "received" && !message.read) {
+      message.read = true;
+      changed = true;
+    }
+  });
+
+  if (changed) saveChatsToStorage(chats);
 }
 
 function migrateAppStorageIfNeeded() {
@@ -463,19 +517,23 @@ function renderChatUsers() {
   const activeMembers = groupMembers.filter((member) => member.active);
 
   activeMembers.forEach((member) => {
+    const unreadCount = getUnreadChatCount(member.name);
     const userDiv = document.createElement("div");
     userDiv.className =
       member.name === selectedChatMember ? "chat-user active-chat-user" : "chat-user";
 
     userDiv.innerHTML = `
-      <strong>${member.name}</strong><br>
-      <small>${member.role}</small>
+      <div>
+        <strong>${member.name}</strong><br>
+        <small>${member.role}</small>
+      </div>
+      ${unreadCount > 0 ? `<span class="chat-unread-badge">${unreadCount}</span>` : ""}
     `;
 
     userDiv.addEventListener("click", function () {
       selectedChatMember = member.name;
-      renderChatUsers();
       renderSelectedChatMessages();
+      renderChatUsers();
     });
 
     chatUsersList.appendChild(userDiv);
@@ -486,10 +544,26 @@ function scrollChatToBottom() {
   if (chatMessages) chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
-function createMessageBubble(sender, text, type) {
+function formatChatMessageTime(timestamp) {
+  const date = new Date(timestamp);
+  if (Number.isNaN(date.getTime())) return "";
+
+  return date.toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+}
+
+function createMessageBubble(message) {
   const messageDiv = document.createElement("div");
-  messageDiv.classList.add("message-bubble", type);
-  messageDiv.innerHTML = `<strong>${sender}:</strong> ${text}`;
+  messageDiv.classList.add("message-bubble", message.type);
+  messageDiv.innerHTML = `
+    <div><strong>${message.sender}:</strong> ${message.text}</div>
+    <span class="message-time">
+      ${formatChatMessageTime(message.timestamp)}
+      ${message.type === "received" && !message.read ? " • Unread" : ""}
+    </span>
+  `;
   return messageDiv;
 }
 
@@ -502,10 +576,11 @@ function renderSelectedChatMessages() {
   chatMessages.innerHTML = "";
 
   selectedConversation.forEach((message) => {
-    const bubble = createMessageBubble(message.sender, message.text, message.type);
+    const bubble = createMessageBubble(message);
     chatMessages.appendChild(bubble);
   });
 
+  markConversationAsRead(selectedChatMember);
   scrollChatToBottom();
 }
 
@@ -524,12 +599,15 @@ function sendMessage() {
   chats[selectedChatMember].push({
     sender: "You",
     text: messageText,
-    type: "sent"
+    type: "sent",
+    timestamp: new Date().toISOString(),
+    read: true
   });
 
   saveChatsToStorage(chats);
   chatInput.value = "";
   renderSelectedChatMessages();
+  renderChatUsers();
 
   addNotification("New chat message", `You sent a message to ${selectedChatMember}`);
 }
@@ -1188,6 +1266,7 @@ setupNavigation();
 checkExistingLogin();
 renderChatUsers();
 renderSelectedChatMessages();
+renderChatUsers();
 renderAllTaskUI();
 renderNotifications();
 updateNotificationPermissionUI();
