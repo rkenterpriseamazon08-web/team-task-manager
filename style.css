@@ -2370,6 +2370,10 @@ html[data-theme="dark"] .mini-progress {
   z-index: 30;
   padding: 16px;
   border-radius: 16px;
+  background: #ffffff !important;
+  border-color: #e2e8f0;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   opacity: 0;
   transform: translateY(10px);
   pointer-events: none;
@@ -2449,6 +2453,12 @@ html[data-theme="dark"] .mini-progress {
   width: 58px;
   height: 58px;
   flex-basis: 58px;
+}
+
+html[data-theme="dark"] .stats-grid > .kpi-card > .kpi-hover-card,
+html[data-theme="dark"] .focus-grid > .kpi-card > .kpi-hover-card {
+  background: #1e293b !important;
+  border-color: #475569;
 }
 
 @media (max-width: 768px) {
