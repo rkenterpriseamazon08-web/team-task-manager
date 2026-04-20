@@ -159,20 +159,51 @@
             <div class="task-list" id="recent-task-list"></div>
           </div>
 
-          <div class="panel">
+          <div class="panel team-insights-panel">
             <div class="panel-header">
-              <h3>Quick Team Chat Preview</h3>
+              <h3>Team Insights</h3>
             </div>
-            <div class="chat-preview">
-              <div class="message-bubble received">
-                <strong>Rahul:</strong> Please review the latest task updates.
+
+            <div class="insights-grid">
+              <div class="insight-card">
+                <div class="donut-chart" id="completion-donut" style="--completed:0;">
+                  <span id="completion-donut-percent">0%</span>
+                </div>
+                <div>
+                  <h4>Task Completion</h4>
+                  <p><span id="completion-donut-detail">0 completed, 0 remaining</span></p>
+                </div>
               </div>
-              <div class="message-bubble sent">
-                <strong class="current-user-chat-name">Demo User:</strong> Sure, I will check them today.
+
+              <div class="insight-card">
+                <h4>Task Status</h4>
+                <div class="status-segmented-bar" id="status-segmented-bar">
+                  <span class="status-pending" style="width:0%;"></span>
+                  <span class="status-progress" style="width:0%;"></span>
+                  <span class="status-completed" style="width:0%;"></span>
+                </div>
+                <div class="status-legend">
+                  <span><i class="legend-dot status-pending-dot"></i>Pending <strong id="pending-insight-count">0</strong></span>
+                  <span><i class="legend-dot status-progress-dot"></i>In Progress <strong id="progress-insight-count">0</strong></span>
+                  <span><i class="legend-dot status-completed-dot"></i>Completed <strong id="completed-insight-count">0</strong></span>
+                </div>
               </div>
-              <div class="message-bubble received">
-                <strong>Sneha:</strong> Pricing sheet has been updated.
+            </div>
+
+            <div class="insight-list-block">
+              <div class="insight-list-header">
+                <h4>Team Performance</h4>
+                <span>Completed tasks</span>
               </div>
+              <div id="team-performance-list" class="insight-list"></div>
+            </div>
+
+            <div class="insight-list-block">
+              <div class="insight-list-header">
+                <h4>Team Productivity</h4>
+                <span>Completed / assigned</span>
+              </div>
+              <div id="team-productivity-list" class="insight-list"></div>
             </div>
           </div>
         </div>

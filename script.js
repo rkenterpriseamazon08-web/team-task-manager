@@ -63,6 +63,15 @@ const completionRate = document.getElementById("completion-rate");
 const teamLoadSummary = document.getElementById("team-load-summary");
 const taskSearchInput = document.getElementById("task-search-input");
 const taskSearchResults = document.getElementById("task-search-results");
+const completionDonut = document.getElementById("completion-donut");
+const completionDonutPercent = document.getElementById("completion-donut-percent");
+const completionDonutDetail = document.getElementById("completion-donut-detail");
+const statusSegmentedBar = document.getElementById("status-segmented-bar");
+const pendingInsightCount = document.getElementById("pending-insight-count");
+const progressInsightCount = document.getElementById("progress-insight-count");
+const completedInsightCount = document.getElementById("completed-insight-count");
+const teamPerformanceList = document.getElementById("team-performance-list");
+const teamProductivityList = document.getElementById("team-productivity-list");
 
 // -----------------------------
 // NOTIFICATION ELEMENTS
@@ -1216,10 +1225,103 @@ function updateDashboardCounts() {
   if (teamLoadSummary) teamLoadSummary.textContent = activeAssignments;
 }
 
+function getTaskStatusCounts(tasks) {
+  return {
+    pending: tasks.filter((task) => task.status === "Pending").length,
+    inProgress: tasks.filter((task) => task.status === "In Progress").length,
+    completed: tasks.filter((task) => task.status === "Completed").length
+  };
+}
+
+function getTeamAnalytics(tasks) {
+  return groupMembers.map((member) => {
+    const assignedTasks = tasks.filter((task) => getTaskAssignees(task).includes(member.name));
+    const completedTasks = assignedTasks.filter((task) => task.status === "Completed").length;
+    const productivity = assignedTasks.length
+      ? Math.round((completedTasks / assignedTasks.length) * 100)
+      : 0;
+
+    return {
+      name: member.name,
+      assigned: assignedTasks.length,
+      completed: completedTasks,
+      productivity
+    };
+  });
+}
+
+function renderTeamInsightList(container, items, renderItem) {
+  if (!container) return;
+
+  container.innerHTML = items.map(renderItem).join("");
+}
+
+function updateDashboardInsights() {
+  const tasks = getTasksFromStorage();
+  const total = tasks.length;
+  const counts = getTaskStatusCounts(tasks);
+  const remaining = Math.max(total - counts.completed, 0);
+  const completionPercent = total ? Math.round((counts.completed / total) * 100) : 0;
+
+  if (completionDonut) completionDonut.style.setProperty("--completed", completionPercent);
+  if (completionDonutPercent) completionDonutPercent.textContent = `${completionPercent}%`;
+  if (completionDonutDetail) {
+    completionDonutDetail.textContent = `${counts.completed} completed, ${remaining} remaining`;
+  }
+
+  if (statusSegmentedBar) {
+    const pendingWidth = total ? (counts.pending / total) * 100 : 0;
+    const progressWidth = total ? (counts.inProgress / total) * 100 : 0;
+    const completedWidth = total ? (counts.completed / total) * 100 : 0;
+    const segments = statusSegmentedBar.querySelectorAll("span");
+
+    if (segments[0]) segments[0].style.width = `${pendingWidth}%`;
+    if (segments[1]) segments[1].style.width = `${progressWidth}%`;
+    if (segments[2]) segments[2].style.width = `${completedWidth}%`;
+  }
+
+  if (pendingInsightCount) pendingInsightCount.textContent = counts.pending;
+  if (progressInsightCount) progressInsightCount.textContent = counts.inProgress;
+  if (completedInsightCount) completedInsightCount.textContent = counts.completed;
+
+  const analytics = getTeamAnalytics(tasks);
+  const maxCompleted = Math.max(...analytics.map((item) => item.completed), 1);
+
+  renderTeamInsightList(teamPerformanceList, analytics, (item) => {
+    const width = item.completed ? Math.max((item.completed / maxCompleted) * 100, 8) : 0;
+
+    return `
+      <div class="insight-row">
+        <div class="insight-row-top">
+          <span>${escapeHTML(item.name)}</span>
+          <strong>${item.completed}</strong>
+        </div>
+        <div class="mini-progress"><span style="width:${width}%;"></span></div>
+      </div>
+    `;
+  });
+
+  renderTeamInsightList(teamProductivityList, analytics, (item) => {
+    const label = item.assigned ? `${item.productivity}%` : "0%";
+
+    return `
+      <div class="insight-row">
+        <div class="insight-row-top">
+          <span>${escapeHTML(item.name)}</span>
+          <strong>${label}</strong>
+        </div>
+        <div class="mini-progress productivity-progress"><span style="width:${item.productivity}%;"></span></div>
+        <p>${item.completed}/${item.assigned} tasks completed</p>
+      </div>
+    `;
+  });
+}
+
 function renderAllTaskUI() {
   renderRecentTasks();
   renderTaskBoard();
   updateDashboardCounts();
+  updateDashboardInsights();
 }
 
 function renderTaskSearchResults(query) {
