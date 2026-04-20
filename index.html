@@ -251,8 +251,17 @@
                   <div id="chat-typing-indicator" class="chat-typing-indicator hidden"></div>
 
                   <div class="chat-input-row">
+                    <input type="file" id="chat-file-input" class="hidden" />
+                    <button class="secondary-btn chat-tool-btn" type="button" id="chat-attach-btn">Attach</button>
+                    <button class="secondary-btn chat-tool-btn" type="button" id="chat-record-btn">Record</button>
                     <input type="text" id="chat-message-input" placeholder="Type your message..." />
                     <button class="primary-btn" id="send-message-btn">Send</button>
+                  </div>
+                  <div id="chat-voice-panel" class="voice-panel hidden">
+                    <span id="chat-voice-status">Recording...</span>
+                    <button type="button" class="secondary-btn" id="chat-stop-record-btn">Stop</button>
+                    <button type="button" class="secondary-btn hidden" id="chat-send-voice-btn">Send Voice</button>
+                    <button type="button" class="danger-btn" id="chat-cancel-record-btn">Cancel</button>
                   </div>
                 </div>
               </div>
@@ -282,8 +291,17 @@
           <div id="group-typing-indicator" class="group-typing-indicator hidden"></div>
 
           <div class="chat-input-row">
+            <input type="file" id="group-file-input" class="hidden" />
+            <button class="secondary-btn chat-tool-btn" type="button" id="group-attach-btn">Attach</button>
+            <button class="secondary-btn chat-tool-btn" type="button" id="group-record-btn">Record</button>
             <input type="text" id="group-chat-input" placeholder="Type group message..." />
             <button class="primary-btn" id="group-send-btn">Send</button>
+          </div>
+          <div id="group-voice-panel" class="voice-panel hidden">
+            <span id="group-voice-status">Recording...</span>
+            <button type="button" class="secondary-btn" id="group-stop-record-btn">Stop</button>
+            <button type="button" class="secondary-btn hidden" id="group-send-voice-btn">Send Voice</button>
+            <button type="button" class="danger-btn" id="group-cancel-record-btn">Cancel</button>
           </div>
         </div>
       </section>
@@ -497,6 +515,12 @@
               <span>Urgent</span>
             </label>
           </div>
+        </div>
+
+        <div class="form-group">
+          <label for="task-attachments">Attachments</label>
+          <input type="file" id="task-attachments" multiple />
+          <small class="form-help">Optional. Attach up to 3 small reference files, 750 KB each.</small>
         </div>
 
         <button type="submit" class="primary-btn">Save Task</button>

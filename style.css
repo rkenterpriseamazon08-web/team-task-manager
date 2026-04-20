@@ -1139,6 +1139,7 @@ select {
 .chat-input-row {
   display: flex;
   gap: 10px;
+  align-items: center;
 }
 
 .chat-input-row input {
@@ -1151,6 +1152,117 @@ select {
   font-family: "Montserrat", Arial, sans-serif;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
+}
+
+.chat-tool-btn {
+  padding: 12px 14px;
+  white-space: nowrap;
+}
+
+.voice-panel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 10px;
+  border: 1px solid rgba(226, 232, 240, 0.82);
+  border-radius: 14px;
+  background: rgba(248, 250, 252, 0.72);
+}
+
+.voice-panel span {
+  flex: 1;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.attachment-list,
+.task-attachment-list,
+.message-attachments {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.attachment-chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(226, 232, 240, 0.78);
+  background: rgba(255, 255, 255, 0.76);
+  color: inherit;
+  text-decoration: none;
+}
+
+.message-bubble.sent .attachment-chip {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.28);
+}
+
+.attachment-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  height: 30px;
+  padding: 0 8px;
+  border-radius: 9px;
+  background: rgba(79, 70, 229, 0.12);
+  color: #4f46e5;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.message-bubble.sent .attachment-icon {
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+}
+
+.attachment-meta {
+  min-width: 0;
+}
+
+.attachment-meta strong,
+.attachment-meta small {
+  display: block;
+}
+
+.attachment-meta strong {
+  overflow: hidden;
+  color: inherit;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.attachment-meta small {
+  color: #64748b;
+  font-size: 11px;
+}
+
+.message-bubble.sent .attachment-meta small {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.voice-message {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.voice-message audio {
+  max-width: 100%;
+  height: 36px;
+}
+
+.voice-message a {
+  color: inherit;
+  font-size: 11px;
+  font-weight: 700;
 }
 
 .task-board {
@@ -2150,6 +2262,18 @@ body::before {
   padding-top: 12px;
 }
 
+.task-attachments {
+  border-top: 1px solid rgba(226, 232, 240, 0.86);
+  padding-top: 12px;
+}
+
+.form-help {
+  display: block;
+  margin-top: 6px;
+  color: #64748b;
+  font-size: 12px;
+}
+
 .task-comments-header {
   display: flex;
   align-items: center;
@@ -2311,7 +2435,10 @@ html[data-theme="dark"] .insight-card p,
 html[data-theme="dark"] .insight-list-header span,
 html[data-theme="dark"] .insight-row p,
 html[data-theme="dark"] .task-comment p,
-html[data-theme="dark"] .task-comment-meta span {
+html[data-theme="dark"] .task-comment-meta span,
+html[data-theme="dark"] .form-help,
+html[data-theme="dark"] .attachment-meta small,
+html[data-theme="dark"] .voice-panel span {
   color: #cbd5e1;
 }
 
@@ -2346,10 +2473,17 @@ html[data-theme="dark"] .message-bubble.received,
 html[data-theme="dark"] .search-results,
 html[data-theme="dark"] .search-result-item,
 html[data-theme="dark"] .task-comment,
+html[data-theme="dark"] .attachment-chip,
+html[data-theme="dark"] .voice-panel,
 html[data-theme="dark"] .tag-checkbox,
 html[data-theme="dark"] .kpi-hover-card {
   background: rgba(30, 41, 59, 0.94);
   border-color: rgba(148, 163, 184, 0.28);
+}
+
+html[data-theme="dark"] .attachment-icon {
+  background: rgba(96, 165, 250, 0.16);
+  color: #bfdbfe;
 }
 
 html[data-theme="dark"] .close-modal-btn {
@@ -2433,6 +2567,16 @@ html[data-theme="dark"] .mini-progress {
   .kanban-card-main,
   .task-comment-form {
     flex-direction: column;
+  }
+
+  .chat-input-row,
+  .voice-panel {
+    align-items: stretch;
+    flex-wrap: wrap;
+  }
+
+  .chat-input-row input[type="text"] {
+    min-width: 100%;
   }
 
   .task-card-meta-stack {

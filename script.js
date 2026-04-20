@@ -1,5 +1,7 @@
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyvsOgYah2WrM4_r_yGMlZrRgg-HAs0A9_ZGt9n5yjfyxS8yhpC4eAlEDWAElJBzFKDsQ/exec";
 const APP_STORAGE_VERSION = "team-task-manager-dashboard-2026-04-19";
+const MAX_ATTACHMENT_SIZE = 750 * 1024;
+const MAX_VOICE_SIZE = 1200 * 1024;
 
 // -----------------------------
 // BASIC ELEMENTS
@@ -30,6 +32,14 @@ const sendMessageBtn = document.getElementById("send-message-btn");
 const chatMessages = document.getElementById("chat-messages");
 const chatUsersList = document.getElementById("chat-users-list");
 const chatTypingIndicator = document.getElementById("chat-typing-indicator");
+const chatFileInput = document.getElementById("chat-file-input");
+const chatAttachBtn = document.getElementById("chat-attach-btn");
+const chatRecordBtn = document.getElementById("chat-record-btn");
+const chatVoicePanel = document.getElementById("chat-voice-panel");
+const chatVoiceStatus = document.getElementById("chat-voice-status");
+const chatStopRecordBtn = document.getElementById("chat-stop-record-btn");
+const chatSendVoiceBtn = document.getElementById("chat-send-voice-btn");
+const chatCancelRecordBtn = document.getElementById("chat-cancel-record-btn");
 
 // -----------------------------
 // TASK ELEMENTS
@@ -45,6 +55,7 @@ const taskSeverityInput = document.getElementById("task-severity");
 const taskStatusInput = document.getElementById("task-status");
 const taskDeadlineInput = document.getElementById("task-deadline");
 const taskAssignedToInput = document.getElementById("task-assigned-to");
+const taskAttachmentsInput = document.getElementById("task-attachments");
 const taskAssignmentHelp = document.getElementById("task-assignment-help");
 const taskTagInputs = document.querySelectorAll('input[name="task-tags"]');
 
@@ -207,6 +218,10 @@ const defaultNotifications = [
 let selectedChatMember = "Rahul";
 let privateChatChannel = null;
 let privateTypingTimer = null;
+let privateVoiceRecorder = null;
+let privateVoiceChunks = [];
+let privateVoiceAttachment = null;
+let privateVoiceCancelled = false;
 
 const defaultChatConversations = {
   Rahul: [
@@ -528,6 +543,121 @@ function escapeHTML(value) {
     .replace(/'/g, "&#39;");
 }
 
+function formatFileSize(size) {
+  const bytes = Number(size) || 0;
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function getFileTypeLabel(type, name = "") {
+  if (type) return type.split("/")[1]?.toUpperCase() || type;
+  const extension = String(name).split(".").pop();
+  return extension && extension !== name ? extension.toUpperCase() : "FILE";
+}
+
+function normalizeAttachment(attachment) {
+  if (!attachment || typeof attachment !== "object") return null;
+  if (!attachment.dataUrl || !attachment.name) return null;
+
+  return {
+    id: attachment.id || `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    name: String(attachment.name),
+    type: attachment.type || "",
+    size: Number(attachment.size) || 0,
+    dataUrl: attachment.dataUrl,
+    kind: attachment.kind === "voice" ? "voice" : "file"
+  };
+}
+
+function normalizeAttachments(attachments) {
+  if (!Array.isArray(attachments)) return [];
+  return attachments.map(normalizeAttachment).filter(Boolean);
+}
+
+function readFileAsAttachment(file, kind = "file", maxSize = MAX_ATTACHMENT_SIZE) {
+  return new Promise((resolve, reject) => {
+    if (!file) {
+      resolve(null);
+      return;
+    }
+
+    if (file.size > maxSize) {
+      reject(new Error(`${file.name} is too large. Maximum size is ${formatFileSize(maxSize)}.`));
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      resolve({
+        id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        name: file.name || (kind === "voice" ? "Voice message.webm" : "Attachment"),
+        type: file.type || "",
+        size: file.size || 0,
+        dataUrl: reader.result,
+        kind
+      });
+    };
+    reader.onerror = () => reject(new Error("Unable to read the selected file."));
+    reader.readAsDataURL(file);
+  });
+}
+
+async function readInputAttachments(input, maxSize = MAX_ATTACHMENT_SIZE) {
+  const files = Array.from(input?.files || []);
+  if (files.length > 3) {
+    throw new Error("Please attach no more than 3 files at a time.");
+  }
+  const attachments = [];
+
+  for (const file of files) {
+    attachments.push(await readFileAsAttachment(file, "file", maxSize));
+  }
+
+  return attachments.filter(Boolean);
+}
+
+function renderAttachmentList(attachments, className = "attachment-list") {
+  const safeAttachments = normalizeAttachments(attachments);
+  if (safeAttachments.length === 0) return "";
+
+  return `
+    <div class="${className}">
+      ${safeAttachments.map((attachment) => `
+        <a class="attachment-chip ${attachment.kind === "voice" ? "voice-attachment" : ""}"
+          href="${attachment.dataUrl}"
+          download="${escapeHTML(attachment.name)}"
+          target="_blank"
+          rel="noopener noreferrer">
+          <span class="attachment-icon">${attachment.kind === "voice" ? "Audio" : getFileTypeLabel(attachment.type, attachment.name)}</span>
+          <span class="attachment-meta">
+            <strong>${escapeHTML(attachment.name)}</strong>
+            <small>${escapeHTML(getFileTypeLabel(attachment.type, attachment.name))} &bull; ${formatFileSize(attachment.size)}</small>
+          </span>
+        </a>
+      `).join("")}
+    </div>
+  `;
+}
+
+function renderMessageAttachments(attachments) {
+  const safeAttachments = normalizeAttachments(attachments);
+  if (safeAttachments.length === 0) return "";
+
+  return safeAttachments.map((attachment) => {
+    if (attachment.kind === "voice") {
+      return `
+        <div class="voice-message">
+          <audio controls src="${attachment.dataUrl}"></audio>
+          <a href="${attachment.dataUrl}" download="${escapeHTML(attachment.name)}">Download voice</a>
+        </div>
+      `;
+    }
+
+    return renderAttachmentList([attachment], "message-attachments");
+  }).join("");
+}
+
 function isValidTaskList(tasks) {
   if (!Array.isArray(tasks)) return false;
   if (tasks.length === 0) return true;
@@ -549,7 +679,8 @@ function normalizeTaskList(tasks) {
       assignedTo: formatTaskAssignees(assignees),
       assignees,
       tags: Array.isArray(task.tags) ? task.tags : [],
-      comments: Array.isArray(task.comments) ? task.comments : []
+      comments: Array.isArray(task.comments) ? task.comments : [],
+      attachments: normalizeAttachments(task.attachments)
     };
   });
 }
@@ -607,7 +738,12 @@ function getTasksFromStorage() {
 }
 
 function saveTasksToStorage(tasks) {
-  localStorage.setItem("ttm_tasks", JSON.stringify(tasks));
+  try {
+    localStorage.setItem("ttm_tasks", JSON.stringify(tasks));
+  } catch (error) {
+    alert("Unable to save task data. Please remove large attachments and try again.");
+    throw error;
+  }
 }
 
 function getNotificationsFromStorage() {
@@ -655,7 +791,12 @@ function getChatsFromStorage() {
 }
 
 function saveChatsToStorage(chats) {
-  localStorage.setItem("ttm_chats", JSON.stringify(chats));
+  try {
+    localStorage.setItem("ttm_chats", JSON.stringify(chats));
+  } catch (error) {
+    alert("Unable to save chat data. Please remove large attachments and try again.");
+    throw error;
+  }
 }
 
 function normalizeChatConversations(chats) {
@@ -682,7 +823,8 @@ function normalizeChatMessage(message, index) {
     text: message?.text || "",
     type: messageType,
     timestamp: message?.timestamp || fallbackTime,
-    read: messageType === "sent" ? true : message?.read === true
+    read: messageType === "sent" ? true : message?.read === true,
+    attachments: normalizeAttachments(message?.attachments)
   };
 }
 
@@ -809,8 +951,12 @@ function createMessageBubble(message) {
   const messageDiv = document.createElement("div");
   messageDiv.classList.add("message-bubble", message.type);
   const senderName = getChatDisplaySender(message);
+  const messageTextMarkup = message.text
+    ? `<div><strong>${escapeHTML(senderName)}:</strong> ${escapeHTML(message.text)}</div>`
+    : `<div><strong>${escapeHTML(senderName)}:</strong></div>`;
   messageDiv.innerHTML = `
-    <div><strong>${escapeHTML(senderName)}:</strong> ${escapeHTML(message.text)}</div>
+    ${messageTextMarkup}
+    ${renderMessageAttachments(message.attachments)}
     <span class="message-time">
       ${escapeHTML(formatChatMessageTime(message.timestamp))}
       ${message.type === "received" && !message.read ? " &bull; Unread" : ""}
@@ -885,11 +1031,20 @@ function renderSelectedChatMessages() {
   scrollChatToBottom();
 }
 
-function sendMessage() {
+async function sendMessage() {
   if (!chatInput) return;
 
   const messageText = chatInput.value.trim();
-  if (!messageText) return;
+  let attachments = [];
+
+  try {
+    attachments = await readInputAttachments(chatFileInput, MAX_ATTACHMENT_SIZE);
+  } catch (error) {
+    alert(error.message || "Unable to attach the selected file.");
+    return;
+  }
+
+  if (!messageText && attachments.length === 0) return;
 
   const chats = getChatsFromStorage();
 
@@ -902,17 +1057,119 @@ function sendMessage() {
     text: messageText,
     type: "sent",
     timestamp: new Date().toISOString(),
-    read: true
+    read: true,
+    attachments
   });
 
   saveChatsToStorage(chats);
   chatInput.value = "";
+  if (chatFileInput) chatFileInput.value = "";
   broadcastPrivateTyping(false);
   renderPrivateTypingIndicator("");
   renderSelectedChatMessages();
   renderChatUsers();
 
   addNotification("New chat message", `${getCurrentUserName()} sent a message to ${selectedChatMember}`);
+}
+
+function setPrivateVoicePanel(state, message = "") {
+  if (!chatVoicePanel) return;
+
+  const isIdle = state === "idle";
+  chatVoicePanel.classList.toggle("hidden", isIdle);
+  if (chatVoiceStatus) chatVoiceStatus.textContent = message;
+  if (chatStopRecordBtn) chatStopRecordBtn.classList.toggle("hidden", state !== "recording");
+  if (chatSendVoiceBtn) chatSendVoiceBtn.classList.toggle("hidden", state !== "ready");
+}
+
+async function startPrivateVoiceRecording() {
+  if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
+    alert("Voice recording is not supported in this browser.");
+    return;
+  }
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    privateVoiceChunks = [];
+    privateVoiceAttachment = null;
+    privateVoiceCancelled = false;
+    privateVoiceRecorder = new MediaRecorder(stream);
+
+    privateVoiceRecorder.addEventListener("dataavailable", (event) => {
+      if (event.data?.size) privateVoiceChunks.push(event.data);
+    });
+
+    privateVoiceRecorder.addEventListener("stop", async () => {
+      stream.getTracks().forEach((track) => track.stop());
+      if (privateVoiceCancelled) {
+        privateVoiceChunks = [];
+        privateVoiceAttachment = null;
+        setPrivateVoicePanel("idle");
+        return;
+      }
+      const blob = new Blob(privateVoiceChunks, { type: privateVoiceRecorder?.mimeType || "audio/webm" });
+
+      if (blob.size > MAX_VOICE_SIZE) {
+        privateVoiceAttachment = null;
+        setPrivateVoicePanel("idle");
+        alert(`Voice message is too large. Maximum size is ${formatFileSize(MAX_VOICE_SIZE)}.`);
+        return;
+      }
+
+      const file = new File([blob], `Voice message ${new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}.webm`, {
+        type: blob.type || "audio/webm"
+      });
+      privateVoiceAttachment = await readFileAsAttachment(file, "voice", MAX_VOICE_SIZE);
+      setPrivateVoicePanel("ready", "Voice message ready to send.");
+    });
+
+    privateVoiceRecorder.start();
+    setPrivateVoicePanel("recording", "Recording voice message...");
+  } catch {
+    setPrivateVoicePanel("idle");
+    alert("Microphone access was denied or unavailable.");
+  }
+}
+
+function stopPrivateVoiceRecording() {
+  if (privateVoiceRecorder && privateVoiceRecorder.state === "recording") {
+    privateVoiceRecorder.stop();
+  }
+}
+
+function cancelPrivateVoiceRecording() {
+  privateVoiceCancelled = true;
+  if (privateVoiceRecorder && privateVoiceRecorder.state === "recording") {
+    privateVoiceRecorder.stream?.getTracks().forEach((track) => track.stop());
+    privateVoiceRecorder.stop();
+  }
+  privateVoiceAttachment = null;
+  privateVoiceChunks = [];
+  setPrivateVoicePanel("idle");
+}
+
+function sendPrivateVoiceMessage() {
+  if (!privateVoiceAttachment) return;
+
+  const chats = getChatsFromStorage();
+  if (!chats[selectedChatMember]) chats[selectedChatMember] = [];
+
+  chats[selectedChatMember].push({
+    sender: getCurrentUserName(),
+    text: "",
+    type: "sent",
+    timestamp: new Date().toISOString(),
+    read: true,
+    attachments: [privateVoiceAttachment]
+  });
+
+  saveChatsToStorage(chats);
+  privateVoiceAttachment = null;
+  privateVoiceChunks = [];
+  setPrivateVoicePanel("idle");
+  renderSelectedChatMessages();
+  renderChatUsers();
+  addNotification("Voice message sent", `${getCurrentUserName()} sent a voice message to ${selectedChatMember}`);
 }
 
 // -----------------------------
@@ -1133,6 +1390,23 @@ function renderTaskComments(task) {
   `;
 }
 
+function renderTaskAttachments(task) {
+  const attachments = normalizeAttachments(task.attachments);
+
+  return `
+    <div class="task-attachments">
+      <div class="task-comments-header">
+        <span>Attachments</span>
+        <small>${attachments.length}</small>
+      </div>
+      ${attachments.length === 0
+        ? `<p class="task-comment-empty">No attachments yet</p>`
+        : renderAttachmentList(attachments, "task-attachment-list")
+      }
+    </div>
+  `;
+}
+
 function addCommentToTask(taskId, commentText) {
   const text = commentText.trim();
   if (!text) return;
@@ -1176,6 +1450,7 @@ function getTaskCardMarkup(task, variant = "recent") {
       </div>
     </div>
     ${renderTaskTags(task.tags)}
+    ${renderTaskAttachments(task)}
     ${renderTaskComments(task)}
   `;
 }
@@ -1582,7 +1857,8 @@ function createNewTask(taskData) {
     assignedTo,
     assignees,
     tags: taskData.tags,
-    comments: []
+    comments: [],
+    attachments: normalizeAttachments(taskData.attachments)
   };
 
   tasks.push(newTask);
@@ -1605,6 +1881,7 @@ function getTaskFormValues() {
     deadline: taskDeadlineInput?.value || "",
     assignedTo: formatTaskAssignees(assignees),
     assignees,
+    attachments: [],
     tags: Array.from(taskTagInputs)
       .filter((input) => input.checked)
       .map((input) => input.value)
@@ -1656,10 +1933,17 @@ function validateTaskForm(taskData) {
   return true;
 }
 
-function submitTaskForm() {
+async function submitTaskForm() {
   const taskData = getTaskFormValues();
 
   if (!validateTaskForm(taskData)) return;
+
+  try {
+    taskData.attachments = await readInputAttachments(taskAttachmentsInput, MAX_ATTACHMENT_SIZE);
+  } catch (error) {
+    alert(error.message || "Unable to attach the selected file.");
+    return;
+  }
 
   createNewTask(taskData);
   closeTaskModal();
@@ -1799,6 +2083,26 @@ if (sendMessageBtn) {
   sendMessageBtn.addEventListener("click", sendMessage);
 }
 
+if (chatAttachBtn && chatFileInput) {
+  chatAttachBtn.addEventListener("click", () => chatFileInput.click());
+}
+
+if (chatRecordBtn) {
+  chatRecordBtn.addEventListener("click", startPrivateVoiceRecording);
+}
+
+if (chatStopRecordBtn) {
+  chatStopRecordBtn.addEventListener("click", stopPrivateVoiceRecording);
+}
+
+if (chatCancelRecordBtn) {
+  chatCancelRecordBtn.addEventListener("click", cancelPrivateVoiceRecording);
+}
+
+if (chatSendVoiceBtn) {
+  chatSendVoiceBtn.addEventListener("click", sendPrivateVoiceMessage);
+}
+
 if (chatInput) {
   chatInput.addEventListener("keypress", function (event) {
     if (event.key === "Enter") {
@@ -1819,7 +2123,7 @@ if (chatInput) {
 if (taskForm) {
   taskForm.addEventListener("submit", function (event) {
     event.preventDefault();
-    submitTaskForm();
+    submitTaskForm().catch(() => alert("Unable to save this task. Please try again."));
   });
 }
 
@@ -1852,7 +2156,7 @@ taskModalInputs.forEach((field) => {
     field.addEventListener("keydown", function (event) {
       if (event.key === "Enter") {
         event.preventDefault();
-        submitTaskForm();
+        submitTaskForm().catch(() => alert("Unable to save this task. Please try again."));
       }
     });
   }
@@ -1862,7 +2166,7 @@ if (taskDescriptionInput) {
   taskDescriptionInput.addEventListener("keydown", function (event) {
     if (event.key === "Enter" && event.ctrlKey) {
       event.preventDefault();
-      submitTaskForm();
+      submitTaskForm().catch(() => alert("Unable to save this task. Please try again."));
     }
   });
 }

@@ -33,6 +33,14 @@ const GROUP_CHANNEL_NAME = "ttm_group_chat_channel";
 const groupChatMessages = document.getElementById("group-chat-messages");
 const groupChatInput = document.getElementById("group-chat-input");
 const groupSendBtn = document.getElementById("group-send-btn");
+const groupFileInput = document.getElementById("group-file-input");
+const groupAttachBtn = document.getElementById("group-attach-btn");
+const groupRecordBtn = document.getElementById("group-record-btn");
+const groupVoicePanel = document.getElementById("group-voice-panel");
+const groupVoiceStatus = document.getElementById("group-voice-status");
+const groupStopRecordBtn = document.getElementById("group-stop-record-btn");
+const groupSendVoiceBtn = document.getElementById("group-send-voice-btn");
+const groupCancelRecordBtn = document.getElementById("group-cancel-record-btn");
 const groupRoomButtons = document.querySelectorAll(".group-room-btn");
 const activeGroupRoomLabel = document.getElementById("active-group-room-label");
 const groupTypingIndicator = document.getElementById("group-typing-indicator");
@@ -40,6 +48,13 @@ const groupTypingIndicator = document.getElementById("group-typing-indicator");
 let activeGroupRoom = "general";
 let groupChannel = null;
 let groupTypingTimer = null;
+let groupVoiceRecorder = null;
+let groupVoiceChunks = [];
+let groupVoiceAttachment = null;
+let groupVoiceCancelled = false;
+
+const GROUP_MAX_ATTACHMENT_SIZE = 750 * 1024;
+const GROUP_MAX_VOICE_SIZE = 1200 * 1024;
 
 function getInitial(name) {
   return (name || "U").trim().charAt(0).toUpperCase() || "U";
@@ -54,6 +69,118 @@ function escapeHTML(value) {
     .replace(/'/g, "&#39;");
 }
 
+function formatFileSize(size) {
+  const bytes = Number(size) || 0;
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function getFileTypeLabel(type, name = "") {
+  if (type) return type.split("/")[1]?.toUpperCase() || type;
+  const extension = String(name).split(".").pop();
+  return extension && extension !== name ? extension.toUpperCase() : "FILE";
+}
+
+function normalizeAttachment(attachment) {
+  if (!attachment || typeof attachment !== "object") return null;
+  if (!attachment.dataUrl || !attachment.name) return null;
+
+  return {
+    id: attachment.id || `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    name: String(attachment.name),
+    type: attachment.type || "",
+    size: Number(attachment.size) || 0,
+    dataUrl: attachment.dataUrl,
+    kind: attachment.kind === "voice" ? "voice" : "file"
+  };
+}
+
+function normalizeAttachments(attachments) {
+  if (!Array.isArray(attachments)) return [];
+  return attachments.map(normalizeAttachment).filter(Boolean);
+}
+
+function normalizeGroupMessage(message) {
+  return {
+    ...message,
+    sender: message?.sender || "Team",
+    text: message?.text || "",
+    timestamp: message?.timestamp || new Date().toISOString(),
+    attachments: normalizeAttachments(message?.attachments)
+  };
+}
+
+function readFileAsAttachment(file, kind = "file", maxSize = GROUP_MAX_ATTACHMENT_SIZE) {
+  return new Promise((resolve, reject) => {
+    if (!file) {
+      resolve(null);
+      return;
+    }
+
+    if (file.size > maxSize) {
+      reject(new Error(`${file.name} is too large. Maximum size is ${formatFileSize(maxSize)}.`));
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      resolve({
+        id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        name: file.name || (kind === "voice" ? "Voice message.webm" : "Attachment"),
+        type: file.type || "",
+        size: file.size || 0,
+        dataUrl: reader.result,
+        kind
+      });
+    };
+    reader.onerror = () => reject(new Error("Unable to read the selected file."));
+    reader.readAsDataURL(file);
+  });
+}
+
+async function readInputAttachments(input, maxSize = GROUP_MAX_ATTACHMENT_SIZE) {
+  const files = Array.from(input?.files || []);
+  if (files.length > 3) {
+    throw new Error("Please attach no more than 3 files at a time.");
+  }
+  const attachments = [];
+
+  for (const file of files) {
+    attachments.push(await readFileAsAttachment(file, "file", maxSize));
+  }
+
+  return attachments.filter(Boolean);
+}
+
+function renderMessageAttachments(attachments) {
+  const safeAttachments = normalizeAttachments(attachments);
+  if (safeAttachments.length === 0) return "";
+
+  return safeAttachments.map((attachment) => {
+    if (attachment.kind === "voice") {
+      return `
+        <div class="voice-message">
+          <audio controls src="${attachment.dataUrl}"></audio>
+          <a href="${attachment.dataUrl}" download="${escapeHTML(attachment.name)}">Download voice</a>
+        </div>
+      `;
+    }
+
+    return `
+      <div class="message-attachments">
+        <a class="attachment-chip" href="${attachment.dataUrl}" download="${escapeHTML(attachment.name)}" target="_blank" rel="noopener noreferrer">
+          <span class="attachment-icon">${getFileTypeLabel(attachment.type, attachment.name)}</span>
+          <span class="attachment-meta">
+            <strong>${escapeHTML(attachment.name)}</strong>
+            <small>${escapeHTML(getFileTypeLabel(attachment.type, attachment.name))} &bull; ${formatFileSize(attachment.size)}</small>
+          </span>
+        </a>
+      </div>
+    `;
+  }).join("");
+}
+
 function getCurrentGroupUserName() {
   try {
     const savedUser = localStorage.getItem("ttm_logged_in_user");
@@ -65,7 +192,12 @@ function getCurrentGroupUserName() {
 }
 
 function saveGroupMessages(messages) {
-  localStorage.setItem(GROUP_STORAGE_KEY, JSON.stringify(messages));
+  try {
+    localStorage.setItem(GROUP_STORAGE_KEY, JSON.stringify(messages));
+  } catch (error) {
+    alert("Unable to save group chat data. Please remove large attachments and try again.");
+    throw error;
+  }
 }
 
 function getSeedMessages() {
@@ -84,7 +216,14 @@ function getSeedMessages() {
 function getGroupMessages() {
   try {
     const saved = localStorage.getItem(GROUP_STORAGE_KEY);
-    if (saved) return JSON.parse(saved);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      const normalized = parsed && typeof parsed === "object" ? parsed : {};
+      Object.keys(normalized).forEach((room) => {
+        normalized[room] = Array.isArray(normalized[room]) ? normalized[room].map(normalizeGroupMessage) : [];
+      });
+      return normalized;
+    }
   } catch {
     // Fall through to defaults.
   }
@@ -166,7 +305,8 @@ function renderGroupMessages() {
           <span class="group-chat-time">${escapeHTML(formatMessageTime(message.timestamp))}</span>
         </div>
         <div class="message-bubble ${isMine ? "sent" : "received"}">
-          ${escapeHTML(message.text)}
+          ${message.text ? escapeHTML(message.text) : ""}
+          ${renderMessageAttachments(message.attachments)}
         </div>
       </div>
     `;
@@ -214,11 +354,20 @@ function appendGroupMessage(room, message, shouldBroadcast = true) {
   }
 }
 
-function sendGroupMessage() {
+async function sendGroupMessage() {
   if (!groupChatInput) return;
 
   const text = groupChatInput.value.trim();
-  if (!text) return;
+  let attachments = [];
+
+  try {
+    attachments = await readInputAttachments(groupFileInput, GROUP_MAX_ATTACHMENT_SIZE);
+  } catch (error) {
+    alert(error.message || "Unable to attach the selected file.");
+    return;
+  }
+
+  if (!text && attachments.length === 0) return;
 
   const sender = getCurrentGroupUserName();
   const room = activeGroupRoom;
@@ -226,16 +375,115 @@ function sendGroupMessage() {
     id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
     sender,
     text,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    attachments
   };
 
   appendGroupMessage(room, message);
   groupChatInput.value = "";
+  if (groupFileInput) groupFileInput.value = "";
   broadcastGroupTyping(false);
   renderTypingIndicator("");
 
   if (typeof window.addAppNotification === "function") {
     window.addAppNotification("Group chat", `Message sent in ${GROUP_ROOMS[room].label}.`);
+  }
+}
+
+function setGroupVoicePanel(state, message = "") {
+  if (!groupVoicePanel) return;
+
+  const isIdle = state === "idle";
+  groupVoicePanel.classList.toggle("hidden", isIdle);
+  if (groupVoiceStatus) groupVoiceStatus.textContent = message;
+  if (groupStopRecordBtn) groupStopRecordBtn.classList.toggle("hidden", state !== "recording");
+  if (groupSendVoiceBtn) groupSendVoiceBtn.classList.toggle("hidden", state !== "ready");
+}
+
+async function startGroupVoiceRecording() {
+  if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
+    alert("Voice recording is not supported in this browser.");
+    return;
+  }
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    groupVoiceChunks = [];
+    groupVoiceAttachment = null;
+    groupVoiceCancelled = false;
+    groupVoiceRecorder = new MediaRecorder(stream);
+
+    groupVoiceRecorder.addEventListener("dataavailable", (event) => {
+      if (event.data?.size) groupVoiceChunks.push(event.data);
+    });
+
+    groupVoiceRecorder.addEventListener("stop", async () => {
+      stream.getTracks().forEach((track) => track.stop());
+      if (groupVoiceCancelled) {
+        groupVoiceChunks = [];
+        groupVoiceAttachment = null;
+        setGroupVoicePanel("idle");
+        return;
+      }
+
+      const blob = new Blob(groupVoiceChunks, { type: groupVoiceRecorder?.mimeType || "audio/webm" });
+      if (blob.size > GROUP_MAX_VOICE_SIZE) {
+        groupVoiceAttachment = null;
+        setGroupVoicePanel("idle");
+        alert(`Voice message is too large. Maximum size is ${formatFileSize(GROUP_MAX_VOICE_SIZE)}.`);
+        return;
+      }
+
+      const file = new File([blob], `Voice message ${new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}.webm`, {
+        type: blob.type || "audio/webm"
+      });
+      groupVoiceAttachment = await readFileAsAttachment(file, "voice", GROUP_MAX_VOICE_SIZE);
+      setGroupVoicePanel("ready", "Voice message ready to send.");
+    });
+
+    groupVoiceRecorder.start();
+    setGroupVoicePanel("recording", "Recording voice message...");
+  } catch {
+    setGroupVoicePanel("idle");
+    alert("Microphone access was denied or unavailable.");
+  }
+}
+
+function stopGroupVoiceRecording() {
+  if (groupVoiceRecorder && groupVoiceRecorder.state === "recording") {
+    groupVoiceRecorder.stop();
+  }
+}
+
+function cancelGroupVoiceRecording() {
+  groupVoiceCancelled = true;
+  if (groupVoiceRecorder && groupVoiceRecorder.state === "recording") {
+    groupVoiceRecorder.stream?.getTracks().forEach((track) => track.stop());
+    groupVoiceRecorder.stop();
+  }
+  groupVoiceAttachment = null;
+  groupVoiceChunks = [];
+  setGroupVoicePanel("idle");
+}
+
+function sendGroupVoiceMessage() {
+  if (!groupVoiceAttachment) return;
+
+  const room = activeGroupRoom;
+  appendGroupMessage(room, {
+    id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    sender: getCurrentGroupUserName(),
+    text: "",
+    timestamp: new Date().toISOString(),
+    attachments: [groupVoiceAttachment]
+  });
+
+  groupVoiceAttachment = null;
+  groupVoiceChunks = [];
+  setGroupVoicePanel("idle");
+
+  if (typeof window.addAppNotification === "function") {
+    window.addAppNotification("Group chat", `Voice message sent in ${GROUP_ROOMS[room].label}.`);
   }
 }
 
@@ -273,6 +521,26 @@ groupRoomButtons.forEach((button) => {
 
 if (groupSendBtn) {
   groupSendBtn.addEventListener("click", sendGroupMessage);
+}
+
+if (groupAttachBtn && groupFileInput) {
+  groupAttachBtn.addEventListener("click", () => groupFileInput.click());
+}
+
+if (groupRecordBtn) {
+  groupRecordBtn.addEventListener("click", startGroupVoiceRecording);
+}
+
+if (groupStopRecordBtn) {
+  groupStopRecordBtn.addEventListener("click", stopGroupVoiceRecording);
+}
+
+if (groupCancelRecordBtn) {
+  groupCancelRecordBtn.addEventListener("click", cancelGroupVoiceRecording);
+}
+
+if (groupSendVoiceBtn) {
+  groupSendVoiceBtn.addEventListener("click", sendGroupVoiceMessage);
 }
 
 if (groupChatInput) {
