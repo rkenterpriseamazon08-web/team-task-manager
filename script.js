@@ -28,6 +28,7 @@ const chatInput = document.getElementById("chat-message-input");
 const sendMessageBtn = document.getElementById("send-message-btn");
 const chatMessages = document.getElementById("chat-messages");
 const chatUsersList = document.getElementById("chat-users-list");
+const chatTypingIndicator = document.getElementById("chat-typing-indicator");
 
 // -----------------------------
 // TASK ELEMENTS
@@ -176,6 +177,8 @@ const defaultNotifications = [
 ];
 
 let selectedChatMember = "Rahul";
+let privateChatChannel = null;
+let privateTypingTimer = null;
 
 const defaultChatConversations = {
   Rahul: [
@@ -223,6 +226,10 @@ function updateUserUI(user) {
   if (sidebarUserRole) sidebarUserRole.textContent = userRole;
   if (topbarUserName) topbarUserName.textContent = userName;
   if (userAvatar) userAvatar.textContent = firstLetter;
+
+  document.querySelectorAll(".current-user-chat-name").forEach((element) => {
+    element.textContent = `${userName}:`;
+  });
 }
 
 function isInAppToastEnabled() {
@@ -462,7 +469,7 @@ function normalizeChatMessage(message, index) {
   const fallbackTime = new Date(Date.now() - (index + 1) * 60000).toISOString();
 
   return {
-    sender: message?.sender || (messageType === "sent" ? "You" : "Team"),
+    sender: message?.sender || (messageType === "sent" ? getCurrentUserName() : "Team"),
     text: message?.text || "",
     type: messageType,
     timestamp: message?.timestamp || fallbackTime,
@@ -563,27 +570,90 @@ function scrollChatToBottom() {
   if (chatMessages) chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
+function getCurrentUserName() {
+  const user = getUserFromLocalStorage();
+  return user?.name || user?.email || "Demo User";
+}
+
 function formatChatMessageTime(timestamp) {
   const date = new Date(timestamp);
   if (Number.isNaN(date.getTime())) return "";
 
-  return date.toLocaleTimeString([], {
-    hour: "2-digit",
-    minute: "2-digit"
+  return date.toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true
   });
+}
+
+function getChatDisplaySender(message) {
+  if (message.type === "sent" || message.sender === "You") {
+    return getCurrentUserName();
+  }
+
+  return message.sender || selectedChatMember || "Team";
 }
 
 function createMessageBubble(message) {
   const messageDiv = document.createElement("div");
   messageDiv.classList.add("message-bubble", message.type);
+  const senderName = getChatDisplaySender(message);
   messageDiv.innerHTML = `
-    <div><strong>${message.sender}:</strong> ${message.text}</div>
+    <div><strong>${escapeHTML(senderName)}:</strong> ${escapeHTML(message.text)}</div>
     <span class="message-time">
-      ${formatChatMessageTime(message.timestamp)}
-      ${message.type === "received" && !message.read ? " • Unread" : ""}
+      ${escapeHTML(formatChatMessageTime(message.timestamp))}
+      ${message.type === "received" && !message.read ? " &bull; Unread" : ""}
     </span>
   `;
   return messageDiv;
+}
+
+function renderPrivateTypingIndicator(name = "") {
+  if (!chatTypingIndicator) return;
+
+  if (!name) {
+    chatTypingIndicator.classList.add("hidden");
+    chatTypingIndicator.innerHTML = "";
+    return;
+  }
+
+  chatTypingIndicator.classList.remove("hidden");
+  chatTypingIndicator.innerHTML = `
+    <div class="typing-indicator-inner">
+      <span class="typing-dots"><span></span><span></span><span></span></span>
+      <span class="typing-indicator-text">${escapeHTML(name)} is typing...</span>
+    </div>
+  `;
+}
+
+function broadcastPrivateTyping(isTyping) {
+  if (!privateChatChannel) return;
+
+  privateChatChannel.postMessage({
+    type: "typing",
+    from: getCurrentUserName(),
+    to: selectedChatMember,
+    isTyping
+  });
+}
+
+function setupPrivateChatChannel() {
+  if (!("BroadcastChannel" in window)) return;
+
+  privateChatChannel = new BroadcastChannel("ttm_private_chat_channel");
+  privateChatChannel.addEventListener("message", (event) => {
+    const data = event.data || {};
+    if (data.type !== "typing") return;
+    if (!data.from || data.from === getCurrentUserName()) return;
+    if (data.from !== selectedChatMember) return;
+
+    renderPrivateTypingIndicator(data.isTyping ? data.from : "");
+
+    if (privateTypingTimer) clearTimeout(privateTypingTimer);
+    if (data.isTyping) {
+      privateTypingTimer = setTimeout(() => renderPrivateTypingIndicator(""), 1800);
+    }
+  });
 }
 
 function renderSelectedChatMessages() {
@@ -599,6 +669,7 @@ function renderSelectedChatMessages() {
     chatMessages.appendChild(bubble);
   });
 
+  renderPrivateTypingIndicator("");
   markConversationAsRead(selectedChatMember);
   scrollChatToBottom();
 }
@@ -616,7 +687,7 @@ function sendMessage() {
   }
 
   chats[selectedChatMember].push({
-    sender: "You",
+    sender: getCurrentUserName(),
     text: messageText,
     type: "sent",
     timestamp: new Date().toISOString(),
@@ -625,10 +696,12 @@ function sendMessage() {
 
   saveChatsToStorage(chats);
   chatInput.value = "";
+  broadcastPrivateTyping(false);
+  renderPrivateTypingIndicator("");
   renderSelectedChatMessages();
   renderChatUsers();
 
-  addNotification("New chat message", `You sent a message to ${selectedChatMember}`);
+  addNotification("New chat message", `${getCurrentUserName()} sent a message to ${selectedChatMember}`);
 }
 
 // -----------------------------
@@ -1263,6 +1336,14 @@ if (chatInput) {
       sendMessage();
     }
   });
+
+  chatInput.addEventListener("input", function () {
+    broadcastPrivateTyping(Boolean(chatInput.value.trim()));
+  });
+
+  chatInput.addEventListener("blur", function () {
+    broadcastPrivateTyping(false);
+  });
 }
 
 if (taskForm) {
@@ -1425,6 +1506,7 @@ function checkExistingLogin() {
 
 migrateAppStorageIfNeeded();
 setupNavigation();
+setupPrivateChatChannel();
 checkExistingLogin();
 renderChatUsers();
 renderSelectedChatMessages();

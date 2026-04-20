@@ -39,6 +39,7 @@ const groupTypingIndicator = document.getElementById("group-typing-indicator");
 
 let activeGroupRoom = "general";
 let groupChannel = null;
+let groupTypingTimer = null;
 
 function getInitial(name) {
   return (name || "U").trim().charAt(0).toUpperCase() || "U";
@@ -53,11 +54,11 @@ function escapeHTML(value) {
     .replace(/'/g, "&#39;");
 }
 
-function getCurrentUserName() {
+function getCurrentGroupUserName() {
   try {
     const savedUser = localStorage.getItem("ttm_logged_in_user");
     const user = savedUser ? JSON.parse(savedUser) : null;
-    return user?.name || "Demo User";
+    return user?.name || user?.email || "Demo User";
   } catch {
     return "Demo User";
   }
@@ -97,9 +98,10 @@ function formatMessageTime(timestamp) {
   const date = new Date(timestamp);
   if (Number.isNaN(date.getTime())) return "";
 
-  return date.toLocaleTimeString([], {
-    hour: "2-digit",
-    minute: "2-digit"
+  return date.toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true
   });
 }
 
@@ -121,12 +123,23 @@ function renderTypingIndicator(name = "") {
   `;
 }
 
+function broadcastGroupTyping(isTyping) {
+  if (!groupChannel) return;
+
+  groupChannel.postMessage({
+    type: "typing",
+    room: activeGroupRoom,
+    sender: getCurrentGroupUserName(),
+    isTyping
+  });
+}
+
 function renderGroupMessages() {
   if (!groupChatMessages) return;
 
   const messagesByRoom = getGroupMessages();
   const messages = messagesByRoom[activeGroupRoom] || [];
-  const currentUserName = getCurrentUserName();
+  const currentUserName = getCurrentGroupUserName();
 
   groupChatMessages.innerHTML = "";
 
@@ -141,14 +154,15 @@ function renderGroupMessages() {
 
   messages.forEach((message) => {
     const isMine = message.sender === currentUserName || message.sender === "You";
+    const senderName = isMine ? currentUserName : message.sender;
     const row = document.createElement("div");
     row.className = `group-message-row ${isMine ? "mine" : "other"}`;
 
     row.innerHTML = `
-      <div class="group-chat-avatar">${escapeHTML(getInitial(message.sender))}</div>
+      <div class="group-chat-avatar">${escapeHTML(getInitial(senderName))}</div>
       <div class="group-chat-content">
         <div class="group-chat-meta">
-          <span class="group-chat-sender">${isMine ? "You" : escapeHTML(message.sender)}</span>
+          <span class="group-chat-sender">${escapeHTML(senderName)}</span>
           <span class="group-chat-time">${escapeHTML(formatMessageTime(message.timestamp))}</span>
         </div>
         <div class="message-bubble ${isMine ? "sent" : "received"}">
@@ -206,7 +220,7 @@ function sendGroupMessage() {
   const text = groupChatInput.value.trim();
   if (!text) return;
 
-  const sender = getCurrentUserName();
+  const sender = getCurrentGroupUserName();
   const room = activeGroupRoom;
   const message = {
     id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
@@ -217,6 +231,7 @@ function sendGroupMessage() {
 
   appendGroupMessage(room, message);
   groupChatInput.value = "";
+  broadcastGroupTyping(false);
   renderTypingIndicator("");
 
   if (typeof window.addAppNotification === "function") {
@@ -229,7 +244,22 @@ function setupGroupChannel() {
 
   groupChannel = new BroadcastChannel(GROUP_CHANNEL_NAME);
   groupChannel.addEventListener("message", (event) => {
-    const { room, message } = event.data || {};
+    const data = event.data || {};
+
+    if (data.type === "typing") {
+      if (data.room !== activeGroupRoom) return;
+      if (!data.sender || data.sender === getCurrentGroupUserName()) return;
+
+      renderTypingIndicator(data.isTyping ? data.sender : "");
+
+      if (groupTypingTimer) clearTimeout(groupTypingTimer);
+      if (data.isTyping) {
+        groupTypingTimer = setTimeout(() => renderTypingIndicator(""), 1800);
+      }
+      return;
+    }
+
+    const { room, message } = data;
     if (!room || !message) return;
     appendGroupMessage(room, message, false);
   });
@@ -254,14 +284,10 @@ if (groupChatInput) {
   });
 
   groupChatInput.addEventListener("input", () => {
-    if (groupChatInput.value.trim()) {
-      renderTypingIndicator(getCurrentUserName());
-    } else {
-      renderTypingIndicator("");
-    }
+    broadcastGroupTyping(Boolean(groupChatInput.value.trim()));
   });
 
-  groupChatInput.addEventListener("blur", () => renderTypingIndicator(""));
+  groupChatInput.addEventListener("blur", () => broadcastGroupTyping(false));
 }
 
 setupGroupChannel();

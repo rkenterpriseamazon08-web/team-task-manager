@@ -1064,6 +1064,7 @@ select {
   max-width: 100%;
 }
 
+.chat-typing-indicator,
 .group-typing-indicator {
   min-height: 28px;
   display: flex;

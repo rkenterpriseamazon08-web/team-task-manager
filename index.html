@@ -65,7 +65,7 @@
         <nav class="sidebar-nav">
           <button class="nav-item active" data-section="dashboard-section">Dashboard</button>
           <button class="nav-item" data-section="chat-section">Chat</button>
-          <button class="nav-item" data-section="tasks-section">Tasks</button>
+          <button class="nav-item" data-section="group-chat-section">Group Chat</button>
           <button class="nav-item" data-section="notifications-section">Notifications</button>
           <button class="nav-item" data-section="team-section">Team</button>
           <button class="nav-item" data-section="settings-section">Settings</button>
@@ -167,7 +167,7 @@
                 <strong>Rahul:</strong> Please review the latest task updates.
               </div>
               <div class="message-bubble sent">
-                <strong>You:</strong> Sure, I will check them today.
+                <strong class="current-user-chat-name">Demo User:</strong> Sure, I will check them today.
               </div>
               <div class="message-bubble received">
                 <strong>Sneha:</strong> Pricing sheet has been updated.
@@ -191,9 +191,11 @@
                 <div class="chat-window">
                   <div class="chat-messages" id="chat-messages">
                     <div class="message-bubble received"><strong>Rahul:</strong> Hi, please share the task status.</div>
-                    <div class="message-bubble sent"><strong>You:</strong> I am working on it.</div>
+                    <div class="message-bubble sent"><strong class="current-user-chat-name">Demo User:</strong> I am working on it.</div>
                     <div class="message-bubble received"><strong>Amit:</strong> Okay, please update by evening.</div>
                   </div>
+
+                  <div id="chat-typing-indicator" class="chat-typing-indicator hidden"></div>
 
                   <div class="chat-input-row">
                     <input type="text" id="chat-message-input" placeholder="Type your message..." />
