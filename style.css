@@ -2371,13 +2371,27 @@ html[data-theme="dark"] .mini-progress {
   padding: 16px;
   border-radius: 16px;
   background: #ffffff !important;
-  border-color: #e2e8f0;
+  background-color: #ffffff !important;
+  background-image: none !important;
+  border: 1px solid #e2e8f0 !important;
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
-  opacity: 0;
+  opacity: 1 !important;
+  visibility: hidden;
   transform: translateY(10px);
   pointer-events: none;
   box-shadow: 0 22px 54px rgba(15, 23, 42, 0.2);
+  isolation: isolate;
+}
+
+.stats-grid > .kpi-card > .kpi-hover-card::before,
+.focus-grid > .kpi-card > .kpi-hover-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: #ffffff;
 }
 
 .stats-grid > .kpi-card:hover,
@@ -2426,7 +2440,8 @@ html[data-theme="dark"] .mini-progress {
 .kpi-card:hover > .kpi-hover-card,
 .kpi-card:focus > .kpi-hover-card,
 .kpi-card:focus-within > .kpi-hover-card {
-  opacity: 1;
+  opacity: 1 !important;
+  visibility: visible;
   transform: translateY(0);
   pointer-events: auto;
 }
@@ -2458,7 +2473,14 @@ html[data-theme="dark"] .mini-progress {
 html[data-theme="dark"] .stats-grid > .kpi-card > .kpi-hover-card,
 html[data-theme="dark"] .focus-grid > .kpi-card > .kpi-hover-card {
   background: #1e293b !important;
-  border-color: #475569;
+  background-color: #1e293b !important;
+  background-image: none !important;
+  border-color: #475569 !important;
+}
+
+html[data-theme="dark"] .stats-grid > .kpi-card > .kpi-hover-card::before,
+html[data-theme="dark"] .focus-grid > .kpi-card > .kpi-hover-card::before {
+  background: #1e293b;
 }
 
 @media (max-width: 768px) {
