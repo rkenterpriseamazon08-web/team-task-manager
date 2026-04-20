@@ -494,6 +494,43 @@ select {
   font-size: 12px;
 }
 
+.presence-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 5px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  border: 1px solid rgba(226, 232, 240, 0.78);
+}
+
+.presence-badge::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+.presence-online {
+  color: #166534;
+  background: rgba(220, 252, 231, 0.86);
+}
+
+.presence-online::before {
+  background: #22c55e;
+}
+
+.presence-offline {
+  color: #64748b;
+  background: rgba(248, 250, 252, 0.78);
+}
+
+.presence-offline::before {
+  background: #cbd5e1;
+}
+
 .active-chat-user {
   background: #eef2ff;
   color: #4338ca;
@@ -697,6 +734,19 @@ select {
 .team-card p {
   color: #6b7280;
   font-size: 13px;
+}
+
+.field-help {
+  margin-top: 8px;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.primary-btn:disabled,
+.task-form select:disabled {
+  opacity: 0.58;
+  cursor: not-allowed;
 }
 
 .settings-box {

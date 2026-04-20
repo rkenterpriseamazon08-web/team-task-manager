@@ -13,6 +13,7 @@ const loginMessage = document.getElementById("login-message");
 
 const sidebarUserName = document.getElementById("sidebar-user-name");
 const sidebarUserRole = document.getElementById("sidebar-user-role");
+const sidebarPresenceStatus = document.getElementById("sidebar-presence-status");
 const topbarUserName = document.getElementById("topbar-user-name");
 const userAvatar = document.getElementById("user-avatar");
 const logoutBtn = document.getElementById("logout-btn");
@@ -44,6 +45,7 @@ const taskSeverityInput = document.getElementById("task-severity");
 const taskStatusInput = document.getElementById("task-status");
 const taskDeadlineInput = document.getElementById("task-deadline");
 const taskAssignedToInput = document.getElementById("task-assigned-to");
+const taskAssignmentHelp = document.getElementById("task-assignment-help");
 const taskTagInputs = document.querySelectorAll('input[name="task-tags"]');
 
 const recentTaskList = document.getElementById("recent-task-list");
@@ -94,6 +96,12 @@ const groupMembers = [
   { name: "Amit", role: "Developer", active: true },
   { name: "Priya", role: "Designer", active: true }
 ];
+
+const PRESENCE_STORAGE_KEY = "ttm_user_presence";
+const PRESENCE_ONLINE_WINDOW_MS = 120000;
+const PRESENCE_HEARTBEAT_MS = 30000;
+let presenceChannel = null;
+let presenceHeartbeatTimer = null;
 
 const defaultTasks = [
   {
@@ -219,7 +227,7 @@ function setLoginMessage(message, type = "") {
 
 function updateUserUI(user) {
   const userName = user?.name || "User";
-  const userRole = user?.role || "Employee";
+  const userRole = normalizeUserRole(user?.role);
   const firstLetter = userName.charAt(0).toUpperCase();
 
   if (sidebarUserName) sidebarUserName.textContent = userName;
@@ -230,6 +238,10 @@ function updateUserUI(user) {
   document.querySelectorAll(".current-user-chat-name").forEach((element) => {
     element.textContent = `${userName}:`;
   });
+
+  applyRoleBasedUI();
+  updateCurrentUserPresence();
+  renderPresenceUI();
 }
 
 function isInAppToastEnabled() {
@@ -316,6 +328,153 @@ function clearUserFromLocalStorage() {
   localStorage.removeItem("ttm_logged_in_user");
 }
 
+function normalizeUserRole(role) {
+  const normalizedRole = String(role || "").trim().toLowerCase();
+
+  if (["admin", "manager", "project manager"].includes(normalizedRole)) return "Admin";
+  if (["member", "employee", "developer", "designer", "business analyst"].includes(normalizedRole)) return "Member";
+  return "Admin";
+}
+
+function canAssignTasks(user = getUserFromLocalStorage()) {
+  return normalizeUserRole(user?.role) === "Admin";
+}
+
+function getTaskAssignees(task) {
+  if (Array.isArray(task.assignees)) {
+    return task.assignees.filter(Boolean);
+  }
+
+  if (typeof task.assignedTo === "string" && task.assignedTo.trim()) {
+    return task.assignedTo
+      .split(",")
+      .map((name) => name.trim())
+      .filter(Boolean);
+  }
+
+  return [];
+}
+
+function formatTaskAssignees(taskOrAssignees) {
+  const assignees = Array.isArray(taskOrAssignees)
+    ? taskOrAssignees
+    : getTaskAssignees(taskOrAssignees);
+
+  return assignees.length ? assignees.join(", ") : "Unassigned";
+}
+
+function applyRoleBasedUI() {
+  const isAdmin = canAssignTasks();
+
+  if (openTaskModalBtn) {
+    openTaskModalBtn.disabled = !isAdmin;
+    openTaskModalBtn.title = isAdmin ? "Create and assign tasks" : "Members cannot assign tasks";
+  }
+
+  if (taskAssignedToInput) {
+    taskAssignedToInput.disabled = !isAdmin;
+  }
+
+  if (taskAssignmentHelp) {
+    taskAssignmentHelp.textContent = isAdmin
+      ? "Admins can assign one or more members."
+      : "Members can update tasks, but assigning is Admin-only.";
+  }
+}
+
+function getPresenceFromStorage() {
+  try {
+    const savedPresence = localStorage.getItem(PRESENCE_STORAGE_KEY);
+    return savedPresence ? JSON.parse(savedPresence) : {};
+  } catch {
+    return {};
+  }
+}
+
+function savePresenceToStorage(presence) {
+  localStorage.setItem(PRESENCE_STORAGE_KEY, JSON.stringify(presence));
+}
+
+function updateCurrentUserPresence(status = "online") {
+  const user = getUserFromLocalStorage();
+  const userName = user?.name || user?.email;
+  if (!userName) return;
+
+  const presence = getPresenceFromStorage();
+  presence[userName] = {
+    status,
+    lastSeen: new Date().toISOString()
+  };
+
+  savePresenceToStorage(presence);
+
+  if (presenceChannel) {
+    presenceChannel.postMessage({ type: "presence", userName, status });
+  }
+}
+
+function isUserOnline(memberName) {
+  const presence = getPresenceFromStorage();
+  const record = presence[memberName];
+  if (!record || record.status === "offline") return false;
+
+  const lastSeen = new Date(record.lastSeen);
+  if (Number.isNaN(lastSeen.getTime())) return false;
+
+  return Date.now() - lastSeen.getTime() <= PRESENCE_ONLINE_WINDOW_MS;
+}
+
+function renderPresenceBadge(memberName) {
+  const online = isUserOnline(memberName);
+  const statusClass = online ? "presence-online" : "presence-offline";
+  const statusText = online ? "Online" : "Offline";
+
+  return `<span class="presence-badge ${statusClass}">${statusText}</span>`;
+}
+
+function renderPresenceUI() {
+  const user = getUserFromLocalStorage();
+  const userName = user?.name || user?.email;
+
+  if (sidebarPresenceStatus && userName) {
+    const online = isUserOnline(userName);
+    sidebarPresenceStatus.className = `presence-badge ${online ? "presence-online" : "presence-offline"}`;
+    sidebarPresenceStatus.textContent = online ? "Online" : "Offline";
+  }
+
+  document.querySelectorAll("[data-team-member]").forEach((card) => {
+    const memberName = card.getAttribute("data-team-member");
+    const badge = card.querySelector(".presence-badge");
+    if (!memberName || !badge) return;
+
+    const online = isUserOnline(memberName);
+    badge.className = `presence-badge ${online ? "presence-online" : "presence-offline"}`;
+    badge.textContent = online ? "Online" : "Offline";
+  });
+
+  renderChatUsers();
+}
+
+function setupPresenceTracking() {
+  if ("BroadcastChannel" in window) {
+    presenceChannel = new BroadcastChannel("ttm_presence_channel");
+    presenceChannel.addEventListener("message", (event) => {
+      if (event.data?.type === "presence") renderPresenceUI();
+    });
+  }
+
+  updateCurrentUserPresence();
+  renderPresenceUI();
+
+  if (presenceHeartbeatTimer) clearInterval(presenceHeartbeatTimer);
+  presenceHeartbeatTimer = setInterval(() => {
+    updateCurrentUserPresence();
+    renderPresenceUI();
+  }, PRESENCE_HEARTBEAT_MS);
+
+  window.addEventListener("beforeunload", () => updateCurrentUserPresence("offline"));
+}
+
 function cloneDefaultTasks() {
   return JSON.parse(JSON.stringify(defaultTasks));
 }
@@ -346,11 +505,17 @@ function isValidTaskList(tasks) {
 }
 
 function normalizeTaskList(tasks) {
-  return tasks.map((task) => ({
-    ...task,
-    tags: Array.isArray(task.tags) ? task.tags : [],
-    comments: Array.isArray(task.comments) ? task.comments : []
-  }));
+  return tasks.map((task) => {
+    const assignees = getTaskAssignees(task);
+
+    return {
+      ...task,
+      assignedTo: formatTaskAssignees(assignees),
+      assignees,
+      tags: Array.isArray(task.tags) ? task.tags : [],
+      comments: Array.isArray(task.comments) ? task.comments : []
+    };
+  });
 }
 
 function isValidNotificationList(notifications) {
@@ -552,6 +717,7 @@ function renderChatUsers() {
       <div>
         <strong>${member.name}</strong><br>
         <small>${member.role}</small>
+        ${renderPresenceBadge(member.name)}
       </div>
       ${unreadCount > 0 ? `<span class="chat-unread-badge">${unreadCount}</span>` : ""}
     `;
@@ -954,7 +1120,7 @@ function getTaskCardMarkup(task, variant = "recent") {
     <div class="${variant === "recent" ? "task-item-main" : "kanban-card-main"}">
       <div>
         <${titleTag}>${escapeHTML(task.title)}</${titleTag}>
-        <p>Assigned to: ${escapeHTML(task.assignedTo)}</p>
+        <p>Assigned to: ${escapeHTML(formatTaskAssignees(task))}</p>
         ${variant === "kanban" ? `
           <p><strong>Deadline:</strong> ${formatDate(task.deadline)}</p>
         ` : ""}
@@ -1071,7 +1237,7 @@ function renderTaskSearchResults(query) {
       task.title.toLowerCase().includes(normalizedQuery) ||
       task.status.toLowerCase().includes(normalizedQuery) ||
       task.severity.toLowerCase().includes(normalizedQuery) ||
-      task.assignedTo.toLowerCase().includes(normalizedQuery) ||
+      formatTaskAssignees(task).toLowerCase().includes(normalizedQuery) ||
       (Array.isArray(task.tags) && task.tags.some((tag) => tag.toLowerCase().includes(normalizedQuery)))
     ))
     .slice(0, 6);
@@ -1082,7 +1248,7 @@ function renderTaskSearchResults(query) {
     taskSearchResults.innerHTML = matches.map((task) => `
       <div class="search-result-item">
         <strong>${task.title}</strong>
-        <span>${task.status} - ${task.assignedTo} - ${formatDate(task.deadline)}</span>
+        <span>${task.status} - ${formatTaskAssignees(task)} - ${formatDate(task.deadline)}</span>
       </div>
     `).join("");
   }
@@ -1091,7 +1257,13 @@ function renderTaskSearchResults(query) {
 }
 
 function openTaskModal() {
+  if (!canAssignTasks()) {
+    alert("Only Admin users can create and assign tasks.");
+    return;
+  }
+
   if (taskModalOverlay) taskModalOverlay.classList.remove("hidden");
+  applyRoleBasedUI();
 
   if (taskStatusInput && !taskStatusInput.value) {
     taskStatusInput.value = "Pending";
@@ -1112,7 +1284,14 @@ function closeTaskModal() {
 }
 
 function createNewTask(taskData) {
+  if (!canAssignTasks()) {
+    alert("Only Admin users can assign tasks.");
+    return;
+  }
+
   const tasks = getTasksFromStorage();
+  const assignees = taskData.assignees || [];
+  const assignedTo = formatTaskAssignees(assignees);
 
   const newTask = {
     id: Date.now(),
@@ -1121,7 +1300,8 @@ function createNewTask(taskData) {
     severity: taskData.severity,
     status: taskData.status,
     deadline: taskData.deadline,
-    assignedTo: taskData.assignedTo.trim(),
+    assignedTo,
+    assignees,
     tags: taskData.tags,
     comments: []
   };
@@ -1130,17 +1310,22 @@ function createNewTask(taskData) {
   saveTasksToStorage(tasks);
   renderAllTaskUI();
 
-  addNotification("New task created", `${taskData.title} was assigned to ${taskData.assignedTo}`);
+  addNotification("New task created", `${taskData.title} was assigned to ${assignedTo}`);
 }
 
 function getTaskFormValues() {
+  const assignees = Array.from(taskAssignedToInput?.selectedOptions || [])
+    .map((option) => option.value)
+    .filter(Boolean);
+
   return {
     title: taskTitleInput?.value.trim() || "",
     description: taskDescriptionInput?.value.trim() || "",
     severity: taskSeverityInput?.value || "",
     status: taskStatusInput?.value || "",
     deadline: taskDeadlineInput?.value || "",
-    assignedTo: taskAssignedToInput?.value.trim() || "",
+    assignedTo: formatTaskAssignees(assignees),
+    assignees,
     tags: Array.from(taskTagInputs)
       .filter((input) => input.checked)
       .map((input) => input.value)
@@ -1178,8 +1363,13 @@ function validateTaskForm(taskData) {
     return false;
   }
 
-  if (!taskData.assignedTo) {
-    alert("Please enter assigned member name.");
+  if (!canAssignTasks()) {
+    alert("Only Admin users can assign tasks.");
+    return false;
+  }
+
+  if (!taskData.assignees || taskData.assignees.length === 0) {
+    alert("Please select at least one assigned member.");
     taskAssignedToInput?.focus();
     return false;
   }
@@ -1219,7 +1409,7 @@ async function handleLoginSubmit(event) {
     const user = {
       email,
       name: "Demo User",
-      role: "Manager",
+      role: "Admin",
       status: "Active"
     };
 
@@ -1264,7 +1454,7 @@ async function handleLoginSubmit(event) {
       const user = result.user || {
         email,
         name: "User",
-        role: "Employee",
+        role: "Member",
         status: "Active"
       };
 
@@ -1320,6 +1510,7 @@ const loginPasswordInput = document.getElementById("password");
 
 if (logoutBtn) {
   logoutBtn.addEventListener("click", function () {
+    updateCurrentUserPresence("offline");
     clearUserFromLocalStorage();
     showLoginScreen();
   });
@@ -1507,7 +1698,9 @@ function checkExistingLogin() {
 migrateAppStorageIfNeeded();
 setupNavigation();
 setupPrivateChatChannel();
+setupPresenceTracking();
 checkExistingLogin();
+applyRoleBasedUI();
 renderChatUsers();
 renderSelectedChatMessages();
 renderChatUsers();

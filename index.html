@@ -77,7 +77,8 @@
           <div class="user-avatar" id="user-avatar">U</div>
           <div>
             <h4 id="sidebar-user-name">Demo User</h4>
-            <p id="sidebar-user-role">Manager</p>
+            <p id="sidebar-user-role">Admin</p>
+            <span id="sidebar-presence-status" class="presence-badge presence-offline">Offline</span>
           </div>
         </div>
         <button id="logout-btn" class="logout-btn">Logout</button>
@@ -277,28 +278,32 @@
           </div>
 
           <div class="team-grid">
-            <div class="team-card">
+            <div class="team-card" data-team-member="Rahul">
               <div class="team-avatar">R</div>
               <h4>Rahul</h4>
               <p>Project Manager</p>
+              <span class="presence-badge presence-offline">Offline</span>
             </div>
 
-            <div class="team-card">
+            <div class="team-card" data-team-member="Sneha">
               <div class="team-avatar">S</div>
               <h4>Sneha</h4>
               <p>Business Analyst</p>
+              <span class="presence-badge presence-offline">Offline</span>
             </div>
 
-            <div class="team-card">
+            <div class="team-card" data-team-member="Amit">
               <div class="team-avatar">A</div>
               <h4>Amit</h4>
               <p>Developer</p>
+              <span class="presence-badge presence-offline">Offline</span>
             </div>
 
-            <div class="team-card">
+            <div class="team-card" data-team-member="Priya">
               <div class="team-avatar">P</div>
               <h4>Priya</h4>
               <p>Designer</p>
+              <span class="presence-badge presence-offline">Offline</span>
             </div>
           </div>
         </div>
@@ -399,13 +404,13 @@
 
           <div class="form-group">
             <label for="task-assigned-to">Assigned To</label>
-            <select id="task-assigned-to">
-              <option value="">Select member</option>
+            <select id="task-assigned-to" multiple size="4">
               <option value="Rahul">Rahul</option>
               <option value="Sneha">Sneha</option>
               <option value="Amit">Amit</option>
               <option value="Priya">Priya</option>
             </select>
+            <p id="task-assignment-help" class="field-help">Admins can assign one or more members.</p>
           </div>
         </div>
 
