@@ -43,6 +43,7 @@ const taskSeverityInput = document.getElementById("task-severity");
 const taskStatusInput = document.getElementById("task-status");
 const taskDeadlineInput = document.getElementById("task-deadline");
 const taskAssignedToInput = document.getElementById("task-assigned-to");
+const taskTagInputs = document.querySelectorAll('input[name="task-tags"]');
 
 const recentTaskList = document.getElementById("recent-task-list");
 const pendingTaskColumn = document.getElementById("pending-task-column");
@@ -316,6 +317,15 @@ function cloneDefaultNotifications() {
   return JSON.parse(JSON.stringify(defaultNotifications));
 }
 
+function escapeHTML(value) {
+  return String(value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function isValidTaskList(tasks) {
   if (!Array.isArray(tasks)) return false;
   if (tasks.length === 0) return true;
@@ -326,6 +336,14 @@ function isValidTaskList(tasks) {
     typeof task.status === "string" &&
     ["Pending", "In Progress", "Completed"].includes(task.status)
   ));
+}
+
+function normalizeTaskList(tasks) {
+  return tasks.map((task) => ({
+    ...task,
+    tags: Array.isArray(task.tags) ? task.tags : [],
+    comments: Array.isArray(task.comments) ? task.comments : []
+  }));
 }
 
 function isValidNotificationList(notifications) {
@@ -355,17 +373,18 @@ function getTasksFromStorage() {
   const savedTasks = localStorage.getItem("ttm_tasks");
 
   if (!savedTasks) {
-    const tasks = cloneDefaultTasks();
+    const tasks = normalizeTaskList(cloneDefaultTasks());
     localStorage.setItem("ttm_tasks", JSON.stringify(tasks));
     return tasks;
   }
 
   try {
-    const tasks = JSON.parse(savedTasks);
+    const tasks = normalizeTaskList(JSON.parse(savedTasks));
     if (!isValidTaskList(tasks)) throw new Error("Invalid task storage");
+    localStorage.setItem("ttm_tasks", JSON.stringify(tasks));
     return tasks;
   } catch {
-    const tasks = cloneDefaultTasks();
+    const tasks = normalizeTaskList(cloneDefaultTasks());
     localStorage.setItem("ttm_tasks", JSON.stringify(tasks));
     return tasks;
   }
@@ -755,6 +774,128 @@ function formatDate(dateString) {
   });
 }
 
+function formatCommentTime(timestamp) {
+  const date = new Date(timestamp);
+  if (Number.isNaN(date.getTime())) return "";
+
+  const datePart = date.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric"
+  });
+  const timePart = date.toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true
+  });
+
+  return `${datePart}, ${timePart}`;
+}
+
+function getCurrentCommentAuthor() {
+  const user = getUserFromLocalStorage();
+
+  return {
+    name: user?.name || "Demo User",
+    identifier: user?.email || "demo@company.com"
+  };
+}
+
+function getPriorityBadgeClass(severity) {
+  if (severity === "High") return "priority-high";
+  if (severity === "Medium") return "priority-medium";
+  if (severity === "Low") return "priority-low";
+  return "";
+}
+
+function renderTaskTags(tags) {
+  if (!Array.isArray(tags) || tags.length === 0) return "";
+
+  return `
+    <div class="task-tags">
+      ${tags.map((tag) => `<span class="task-tag">${escapeHTML(tag)}</span>`).join("")}
+    </div>
+  `;
+}
+
+function renderTaskComments(task) {
+  const comments = Array.isArray(task.comments) ? task.comments : [];
+
+  return `
+    <div class="task-comments">
+      <div class="task-comments-header">
+        <span>Comments</span>
+        <small>${comments.length}</small>
+      </div>
+      <div class="task-comment-list">
+        ${comments.length === 0
+          ? `<p class="task-comment-empty">No comments yet</p>`
+          : comments.map((comment) => `
+              <div class="task-comment">
+                <div class="task-comment-meta">
+                  <strong>${escapeHTML(comment.name)}</strong>
+                  <span>${escapeHTML(comment.identifier)} &bull; ${formatCommentTime(comment.timestamp)}</span>
+                </div>
+                <p>${escapeHTML(comment.text)}</p>
+              </div>
+            `).join("")
+        }
+      </div>
+      <div class="task-comment-form">
+        <input type="text" class="task-comment-input" placeholder="Add a comment..." />
+        <button type="button" class="task-comment-add" data-task-id="${escapeHTML(task.id)}">Add</button>
+      </div>
+    </div>
+  `;
+}
+
+function addCommentToTask(taskId, commentText) {
+  const text = commentText.trim();
+  if (!text) return;
+
+  const tasks = getTasksFromStorage();
+  const task = tasks.find((item) => String(item.id) === String(taskId));
+  if (!task) return;
+
+  const author = getCurrentCommentAuthor();
+  const comment = {
+    id: Date.now(),
+    name: author.name,
+    identifier: author.identifier,
+    text,
+    timestamp: new Date().toISOString()
+  };
+
+  if (!Array.isArray(task.comments)) task.comments = [];
+  task.comments.push(comment);
+  saveTasksToStorage(tasks);
+  renderAllTaskUI();
+  addNotification("Task comment added", `${author.name} commented on "${task.title}"`);
+}
+
+function getTaskCardMarkup(task, variant = "recent") {
+  const titleTag = variant === "recent" ? "h4" : "h5";
+  const priorityClass = getPriorityBadgeClass(task.severity);
+
+  return `
+    <div class="${variant === "recent" ? "task-item-main" : "kanban-card-main"}">
+      <div>
+        <${titleTag}>${escapeHTML(task.title)}</${titleTag}>
+        <p>Assigned to: ${escapeHTML(task.assignedTo)}</p>
+        ${variant === "kanban" ? `
+          <p><strong>Deadline:</strong> ${formatDate(task.deadline)}</p>
+        ` : ""}
+      </div>
+      <div class="task-card-meta-stack">
+        <span class="priority-badge ${priorityClass}">${escapeHTML(task.severity || "No priority")}</span>
+        <span class="badge ${getBadgeClass(task.status)}">${escapeHTML(task.status)}</span>
+      </div>
+    </div>
+    ${renderTaskTags(task.tags)}
+    ${renderTaskComments(task)}
+  `;
+}
+
 function isTaskDueSoon(task) {
   if (!task.deadline || task.status === "Completed") return false;
 
@@ -777,13 +918,7 @@ function renderRecentTasks() {
   tasks.slice().reverse().forEach((task) => {
     const taskDiv = document.createElement("div");
     taskDiv.className = "task-item";
-    taskDiv.innerHTML = `
-      <div>
-        <h4>${task.title}</h4>
-        <p>Assigned to: ${task.assignedTo}</p>
-      </div>
-      <span class="badge ${getBadgeClass(task.status)}">${task.status}</span>
-    `;
+    taskDiv.innerHTML = getTaskCardMarkup(task, "recent");
     recentTaskList.appendChild(taskDiv);
   });
 }
@@ -798,13 +933,8 @@ function renderTaskCardsIntoColumn(columnElement, tasks) {
 
   tasks.slice().reverse().forEach((task) => {
     const card = document.createElement("div");
-    card.className = "kanban-card";
-    card.innerHTML = `
-      <h5>${task.title}</h5>
-      <p><strong>Severity:</strong> ${task.severity}</p>
-      <p><strong>Assigned To:</strong> ${task.assignedTo}</p>
-      <p><strong>Deadline:</strong> ${formatDate(task.deadline)}</p>
-    `;
+    card.className = `kanban-card ${getPriorityBadgeClass(task.severity)}`;
+    card.innerHTML = getTaskCardMarkup(task, "kanban");
     columnElement.appendChild(card);
   });
 }
@@ -868,7 +998,8 @@ function renderTaskSearchResults(query) {
       task.title.toLowerCase().includes(normalizedQuery) ||
       task.status.toLowerCase().includes(normalizedQuery) ||
       task.severity.toLowerCase().includes(normalizedQuery) ||
-      task.assignedTo.toLowerCase().includes(normalizedQuery)
+      task.assignedTo.toLowerCase().includes(normalizedQuery) ||
+      (Array.isArray(task.tags) && task.tags.some((tag) => tag.toLowerCase().includes(normalizedQuery)))
     ))
     .slice(0, 6);
 
@@ -917,7 +1048,9 @@ function createNewTask(taskData) {
     severity: taskData.severity,
     status: taskData.status,
     deadline: taskData.deadline,
-    assignedTo: taskData.assignedTo.trim()
+    assignedTo: taskData.assignedTo.trim(),
+    tags: taskData.tags,
+    comments: []
   };
 
   tasks.push(newTask);
@@ -934,7 +1067,10 @@ function getTaskFormValues() {
     severity: taskSeverityInput?.value || "",
     status: taskStatusInput?.value || "",
     deadline: taskDeadlineInput?.value || "",
-    assignedTo: taskAssignedToInput?.value.trim() || ""
+    assignedTo: taskAssignedToInput?.value.trim() || "",
+    tags: Array.from(taskTagInputs)
+      .filter((input) => input.checked)
+      .map((input) => input.value)
   };
 }
 
@@ -1184,6 +1320,32 @@ document.addEventListener("keydown", function (event) {
   if (event.key === "Escape" && taskModalOverlay && !taskModalOverlay.classList.contains("hidden")) {
     closeTaskModal();
   }
+});
+
+document.addEventListener("click", function (event) {
+  if (!(event.target instanceof Element)) return;
+
+  const addCommentButton = event.target.closest(".task-comment-add");
+  if (!addCommentButton) return;
+
+  const commentsContainer = addCommentButton.closest(".task-comments");
+  const commentInput = commentsContainer?.querySelector(".task-comment-input");
+  if (!commentInput) return;
+
+  addCommentToTask(addCommentButton.dataset.taskId, commentInput.value);
+});
+
+document.addEventListener("keydown", function (event) {
+  if (!(event.target instanceof Element)) return;
+  if (!event.target.classList?.contains("task-comment-input")) return;
+  if (event.key !== "Enter") return;
+
+  event.preventDefault();
+  const commentsContainer = event.target.closest(".task-comments");
+  const addCommentButton = commentsContainer?.querySelector(".task-comment-add");
+  if (!addCommentButton) return;
+
+  addCommentToTask(addCommentButton.dataset.taskId, event.target.value);
 });
 
 if (enableBrowserNotificationsBtn) {
