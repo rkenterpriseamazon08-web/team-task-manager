@@ -1155,8 +1155,70 @@ select {
 }
 
 .chat-tool-btn {
-  padding: 12px 14px;
-  white-space: nowrap;
+  position: relative;
+  display: inline-grid;
+  width: 46px;
+  height: 46px;
+  flex: 0 0 46px;
+  place-items: center;
+  padding: 0;
+  color: #111827;
+}
+
+.chat-tool-btn span {
+  position: relative;
+  display: block;
+}
+
+.attachment-tool-btn span {
+  width: 22px;
+  height: 28px;
+  border: 2.5px solid currentColor;
+  border-top: none;
+  border-radius: 0 0 12px 12px;
+  transform: rotate(42deg);
+}
+
+.attachment-tool-btn span::before {
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: -8px;
+  width: 11px;
+  height: 23px;
+  border: 2.5px solid currentColor;
+  border-top: none;
+  border-radius: 0 0 9px 9px;
+}
+
+.voice-tool-btn span {
+  width: 18px;
+  height: 25px;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+.voice-tool-btn span::before {
+  content: "";
+  position: absolute;
+  left: -7px;
+  top: 8px;
+  width: 32px;
+  height: 22px;
+  border: 3px solid currentColor;
+  border-top: none;
+  border-radius: 0 0 18px 18px;
+}
+
+.voice-tool-btn span::after {
+  content: "";
+  position: absolute;
+  left: 7px;
+  top: 30px;
+  width: 4px;
+  height: 11px;
+  background: currentColor;
+  box-shadow: -9px 10px 0 0 currentColor, 9px 10px 0 0 currentColor;
 }
 
 .voice-panel {

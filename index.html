@@ -252,8 +252,12 @@
 
                   <div class="chat-input-row">
                     <input type="file" id="chat-file-input" class="hidden" />
-                    <button class="secondary-btn chat-tool-btn" type="button" id="chat-attach-btn">Attach</button>
-                    <button class="secondary-btn chat-tool-btn" type="button" id="chat-record-btn">Record</button>
+                    <button class="secondary-btn chat-tool-btn attachment-tool-btn" type="button" id="chat-attach-btn" aria-label="Attach file" title="Attach file">
+                      <span aria-hidden="true"></span>
+                    </button>
+                    <button class="secondary-btn chat-tool-btn voice-tool-btn" type="button" id="chat-record-btn" aria-label="Record voice message" title="Record voice message">
+                      <span aria-hidden="true"></span>
+                    </button>
                     <input type="text" id="chat-message-input" placeholder="Type your message..." />
                     <button class="primary-btn" id="send-message-btn">Send</button>
                   </div>
@@ -292,8 +296,12 @@
 
           <div class="chat-input-row">
             <input type="file" id="group-file-input" class="hidden" />
-            <button class="secondary-btn chat-tool-btn" type="button" id="group-attach-btn">Attach</button>
-            <button class="secondary-btn chat-tool-btn" type="button" id="group-record-btn">Record</button>
+            <button class="secondary-btn chat-tool-btn attachment-tool-btn" type="button" id="group-attach-btn" aria-label="Attach file" title="Attach file">
+              <span aria-hidden="true"></span>
+            </button>
+            <button class="secondary-btn chat-tool-btn voice-tool-btn" type="button" id="group-record-btn" aria-label="Record voice message" title="Record voice message">
+              <span aria-hidden="true"></span>
+            </button>
             <input type="text" id="group-chat-input" placeholder="Type group message..." />
             <button class="primary-btn" id="group-send-btn">Send</button>
           </div>
