@@ -1453,6 +1453,10 @@ function updateDashboardInsights() {
   const completionPercent = total ? Math.round((counts.completed / total) * 100) : 0;
 
   if (completionDonut) completionDonut.style.setProperty("--completed", completionPercent);
+  if (completionDonut) {
+    const progressPercent = total ? Math.round((counts.inProgress / total) * 100) : 0;
+    completionDonut.style.setProperty("--progress-end", completionPercent + progressPercent);
+  }
   if (completionDonutPercent) completionDonutPercent.textContent = `${completionPercent}%`;
   if (completionDonutDetail) {
     completionDonutDetail.textContent = `${counts.completed} completed, ${remaining} remaining`;
@@ -1474,32 +1478,15 @@ function updateDashboardInsights() {
   if (completedInsightCount) completedInsightCount.textContent = counts.completed;
 
   const analytics = getTeamAnalytics(tasks);
-  const maxCompleted = Math.max(...analytics.map((item) => item.completed), 1);
-
-  renderTeamInsightList(teamPerformanceList, analytics, (item) => {
-    const width = item.completed ? Math.max((item.completed / maxCompleted) * 100, 8) : 0;
-
-    return `
-      <div class="insight-row">
-        <div class="insight-row-top">
-          <span>${escapeHTML(item.name)}</span>
-          <strong>${item.completed}</strong>
-        </div>
-        <div class="mini-progress"><span style="width:${width}%;"></span></div>
-      </div>
-    `;
-  });
-
-  renderTeamInsightList(teamProductivityList, analytics, (item) => {
+  renderTeamInsightList(teamPerformanceList, analytics.slice(0, 3), (item, index) => {
     const label = item.assigned ? `${item.productivity}%` : "0%";
+    const assigneeLabel = item.name || `Assignee ${index + 1}`;
 
     return `
-      <div class="insight-row">
-        <div class="insight-row-top">
-          <span>${escapeHTML(item.name)}</span>
-          <strong>${label}</strong>
-        </div>
-        <div class="mini-progress productivity-progress"><span style="width:${item.productivity}%;"></span></div>
+      <div class="assignee-pie-card">
+        <h5>${escapeHTML(assigneeLabel)}</h5>
+        <div class="assignee-pie" style="--score:${item.productivity};"></div>
+        <strong>${label} done</strong>
         <p>${item.completed}/${item.assigned} tasks completed</p>
       </div>
     `;
