@@ -575,6 +575,14 @@ function showDashboardSection() {
   });
 
   if (pageTitle) pageTitle.textContent = "Dashboard";
+  updateTopbarTaskAction("dashboard-section");
+}
+
+function updateTopbarTaskAction(sectionId) {
+  if (!openTaskModalBtn) return;
+
+  const shouldShow = sectionId === "dashboard-section" || sectionId === "tasks-section";
+  openTaskModalBtn.classList.toggle("hidden", !shouldShow);
 }
 
 function getTasksFromStorage() {
@@ -729,6 +737,7 @@ function setupNavigation() {
       }
 
       if (pageTitle) pageTitle.textContent = item.querySelector(".nav-label")?.textContent || item.textContent.trim();
+      updateTopbarTaskAction(targetSectionId);
     });
   });
 }
