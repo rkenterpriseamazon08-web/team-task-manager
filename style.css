@@ -1881,6 +1881,61 @@ body::before {
   line-height: 1.5;
 }
 
+.stat-card.kpi-card,
+.focus-card.kpi-card {
+  overflow: hidden;
+}
+
+.stat-card.kpi-card > .kpi-hover-card,
+.focus-card.kpi-card > .kpi-hover-card {
+  position: absolute;
+  z-index: 4;
+}
+
+.kpi-card .kpi-hover-card h4,
+.kpi-card .kpi-detail-list strong,
+.kpi-card .kpi-detail-list span,
+.kpi-card .kpi-empty,
+.kpi-card .kpi-mini-chart p,
+.kpi-card .mini-donut span {
+  margin-bottom: 0;
+  text-transform: none;
+  letter-spacing: 0;
+  font-family: inherit;
+}
+
+.kpi-card .kpi-hover-card h4 {
+  color: #111827;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.25;
+  margin-bottom: 7px;
+}
+
+.kpi-card .kpi-detail-list strong {
+  color: #111827;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.kpi-card .kpi-detail-list span,
+.kpi-card .kpi-empty,
+.kpi-card .kpi-mini-chart p {
+  color: #64748b;
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1.35;
+  margin-top: 2px;
+}
+
+.kpi-card .mini-donut span {
+  color: #111827;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+}
+
 .task-item,
 .kanban-card,
 .notification-item,
