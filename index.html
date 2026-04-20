@@ -4,6 +4,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Team Task Manager</title>
+  <script>
+    (function () {
+      try {
+        var savedTheme = localStorage.getItem("ttm_theme");
+        if (savedTheme === "dark") document.documentElement.setAttribute("data-theme", "dark");
+      } catch (error) {}
+    })();
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -125,51 +133,59 @@
 
       <section id="dashboard-section" class="content-section active-section">
         <div class="stats-grid">
-          <div class="stat-card">
+          <div class="stat-card kpi-card" tabindex="0" data-kpi-detail="total">
             <h3>Total Tasks</h3>
             <p id="total-tasks-count">0</p>
             <span>All assigned tasks</span>
+            <div class="kpi-hover-card" id="total-tasks-detail"></div>
           </div>
 
-          <div class="stat-card">
+          <div class="stat-card kpi-card" tabindex="0" data-kpi-detail="progress">
             <h3>In Progress</h3>
             <p id="in-progress-count">0</p>
             <span>Tasks being worked on</span>
+            <div class="kpi-hover-card" id="progress-tasks-detail"></div>
           </div>
 
-          <div class="stat-card">
+          <div class="stat-card kpi-card" tabindex="0" data-kpi-detail="completed">
             <h3>Completed</h3>
             <p id="completed-count">0</p>
             <span>Finished successfully</span>
+            <div class="kpi-hover-card" id="completed-tasks-detail"></div>
           </div>
 
-          <div class="stat-card">
+          <div class="stat-card kpi-card" tabindex="0" data-kpi-detail="notifications">
             <h3>Notifications</h3>
             <p id="notifications-count">0</p>
             <span>Unread alerts</span>
+            <div class="kpi-hover-card" id="notifications-detail"></div>
           </div>
         </div>
 
         <div class="focus-grid">
-          <div class="focus-card">
+          <div class="focus-card kpi-card" tabindex="0" data-kpi-detail="due">
             <span>Due Soon</span>
             <strong id="due-soon-count">0</strong>
             <p>Tasks due in the next 3 days</p>
+            <div class="kpi-hover-card" id="due-soon-detail"></div>
           </div>
-          <div class="focus-card">
+          <div class="focus-card kpi-card" tabindex="0" data-kpi-detail="priority">
             <span>High Priority</span>
             <strong id="high-priority-count">0</strong>
             <p>Important tasks needing attention</p>
+            <div class="kpi-hover-card" id="high-priority-detail"></div>
           </div>
-          <div class="focus-card">
+          <div class="focus-card kpi-card" tabindex="0" data-kpi-detail="completion">
             <span>Completion Rate</span>
             <strong id="completion-rate">0%</strong>
             <p>Finished tasks across the board</p>
+            <div class="kpi-hover-card" id="completion-rate-detail"></div>
           </div>
-          <div class="focus-card">
+          <div class="focus-card kpi-card" tabindex="0" data-kpi-detail="load">
             <span>Team Load</span>
             <strong id="team-load-summary">0</strong>
             <p>Active assignments still open</p>
+            <div class="kpi-hover-card" id="team-load-detail"></div>
           </div>
         </div>
 
@@ -401,6 +417,12 @@
             <div class="settings-card">
               <h4>Storage & App Preferences</h4>
               <p id="storage-status-text">Local storage status: Active</p>
+
+              <label class="settings-toggle theme-toggle-row">
+                <input type="checkbox" id="theme-toggle" />
+                <span>Dark mode</span>
+              </label>
+              <p id="theme-status-text">Theme: Light</p>
 
               <label class="settings-toggle">
                 <input type="checkbox" id="remember-data-toggle" checked disabled />

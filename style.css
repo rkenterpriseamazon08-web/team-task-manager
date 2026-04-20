@@ -504,6 +504,105 @@ select {
   color: #9ca3af;
 }
 
+.kpi-card {
+  cursor: default;
+  outline: none;
+}
+
+.kpi-hover-card {
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: 14px;
+  max-height: calc(100% - 28px);
+  overflow-y: auto;
+  opacity: 0;
+  transform: translateY(8px);
+  pointer-events: none;
+  padding: 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(226, 232, 240, 0.88);
+  box-shadow: 0 18px 36px rgba(15, 23, 42, 0.14);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+  z-index: 4;
+}
+
+.kpi-card:hover .kpi-hover-card,
+.kpi-card:focus .kpi-hover-card,
+.kpi-card:focus-within .kpi-hover-card {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.kpi-hover-card h4 {
+  margin-bottom: 10px;
+  color: #111827;
+  font-size: 13px;
+}
+
+.kpi-detail-list {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  list-style: none;
+}
+
+.kpi-detail-list li {
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.72);
+}
+
+.kpi-detail-list li:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.kpi-detail-list strong {
+  display: block;
+  color: #111827;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.kpi-detail-list span,
+.kpi-empty,
+.kpi-mini-chart p {
+  display: block;
+  color: #64748b;
+  font-size: 11px;
+  line-height: 1.45;
+  margin-top: 3px;
+}
+
+.kpi-mini-chart {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mini-donut {
+  --completed: 0;
+  width: 58px;
+  height: 58px;
+  flex: 0 0 58px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, rgba(255, 255, 255, 0.95) 0 54%, transparent 55%),
+    conic-gradient(#2563eb calc(var(--completed) * 1%), #f59e0b 0);
+}
+
+.mini-donut span {
+  color: #111827;
+  font-size: 13px;
+  font-weight: 800;
+}
+
 .dashboard-grid {
   display: grid;
   grid-template-columns: 1.3fr 1fr;
@@ -1286,6 +1385,10 @@ select {
   height: 18px;
 }
 
+.theme-toggle-row {
+  margin-bottom: 4px;
+}
+
 .secondary-btn {
   background: rgba(255, 255, 255, 0.72);
   color: #374151;
@@ -1994,6 +2097,150 @@ body::before {
   cursor: pointer;
   font-size: 12px;
   font-weight: 800;
+}
+
+html[data-theme="dark"] body {
+  background:
+    linear-gradient(120deg, rgba(37, 99, 235, 0.14), transparent 34%),
+    linear-gradient(240deg, rgba(124, 58, 237, 0.18), transparent 38%),
+    #0f172a;
+  color: #e5e7eb;
+}
+
+html[data-theme="dark"] body::before {
+  background:
+    radial-gradient(circle at 18% 18%, rgba(96, 165, 250, 0.12), transparent 24%),
+    radial-gradient(circle at 82% 8%, rgba(167, 139, 250, 0.12), transparent 28%),
+    radial-gradient(circle at 72% 72%, rgba(34, 197, 94, 0.08), transparent 24%);
+}
+
+html[data-theme="dark"] .main-content {
+  background: rgba(15, 23, 42, 0.72);
+}
+
+html[data-theme="dark"] .topbar,
+html[data-theme="dark"] .stat-card,
+html[data-theme="dark"] .panel,
+html[data-theme="dark"] .login-card,
+html[data-theme="dark"] .task-modal,
+html[data-theme="dark"] .settings-card,
+html[data-theme="dark"] .team-card,
+html[data-theme="dark"] .task-item,
+html[data-theme="dark"] .kanban-card,
+html[data-theme="dark"] .notification-item,
+html[data-theme="dark"] .focus-card,
+html[data-theme="dark"] .insight-card,
+html[data-theme="dark"] .insight-list-block,
+html[data-theme="dark"] .timeline-content,
+html[data-theme="dark"] .timeline-empty,
+html[data-theme="dark"] .task-column {
+  background: linear-gradient(145deg, rgba(30, 41, 59, 0.82), rgba(15, 23, 42, 0.62));
+  border-color: rgba(148, 163, 184, 0.28);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 18px 44px rgba(0, 0, 0, 0.2);
+}
+
+html[data-theme="dark"] .topbar h1,
+html[data-theme="dark"] .login-card h1,
+html[data-theme="dark"] .task-modal-header h3,
+html[data-theme="dark"] .panel-header h3,
+html[data-theme="dark"] .task-item h4,
+html[data-theme="dark"] .kanban-card h5,
+html[data-theme="dark"] .team-card h4,
+html[data-theme="dark"] .settings-card h4,
+html[data-theme="dark"] .timeline-content h4,
+html[data-theme="dark"] .timeline-empty h4,
+html[data-theme="dark"] .insight-card h4,
+html[data-theme="dark"] .insight-list-header h4,
+html[data-theme="dark"] .insight-row-top span,
+html[data-theme="dark"] .task-comments-header,
+html[data-theme="dark"] .task-comment-meta strong {
+  color: #f8fafc;
+}
+
+html[data-theme="dark"] .topbar-subtitle,
+html[data-theme="dark"] .login-subtitle,
+html[data-theme="dark"] .stat-card h3,
+html[data-theme="dark"] .stat-card span,
+html[data-theme="dark"] .focus-card span,
+html[data-theme="dark"] .focus-card p,
+html[data-theme="dark"] .settings-card p,
+html[data-theme="dark"] .team-card p,
+html[data-theme="dark"] .task-item p,
+html[data-theme="dark"] .kanban-card p,
+html[data-theme="dark"] .timeline-content p,
+html[data-theme="dark"] .timeline-empty p,
+html[data-theme="dark"] .timeline-meta,
+html[data-theme="dark"] .insight-card p,
+html[data-theme="dark"] .insight-list-header span,
+html[data-theme="dark"] .insight-row p,
+html[data-theme="dark"] .task-comment p,
+html[data-theme="dark"] .task-comment-meta span {
+  color: #cbd5e1;
+}
+
+html[data-theme="dark"] .stat-card p,
+html[data-theme="dark"] .focus-card strong,
+html[data-theme="dark"] .donut-chart span,
+html[data-theme="dark"] .mini-donut span {
+  color: #f8fafc;
+}
+
+html[data-theme="dark"] .search-box,
+html[data-theme="dark"] .chat-input-row input,
+html[data-theme="dark"] .task-form textarea,
+html[data-theme="dark"] .task-form select,
+html[data-theme="dark"] .task-form input,
+html[data-theme="dark"] .task-comment-input,
+html[data-theme="dark"] .form-group input,
+html[data-theme="dark"] .form-group textarea,
+html[data-theme="dark"] .form-group select {
+  background: rgba(15, 23, 42, 0.68);
+  border-color: rgba(148, 163, 184, 0.34);
+  color: #f8fafc;
+}
+
+html[data-theme="dark"] .search-box::placeholder,
+html[data-theme="dark"] .chat-input-row input::placeholder,
+html[data-theme="dark"] .task-comment-input::placeholder {
+  color: #94a3b8;
+}
+
+html[data-theme="dark"] .message-bubble.received,
+html[data-theme="dark"] .search-results,
+html[data-theme="dark"] .search-result-item,
+html[data-theme="dark"] .task-comment,
+html[data-theme="dark"] .tag-checkbox,
+html[data-theme="dark"] .kpi-hover-card {
+  background: rgba(30, 41, 59, 0.94);
+  border-color: rgba(148, 163, 184, 0.28);
+}
+
+html[data-theme="dark"] .close-modal-btn {
+  background: rgba(51, 65, 85, 0.88);
+  color: #f8fafc;
+}
+
+html[data-theme="dark"] .kpi-hover-card h4,
+html[data-theme="dark"] .kpi-detail-list strong {
+  color: #f8fafc;
+}
+
+html[data-theme="dark"] .kpi-detail-list span,
+html[data-theme="dark"] .kpi-empty,
+html[data-theme="dark"] .kpi-mini-chart p {
+  color: #cbd5e1;
+}
+
+html[data-theme="dark"] .donut-chart,
+html[data-theme="dark"] .mini-donut {
+  background:
+    radial-gradient(circle, rgba(15, 23, 42, 0.95) 0 55%, transparent 56%),
+    conic-gradient(#60a5fa calc(var(--completed) * 1%), #f59e0b 0);
+}
+
+html[data-theme="dark"] .status-segmented-bar,
+html[data-theme="dark"] .mini-progress {
+  background: rgba(51, 65, 85, 0.88);
 }
 
 @media (max-width: 768px) {

@@ -64,6 +64,14 @@ const teamLoadSummary = document.getElementById("team-load-summary");
 const upcomingEventsList = document.getElementById("upcoming-events-list");
 const taskSearchInput = document.getElementById("task-search-input");
 const taskSearchResults = document.getElementById("task-search-results");
+const totalTasksDetail = document.getElementById("total-tasks-detail");
+const progressTasksDetail = document.getElementById("progress-tasks-detail");
+const completedTasksDetail = document.getElementById("completed-tasks-detail");
+const notificationsDetail = document.getElementById("notifications-detail");
+const dueSoonDetail = document.getElementById("due-soon-detail");
+const highPriorityDetail = document.getElementById("high-priority-detail");
+const completionRateDetail = document.getElementById("completion-rate-detail");
+const teamLoadDetail = document.getElementById("team-load-detail");
 const completionDonut = document.getElementById("completion-donut");
 const completionDonutPercent = document.getElementById("completion-donut-percent");
 const completionDonutDetail = document.getElementById("completion-donut-detail");
@@ -83,6 +91,8 @@ const disableBrowserNotificationsBtn = document.getElementById("disable-browser-
 const notificationPermissionStatus = document.getElementById("notification-permission-status");
 const inAppToastToggle = document.getElementById("in-app-toast-toggle");
 const notificationSoundToggle = document.getElementById("notification-sound-toggle");
+const themeToggle = document.getElementById("theme-toggle");
+const themeStatusText = document.getElementById("theme-status-text");
 const clearNotificationsBtn = document.getElementById("clear-notifications-btn");
 const resetAppDataBtn = document.getElementById("reset-app-data-btn");
 
@@ -268,6 +278,22 @@ function isNotificationSoundEnabled() {
 
 function setNotificationSoundEnabled(value) {
   localStorage.setItem("ttm_notification_sound_enabled", value ? "true" : "false");
+}
+
+function getSavedTheme() {
+  return localStorage.getItem("ttm_theme") === "dark" ? "dark" : "light";
+}
+
+function applyTheme(theme) {
+  const normalizedTheme = theme === "dark" ? "dark" : "light";
+
+  document.documentElement.setAttribute("data-theme", normalizedTheme);
+  localStorage.setItem("ttm_theme", normalizedTheme);
+
+  if (themeToggle) themeToggle.checked = normalizedTheme === "dark";
+  if (themeStatusText) {
+    themeStatusText.textContent = `Theme: ${normalizedTheme === "dark" ? "Dark" : "Light"}`;
+  }
 }
 
 function playNotificationSound() {
@@ -1285,6 +1311,98 @@ function updateDashboardCounts() {
   if (highPriorityCount) highPriorityCount.textContent = highPriority;
   if (completionRate) completionRate.textContent = `${completionPercentage}%`;
   if (teamLoadSummary) teamLoadSummary.textContent = activeAssignments;
+  renderKpiHoverDetails(tasks);
+}
+
+function getRecentTasksByStatus(tasks, status) {
+  return tasks
+    .filter((task) => task.status === status)
+    .slice()
+    .reverse()
+    .slice(0, 3);
+}
+
+function renderKpiTaskList(tasks, emptyText) {
+  if (!tasks.length) return `<p class="kpi-empty">${escapeHTML(emptyText)}</p>`;
+
+  return `
+    <ul class="kpi-detail-list">
+      ${tasks.map((task) => `
+        <li>
+          <strong>${escapeHTML(task.title)}</strong>
+          <span>${escapeHTML(formatTaskAssignees(task))} · ${escapeHTML(task.status)}</span>
+        </li>
+      `).join("")}
+    </ul>
+  `;
+}
+
+function renderKpiNotificationList(notifications) {
+  if (!notifications.length) return `<p class="kpi-empty">No recent notifications</p>`;
+
+  return `
+    <ul class="kpi-detail-list">
+      ${notifications.map((notification) => `
+        <li>
+          <strong>${escapeHTML(notification.title)}</strong>
+          <span>${escapeHTML(notification.message)}</span>
+        </li>
+      `).join("")}
+    </ul>
+  `;
+}
+
+function setKpiDetail(element, title, content) {
+  if (!element) return;
+
+  element.innerHTML = `
+    <h4>${escapeHTML(title)}</h4>
+    ${content}
+  `;
+}
+
+function renderKpiHoverDetails(tasks) {
+  const notifications = getNotificationsFromStorage();
+  const completed = tasks.filter((task) => task.status === "Completed").length;
+  const total = tasks.length;
+  const completionPercentage = total ? Math.round((completed / total) * 100) : 0;
+  const recentTasks = tasks.slice().reverse().slice(0, 3);
+  const dueSoonTasks = tasks.filter(isTaskDueSoon).slice(0, 3);
+  const highPriorityTasks = tasks
+    .filter((task) => task.severity === "High")
+    .slice()
+    .reverse()
+    .slice(0, 3);
+  const loadItems = groupMembers.map((member) => {
+    const activeTasks = tasks.filter((task) => (
+      task.status !== "Completed" && getTaskAssignees(task).includes(member.name)
+    )).length;
+
+    return { name: member.name, activeTasks };
+  });
+
+  setKpiDetail(totalTasksDetail, "Top recent tasks", renderKpiTaskList(recentTasks, "No recent tasks"));
+  setKpiDetail(progressTasksDetail, "In progress now", renderKpiTaskList(getRecentTasksByStatus(tasks, "In Progress"), "No in-progress tasks"));
+  setKpiDetail(completedTasksDetail, "Recently completed", renderKpiTaskList(getRecentTasksByStatus(tasks, "Completed"), "No completed tasks"));
+  setKpiDetail(notificationsDetail, "Recent notifications", renderKpiNotificationList(notifications.slice(0, 3)));
+  setKpiDetail(dueSoonDetail, "Due within 3 days", renderKpiTaskList(dueSoonTasks, "No tasks due soon"));
+  setKpiDetail(highPriorityDetail, "High priority work", renderKpiTaskList(highPriorityTasks, "No high-priority tasks"));
+  setKpiDetail(completionRateDetail, "Completion snapshot", `
+    <div class="kpi-mini-chart">
+      <div class="mini-donut" style="--completed:${completionPercentage};"><span>${completionPercentage}%</span></div>
+      <p>${completed}/${total} tasks completed</p>
+    </div>
+  `);
+  setKpiDetail(teamLoadDetail, "Team load", `
+    <ul class="kpi-detail-list">
+      ${loadItems.map((item) => `
+        <li>
+          <strong>${escapeHTML(item.name)}</strong>
+          <span>${item.activeTasks} active assignment${item.activeTasks === 1 ? "" : "s"}</span>
+        </li>
+      `).join("")}
+    </ul>
+  `);
 }
 
 function getTaskStatusCounts(tasks) {
@@ -1807,6 +1925,12 @@ if (notificationSoundToggle) {
   });
 }
 
+if (themeToggle) {
+  themeToggle.addEventListener("change", function () {
+    applyTheme(themeToggle.checked ? "dark" : "light");
+  });
+}
+
 if (clearNotificationsBtn) {
   clearNotificationsBtn.addEventListener("click", function () {
     saveNotificationsToStorage([]);
@@ -1861,6 +1985,7 @@ function checkExistingLogin() {
 }
 
 migrateAppStorageIfNeeded();
+applyTheme(getSavedTheme());
 setupNavigation();
 setupPrivateChatChannel();
 setupPresenceTracking();
