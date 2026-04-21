@@ -291,6 +291,25 @@ select {
   transform: rotate(-45deg);
 }
 
+.nav-drive::before {
+  left: 2px;
+  top: 4px;
+  width: 14px;
+  height: 10px;
+  border: 2px solid currentColor;
+  border-radius: 3px;
+}
+
+.nav-drive::after {
+  left: 3px;
+  top: 2px;
+  width: 7px;
+  height: 5px;
+  border: 2px solid currentColor;
+  border-bottom: none;
+  border-radius: 3px 3px 0 0;
+}
+
 .nav-notifications::before {
   left: 4px;
   top: 2px;
@@ -1163,33 +1182,23 @@ select {
   place-items: center;
   padding: 0;
   color: #374151;
-  overflow: visible;
+  overflow: hidden;
 }
 
-.chat-tool-btn span {
-  display: block;
+.composer-icon {
   width: 22px;
   height: 22px;
-  background: currentColor;
-  transform: none;
+  display: block;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
-.attachment-tool-btn span {
-  mask:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21.44 11.05 12.25 20.24a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 1 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48'/%3E%3C/svg%3E")
-    center / contain no-repeat;
-  -webkit-mask:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21.44 11.05 12.25 20.24a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 1 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48'/%3E%3C/svg%3E")
-    center / contain no-repeat;
-}
-
-.voice-tool-btn span {
-  mask:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='black'%3E%3Cpath d='M12 14a3.5 3.5 0 0 0 3.5-3.5v-5a3.5 3.5 0 0 0-7 0v5A3.5 3.5 0 0 0 12 14Zm6.25-3.5a1 1 0 1 0-2 0 4.25 4.25 0 0 1-8.5 0 1 1 0 1 0-2 0A6.26 6.26 0 0 0 11 16.68V20H8.5a1 1 0 1 0 0 2h7a1 1 0 1 0 0-2H13v-3.32a6.26 6.26 0 0 0 5.25-6.18Z'/%3E%3C/svg%3E")
-    center / contain no-repeat;
-  -webkit-mask:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='black'%3E%3Cpath d='M12 14a3.5 3.5 0 0 0 3.5-3.5v-5a3.5 3.5 0 0 0-7 0v5A3.5 3.5 0 0 0 12 14Zm6.25-3.5a1 1 0 1 0-2 0 4.25 4.25 0 0 1-8.5 0 1 1 0 1 0-2 0A6.26 6.26 0 0 0 11 16.68V20H8.5a1 1 0 1 0 0 2h7a1 1 0 1 0 0-2H13v-3.32a6.26 6.26 0 0 0 5.25-6.18Z'/%3E%3C/svg%3E")
-    center / contain no-repeat;
+.voice-tool-btn .composer-icon path:first-child {
+  fill: currentColor;
+  stroke: none;
 }
 
 .voice-panel {
@@ -1208,6 +1217,63 @@ select {
   color: #475569;
   font-size: 12px;
   font-weight: 700;
+}
+
+.composer-attachment-preview {
+  margin: 0 0 10px;
+  padding: 10px;
+  border: 1px solid rgba(226, 232, 240, 0.86);
+  border-radius: 14px;
+  background: rgba(248, 250, 252, 0.82);
+}
+
+.composer-preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.composer-preview-header span {
+  color: #475569;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.composer-preview-remove {
+  border: none;
+  background: rgba(239, 68, 68, 0.1);
+  color: #b91c1c;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 10px;
+}
+
+.composer-preview-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 8px;
+}
+
+.composer-preview-item {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 10px;
+  padding: 8px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(226, 232, 240, 0.76);
+}
+
+.composer-preview-item img {
+  width: 52px;
+  height: 52px;
+  border-radius: 10px;
+  object-fit: cover;
 }
 
 .attachment-list,
@@ -1296,6 +1362,85 @@ select {
   color: inherit;
   font-size: 11px;
   font-weight: 700;
+}
+
+.drive-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.drive-subtitle {
+  color: #64748b;
+  font-size: 13px;
+}
+
+.drive-file-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 14px;
+}
+
+.drive-file-card,
+.drive-empty {
+  padding: 14px;
+  border: 1px solid rgba(226, 232, 240, 0.78);
+  border-radius: 16px;
+  background: rgba(248, 250, 252, 0.72);
+}
+
+.drive-file-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.drive-file-preview {
+  display: grid;
+  height: 132px;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 14px;
+  background: rgba(226, 232, 240, 0.62);
+}
+
+.drive-file-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.drive-file-preview span {
+  color: #4f46e5;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.drive-file-info h4 {
+  overflow: hidden;
+  color: #111827;
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.drive-file-info p,
+.drive-empty p {
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.drive-file-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.drive-file-actions a {
+  flex: 1;
+  padding: 10px 12px;
+  text-align: center;
+  text-decoration: none;
 }
 
 .task-board {
@@ -2471,7 +2616,11 @@ html[data-theme="dark"] .task-comment p,
 html[data-theme="dark"] .task-comment-meta span,
 html[data-theme="dark"] .form-help,
 html[data-theme="dark"] .attachment-meta small,
-html[data-theme="dark"] .voice-panel span {
+html[data-theme="dark"] .voice-panel span,
+html[data-theme="dark"] .composer-preview-header span,
+html[data-theme="dark"] .drive-subtitle,
+html[data-theme="dark"] .drive-file-info p,
+html[data-theme="dark"] .drive-empty p {
   color: #cbd5e1;
 }
 
@@ -2508,10 +2657,23 @@ html[data-theme="dark"] .search-result-item,
 html[data-theme="dark"] .task-comment,
 html[data-theme="dark"] .attachment-chip,
 html[data-theme="dark"] .voice-panel,
+html[data-theme="dark"] .composer-attachment-preview,
+html[data-theme="dark"] .composer-preview-item,
+html[data-theme="dark"] .drive-file-card,
+html[data-theme="dark"] .drive-empty,
 html[data-theme="dark"] .tag-checkbox,
 html[data-theme="dark"] .kpi-hover-card {
   background: rgba(30, 41, 59, 0.94);
   border-color: rgba(148, 163, 184, 0.28);
+}
+
+html[data-theme="dark"] .drive-file-info h4,
+html[data-theme="dark"] .drive-empty h4 {
+  color: #f8fafc;
+}
+
+html[data-theme="dark"] .drive-file-preview {
+  background: rgba(15, 23, 42, 0.7);
 }
 
 html[data-theme="dark"] .attachment-icon {

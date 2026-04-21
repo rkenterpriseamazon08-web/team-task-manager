@@ -36,6 +36,7 @@ const groupSendBtn = document.getElementById("group-send-btn");
 const groupFileInput = document.getElementById("group-file-input");
 const groupAttachBtn = document.getElementById("group-attach-btn");
 const groupRecordBtn = document.getElementById("group-record-btn");
+const groupAttachmentPreview = document.getElementById("group-attachment-preview");
 const groupVoicePanel = document.getElementById("group-voice-panel");
 const groupVoiceStatus = document.getElementById("group-voice-status");
 const groupStopRecordBtn = document.getElementById("group-stop-record-btn");
@@ -52,6 +53,7 @@ let groupVoiceRecorder = null;
 let groupVoiceChunks = [];
 let groupVoiceAttachment = null;
 let groupVoiceCancelled = false;
+let groupAttachmentPreviewUrls = [];
 
 const GROUP_MAX_ATTACHMENT_SIZE = 750 * 1024;
 const GROUP_MAX_VOICE_SIZE = 1200 * 1024;
@@ -92,7 +94,8 @@ function normalizeAttachment(attachment) {
     type: attachment.type || "",
     size: Number(attachment.size) || 0,
     dataUrl: attachment.dataUrl,
-    kind: attachment.kind === "voice" ? "voice" : "file"
+    kind: attachment.kind === "voice" ? "voice" : "file",
+    createdAt: attachment.createdAt || ""
   };
 }
 
@@ -131,7 +134,8 @@ function readFileAsAttachment(file, kind = "file", maxSize = GROUP_MAX_ATTACHMEN
         type: file.type || "",
         size: file.size || 0,
         dataUrl: reader.result,
-        kind
+        kind,
+        createdAt: new Date().toISOString()
       });
     };
     reader.onerror = () => reject(new Error("Unable to read the selected file."));
@@ -179,6 +183,66 @@ function renderMessageAttachments(attachments) {
       </div>
     `;
   }).join("");
+}
+
+function clearAttachmentPreview(input, container, previewUrls) {
+  previewUrls.forEach((url) => URL.revokeObjectURL(url));
+  previewUrls.length = 0;
+  if (input) input.value = "";
+  if (container) {
+    container.innerHTML = "";
+    container.classList.add("hidden");
+  }
+}
+
+function renderComposerAttachmentPreview(input, container, previewUrls) {
+  if (!input || !container) return;
+
+  previewUrls.forEach((url) => URL.revokeObjectURL(url));
+  previewUrls.length = 0;
+
+  const files = Array.from(input.files || []);
+  if (files.length === 0) {
+    container.innerHTML = "";
+    container.classList.add("hidden");
+    return;
+  }
+
+  container.classList.remove("hidden");
+  container.innerHTML = `
+    <div class="composer-preview-header">
+      <span>${files.length} file${files.length === 1 ? "" : "s"} ready to send</span>
+      <button type="button" class="composer-preview-remove">Remove</button>
+    </div>
+    <div class="composer-preview-list">
+      ${files.map((file) => {
+        const isImage = file.type.startsWith("image/");
+        const imageUrl = isImage ? URL.createObjectURL(file) : "";
+        if (imageUrl) previewUrls.push(imageUrl);
+
+        return `
+          <div class="composer-preview-item">
+            ${isImage
+              ? `<img src="${imageUrl}" alt="${escapeHTML(file.name)}" />`
+              : `<span class="attachment-icon">${escapeHTML(getFileTypeLabel(file.type, file.name))}</span>`
+            }
+            <span class="attachment-meta">
+              <strong>${escapeHTML(file.name)}</strong>
+              <small>${escapeHTML(getFileTypeLabel(file.type, file.name))} &bull; ${formatFileSize(file.size)}</small>
+            </span>
+          </div>
+        `;
+      }).join("")}
+    </div>
+  `;
+}
+
+function clearGroupAttachmentPreview() {
+  clearAttachmentPreview(groupFileInput, groupAttachmentPreview, groupAttachmentPreviewUrls);
+}
+
+function renderGroupAttachmentPreview() {
+  renderComposerAttachmentPreview(groupFileInput, groupAttachmentPreview, groupAttachmentPreviewUrls);
 }
 
 function getCurrentGroupUserName() {
@@ -348,6 +412,7 @@ function appendGroupMessage(room, message, shouldBroadcast = true) {
   saveGroupMessages(messagesByRoom);
 
   if (room === activeGroupRoom) renderGroupMessages();
+  if (typeof window.renderGoogleDriveFiles === "function") window.renderGoogleDriveFiles();
 
   if (shouldBroadcast && groupChannel) {
     groupChannel.postMessage({ room, message });
@@ -381,12 +446,16 @@ async function sendGroupMessage() {
 
   appendGroupMessage(room, message);
   groupChatInput.value = "";
-  if (groupFileInput) groupFileInput.value = "";
+  clearGroupAttachmentPreview();
   broadcastGroupTyping(false);
   renderTypingIndicator("");
 
   if (typeof window.addAppNotification === "function") {
     window.addAppNotification("Group chat", `Message sent in ${GROUP_ROOMS[room].label}.`);
+  }
+
+  if (typeof window.renderGoogleDriveFiles === "function") {
+    window.renderGoogleDriveFiles();
   }
 }
 
@@ -485,6 +554,10 @@ function sendGroupVoiceMessage() {
   if (typeof window.addAppNotification === "function") {
     window.addAppNotification("Group chat", `Voice message sent in ${GROUP_ROOMS[room].label}.`);
   }
+
+  if (typeof window.renderGoogleDriveFiles === "function") {
+    window.renderGoogleDriveFiles();
+  }
 }
 
 function setupGroupChannel() {
@@ -525,6 +598,18 @@ if (groupSendBtn) {
 
 if (groupAttachBtn && groupFileInput) {
   groupAttachBtn.addEventListener("click", () => groupFileInput.click());
+}
+
+if (groupFileInput) {
+  groupFileInput.addEventListener("change", renderGroupAttachmentPreview);
+}
+
+if (groupAttachmentPreview) {
+  groupAttachmentPreview.addEventListener("click", (event) => {
+    if (event.target instanceof Element && event.target.closest(".composer-preview-remove")) {
+      clearGroupAttachmentPreview();
+    }
+  });
 }
 
 if (groupRecordBtn) {

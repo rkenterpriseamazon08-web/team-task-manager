@@ -35,6 +35,7 @@ const chatTypingIndicator = document.getElementById("chat-typing-indicator");
 const chatFileInput = document.getElementById("chat-file-input");
 const chatAttachBtn = document.getElementById("chat-attach-btn");
 const chatRecordBtn = document.getElementById("chat-record-btn");
+const chatAttachmentPreview = document.getElementById("chat-attachment-preview");
 const chatVoicePanel = document.getElementById("chat-voice-panel");
 const chatVoiceStatus = document.getElementById("chat-voice-status");
 const chatStopRecordBtn = document.getElementById("chat-stop-record-btn");
@@ -92,6 +93,7 @@ const progressInsightCount = document.getElementById("progress-insight-count");
 const completedInsightCount = document.getElementById("completed-insight-count");
 const teamPerformanceList = document.getElementById("team-performance-list");
 const teamProductivityList = document.getElementById("team-productivity-list");
+const driveFileGrid = document.getElementById("drive-file-grid");
 
 // -----------------------------
 // NOTIFICATION ELEMENTS
@@ -222,6 +224,7 @@ let privateVoiceRecorder = null;
 let privateVoiceChunks = [];
 let privateVoiceAttachment = null;
 let privateVoiceCancelled = false;
+let privateAttachmentPreviewUrls = [];
 
 const defaultChatConversations = {
   Rahul: [
@@ -566,7 +569,8 @@ function normalizeAttachment(attachment) {
     type: attachment.type || "",
     size: Number(attachment.size) || 0,
     dataUrl: attachment.dataUrl,
-    kind: attachment.kind === "voice" ? "voice" : "file"
+    kind: attachment.kind === "voice" ? "voice" : "file",
+    createdAt: attachment.createdAt || ""
   };
 }
 
@@ -595,7 +599,8 @@ function readFileAsAttachment(file, kind = "file", maxSize = MAX_ATTACHMENT_SIZE
         type: file.type || "",
         size: file.size || 0,
         dataUrl: reader.result,
-        kind
+        kind,
+        createdAt: new Date().toISOString()
       });
     };
     reader.onerror = () => reject(new Error("Unable to read the selected file."));
@@ -657,6 +662,171 @@ function renderMessageAttachments(attachments) {
     return renderAttachmentList([attachment], "message-attachments");
   }).join("");
 }
+
+function clearAttachmentPreview(input, container, previewUrls) {
+  previewUrls.forEach((url) => URL.revokeObjectURL(url));
+  previewUrls.length = 0;
+  if (input) input.value = "";
+  if (container) {
+    container.innerHTML = "";
+    container.classList.add("hidden");
+  }
+}
+
+function renderComposerAttachmentPreview(input, container, previewUrls) {
+  if (!input || !container) return;
+
+  previewUrls.forEach((url) => URL.revokeObjectURL(url));
+  previewUrls.length = 0;
+
+  const files = Array.from(input.files || []);
+  if (files.length === 0) {
+    container.innerHTML = "";
+    container.classList.add("hidden");
+    return;
+  }
+
+  container.classList.remove("hidden");
+  container.innerHTML = `
+    <div class="composer-preview-header">
+      <span>${files.length} file${files.length === 1 ? "" : "s"} ready to send</span>
+      <button type="button" class="composer-preview-remove">Remove</button>
+    </div>
+    <div class="composer-preview-list">
+      ${files.map((file) => {
+        const isImage = file.type.startsWith("image/");
+        const imageUrl = isImage ? URL.createObjectURL(file) : "";
+        if (imageUrl) previewUrls.push(imageUrl);
+
+        return `
+          <div class="composer-preview-item">
+            ${isImage
+              ? `<img src="${imageUrl}" alt="${escapeHTML(file.name)}" />`
+              : `<span class="attachment-icon">${escapeHTML(getFileTypeLabel(file.type, file.name))}</span>`
+            }
+            <span class="attachment-meta">
+              <strong>${escapeHTML(file.name)}</strong>
+              <small>${escapeHTML(getFileTypeLabel(file.type, file.name))} &bull; ${formatFileSize(file.size)}</small>
+            </span>
+          </div>
+        `;
+      }).join("")}
+    </div>
+  `;
+}
+
+function clearPrivateAttachmentPreview() {
+  clearAttachmentPreview(chatFileInput, chatAttachmentPreview, privateAttachmentPreviewUrls);
+}
+
+function renderPrivateAttachmentPreview() {
+  renderComposerAttachmentPreview(chatFileInput, chatAttachmentPreview, privateAttachmentPreviewUrls);
+}
+
+function getStoredGroupMessagesForDrive() {
+  try {
+    const saved = localStorage.getItem("ttm_group_messages");
+    const parsed = saved ? JSON.parse(saved) : {};
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function collectDriveFiles() {
+  const files = [];
+
+  getTasksFromStorage().forEach((task) => {
+    normalizeAttachments(task.attachments).forEach((attachment) => {
+      files.push({
+        ...attachment,
+        source: "Task",
+        sourceDetail: task.title || "Untitled task"
+      });
+    });
+  });
+
+  const chats = getChatsFromStorage();
+  Object.entries(chats).forEach(([memberName, messages]) => {
+    (messages || []).forEach((message) => {
+      normalizeAttachments(message.attachments).forEach((attachment) => {
+        files.push({
+          ...attachment,
+          source: "Chat",
+          sourceDetail: memberName,
+          createdAt: attachment.createdAt || message.timestamp || ""
+        });
+      });
+    });
+  });
+
+  const groupMessages = getStoredGroupMessagesForDrive();
+  Object.entries(groupMessages).forEach(([roomName, messages]) => {
+    (Array.isArray(messages) ? messages : []).forEach((message) => {
+      normalizeAttachments(message.attachments).forEach((attachment) => {
+        files.push({
+          ...attachment,
+          source: "Group Chat",
+          sourceDetail: roomName,
+          createdAt: attachment.createdAt || message.timestamp || ""
+        });
+      });
+    });
+  });
+
+  return files.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+}
+
+function formatDriveDate(timestamp) {
+  const date = new Date(timestamp);
+  if (Number.isNaN(date.getTime())) return "Unknown date";
+
+  return date.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric"
+  });
+}
+
+function renderGoogleDriveFiles() {
+  if (!driveFileGrid) return;
+
+  const files = collectDriveFiles();
+  if (files.length === 0) {
+    driveFileGrid.innerHTML = `
+      <div class="drive-empty">
+        <h4>No shared files yet</h4>
+        <p>Files attached to tasks, chats, and group chats will appear here.</p>
+      </div>
+    `;
+    return;
+  }
+
+  driveFileGrid.innerHTML = files.map((file) => {
+    const isImage = String(file.type || "").startsWith("image/");
+    return `
+      <article class="drive-file-card">
+        <div class="drive-file-preview">
+          ${isImage
+            ? `<img src="${file.dataUrl}" alt="${escapeHTML(file.name)}" />`
+            : `<span>${escapeHTML(file.kind === "voice" ? "AUDIO" : getFileTypeLabel(file.type, file.name))}</span>`
+          }
+        </div>
+        <div class="drive-file-info">
+          <h4>${escapeHTML(file.name)}</h4>
+          <p>${escapeHTML(file.source)} &bull; ${escapeHTML(file.sourceDetail)}</p>
+          <p>${escapeHTML(getFileTypeLabel(file.type, file.name))} &bull; ${formatFileSize(file.size)} &bull; ${formatDriveDate(file.createdAt)}</p>
+        </div>
+        <div class="drive-file-actions">
+          <a class="secondary-btn" href="${file.dataUrl}" target="_blank" rel="noopener noreferrer">Open</a>
+          <a class="primary-btn" href="${file.dataUrl}" download="${escapeHTML(file.name)}">Download</a>
+        </div>
+      </article>
+    `;
+  }).join("");
+}
+
+window.renderGoogleDriveFiles = renderGoogleDriveFiles;
 
 function isValidTaskList(tasks) {
   if (!Array.isArray(tasks)) return false;
@@ -1063,11 +1233,12 @@ async function sendMessage() {
 
   saveChatsToStorage(chats);
   chatInput.value = "";
-  if (chatFileInput) chatFileInput.value = "";
+  clearPrivateAttachmentPreview();
   broadcastPrivateTyping(false);
   renderPrivateTypingIndicator("");
   renderSelectedChatMessages();
   renderChatUsers();
+  renderGoogleDriveFiles();
 
   addNotification("New chat message", `${getCurrentUserName()} sent a message to ${selectedChatMember}`);
 }
@@ -1169,6 +1340,7 @@ function sendPrivateVoiceMessage() {
   setPrivateVoicePanel("idle");
   renderSelectedChatMessages();
   renderChatUsers();
+  renderGoogleDriveFiles();
   addNotification("Voice message sent", `${getCurrentUserName()} sent a voice message to ${selectedChatMember}`);
 }
 
@@ -1774,6 +1946,7 @@ function renderAllTaskUI() {
   renderTaskBoard();
   updateDashboardCounts();
   updateDashboardInsights();
+  renderGoogleDriveFiles();
 }
 
 function renderTaskSearchResults(query) {
@@ -2085,6 +2258,18 @@ if (sendMessageBtn) {
 
 if (chatAttachBtn && chatFileInput) {
   chatAttachBtn.addEventListener("click", () => chatFileInput.click());
+}
+
+if (chatFileInput) {
+  chatFileInput.addEventListener("change", renderPrivateAttachmentPreview);
+}
+
+if (chatAttachmentPreview) {
+  chatAttachmentPreview.addEventListener("click", (event) => {
+    if (event.target instanceof Element && event.target.closest(".composer-preview-remove")) {
+      clearPrivateAttachmentPreview();
+    }
+  });
 }
 
 if (chatRecordBtn) {
