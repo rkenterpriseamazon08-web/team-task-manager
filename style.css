@@ -1175,23 +1175,29 @@ select {
 
 .chat-tool-btn {
   position: relative;
-  display: inline-grid;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 44px;
   height: 44px;
   flex: 0 0 44px;
-  place-items: center;
+  box-sizing: border-box;
   padding: 0;
   color: #374151;
   overflow: hidden;
+  line-height: 0;
 }
 
 .composer-icon {
-  width: 22px;
-  height: 22px;
+  width: 21px;
+  height: 21px;
   display: block;
+  flex: 0 0 21px;
   fill: none;
+  margin: auto;
+  pointer-events: none;
   stroke: currentColor;
-  stroke-width: 2.2;
+  stroke-width: 2.1;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
@@ -1436,11 +1442,115 @@ select {
   gap: 8px;
 }
 
-.drive-file-actions a {
+.drive-file-actions a,
+.drive-file-actions button {
   flex: 1;
   padding: 10px 12px;
   text-align: center;
   text-decoration: none;
+}
+
+.modal-overlay {
+  position: fixed;
+  z-index: 1200;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(15, 23, 42, 0.48);
+}
+
+.drive-preview-modal {
+  display: flex;
+  width: min(860px, 96vw);
+  max-height: 88vh;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 30px 80px rgba(15, 23, 42, 0.28);
+}
+
+.drive-preview-header,
+.drive-preview-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.86);
+}
+
+.drive-preview-footer {
+  justify-content: flex-end;
+  border-top: 1px solid rgba(226, 232, 240, 0.86);
+  border-bottom: none;
+}
+
+.drive-preview-header h3 {
+  color: #111827;
+  font-size: 17px;
+}
+
+.drive-preview-header p {
+  color: #64748b;
+  font-size: 12px;
+}
+
+.drive-preview-body {
+  display: grid;
+  min-height: 260px;
+  overflow: auto;
+  padding: 16px;
+  place-items: center;
+  background: #f8fafc;
+}
+
+.drive-preview-image {
+  max-width: 100%;
+  max-height: 62vh;
+  border-radius: 14px;
+  object-fit: contain;
+}
+
+.drive-preview-audio {
+  width: min(520px, 100%);
+}
+
+.drive-preview-frame {
+  width: 100%;
+  min-height: 62vh;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 14px;
+  background: #fff;
+}
+
+.drive-preview-unavailable {
+  max-width: 380px;
+  text-align: center;
+}
+
+.drive-preview-unavailable span {
+  display: inline-flex;
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(79, 70, 229, 0.1);
+  color: #4f46e5;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.drive-preview-unavailable h4 {
+  color: #111827;
+  font-size: 16px;
+}
+
+.drive-preview-unavailable p {
+  color: #64748b;
+  font-size: 13px;
 }
 
 .task-board {
@@ -2668,12 +2778,37 @@ html[data-theme="dark"] .kpi-hover-card {
 }
 
 html[data-theme="dark"] .drive-file-info h4,
-html[data-theme="dark"] .drive-empty h4 {
+html[data-theme="dark"] .drive-empty h4,
+html[data-theme="dark"] .drive-preview-header h3,
+html[data-theme="dark"] .drive-preview-unavailable h4 {
   color: #f8fafc;
 }
 
 html[data-theme="dark"] .drive-file-preview {
   background: rgba(15, 23, 42, 0.7);
+}
+
+html[data-theme="dark"] .drive-preview-modal {
+  background: #0f172a;
+  border-color: rgba(148, 163, 184, 0.28);
+}
+
+html[data-theme="dark"] .drive-preview-header,
+html[data-theme="dark"] .drive-preview-footer {
+  border-color: rgba(148, 163, 184, 0.24);
+}
+
+html[data-theme="dark"] .drive-preview-header p,
+html[data-theme="dark"] .drive-preview-unavailable p {
+  color: #cbd5e1;
+}
+
+html[data-theme="dark"] .drive-preview-body {
+  background: #111827;
+}
+
+html[data-theme="dark"] .drive-preview-frame {
+  border-color: rgba(148, 163, 184, 0.28);
 }
 
 html[data-theme="dark"] .attachment-icon {

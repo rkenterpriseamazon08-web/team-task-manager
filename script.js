@@ -225,6 +225,7 @@ let privateVoiceChunks = [];
 let privateVoiceAttachment = null;
 let privateVoiceCancelled = false;
 let privateAttachmentPreviewUrls = [];
+let currentDriveFiles = [];
 
 const defaultChatConversations = {
   Rahul: [
@@ -788,11 +789,107 @@ function formatDriveDate(timestamp) {
   });
 }
 
+function isSafeDriveDataUrl(dataUrl) {
+  return typeof dataUrl === "string" && dataUrl.startsWith("data:");
+}
+
+function getDrivePreviewType(file) {
+  const type = String(file?.type || "").toLowerCase();
+  const name = String(file?.name || "").toLowerCase();
+
+  if (!isSafeDriveDataUrl(file?.dataUrl)) return "unsupported";
+  if (type.startsWith("image/")) return "image";
+  if (type.startsWith("audio/") || file?.kind === "voice") return "audio";
+  if (type === "application/pdf" || name.endsWith(".pdf")) return "frame";
+  if (type.startsWith("text/") || name.endsWith(".txt") || name.endsWith(".csv")) return "frame";
+  return "unsupported";
+}
+
+function ensureDrivePreviewModal() {
+  let modal = document.getElementById("drive-preview-modal");
+  if (modal) return modal;
+
+  modal = document.createElement("div");
+  modal.id = "drive-preview-modal";
+  modal.className = "modal-overlay hidden";
+  modal.innerHTML = `
+    <div class="drive-preview-modal" role="dialog" aria-modal="true" aria-labelledby="drive-preview-title">
+      <div class="drive-preview-header">
+        <div>
+          <h3 id="drive-preview-title">File preview</h3>
+          <p id="drive-preview-meta"></p>
+        </div>
+        <button type="button" class="secondary-btn drive-preview-close" aria-label="Close preview">Close</button>
+      </div>
+      <div id="drive-preview-body" class="drive-preview-body"></div>
+      <div class="drive-preview-footer">
+        <a id="drive-preview-download" class="primary-btn" href="#" download>Download</a>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+
+  modal.addEventListener("click", (event) => {
+    const closeButton = event.target instanceof Element ? event.target.closest(".drive-preview-close") : null;
+    if (event.target === modal || closeButton) {
+      closeDrivePreviewModal();
+    }
+  });
+
+  return modal;
+}
+
+function closeDrivePreviewModal() {
+  const modal = document.getElementById("drive-preview-modal");
+  if (modal) {
+    modal.classList.add("hidden");
+  }
+}
+
+function openDriveFilePreview(file) {
+  const modal = ensureDrivePreviewModal();
+  const title = modal.querySelector("#drive-preview-title");
+  const meta = modal.querySelector("#drive-preview-meta");
+  const body = modal.querySelector("#drive-preview-body");
+  const download = modal.querySelector("#drive-preview-download");
+
+  if (!body || !download) return;
+
+  const previewType = getDrivePreviewType(file);
+  const safeName = escapeHTML(file?.name || "Attachment");
+  const safeType = escapeHTML(getFileTypeLabel(file?.type, file?.name));
+  const safeSize = formatFileSize(file?.size);
+
+  if (title) title.textContent = file?.name || "Attachment";
+  if (meta) meta.textContent = `${getFileTypeLabel(file?.type, file?.name)} • ${safeSize}`;
+
+  download.href = isSafeDriveDataUrl(file?.dataUrl) ? file.dataUrl : "#";
+  download.setAttribute("download", file?.name || "attachment");
+
+  if (previewType === "image") {
+    body.innerHTML = `<img class="drive-preview-image" src="${file.dataUrl}" alt="${safeName}" />`;
+  } else if (previewType === "audio") {
+    body.innerHTML = `<audio class="drive-preview-audio" controls src="${file.dataUrl}"></audio>`;
+  } else if (previewType === "frame") {
+    body.innerHTML = `<iframe class="drive-preview-frame" src="${file.dataUrl}" title="${safeName}"></iframe>`;
+  } else {
+    body.innerHTML = `
+      <div class="drive-preview-unavailable">
+        <span>${safeType}</span>
+        <h4>Preview not available for this file type</h4>
+        <p>You can still download the file safely.</p>
+      </div>
+    `;
+  }
+
+  modal.classList.remove("hidden");
+}
+
 function renderGoogleDriveFiles() {
   if (!driveFileGrid) return;
 
-  const files = collectDriveFiles();
-  if (files.length === 0) {
+  currentDriveFiles = collectDriveFiles();
+  if (currentDriveFiles.length === 0) {
     driveFileGrid.innerHTML = `
       <div class="drive-empty">
         <h4>No shared files yet</h4>
@@ -802,7 +899,7 @@ function renderGoogleDriveFiles() {
     return;
   }
 
-  driveFileGrid.innerHTML = files.map((file) => {
+  driveFileGrid.innerHTML = currentDriveFiles.map((file, index) => {
     const isImage = String(file.type || "").startsWith("image/");
     return `
       <article class="drive-file-card">
@@ -818,7 +915,7 @@ function renderGoogleDriveFiles() {
           <p>${escapeHTML(getFileTypeLabel(file.type, file.name))} &bull; ${formatFileSize(file.size)} &bull; ${formatDriveDate(file.createdAt)}</p>
         </div>
         <div class="drive-file-actions">
-          <a class="secondary-btn" href="${file.dataUrl}" target="_blank" rel="noopener noreferrer">Open</a>
+          <button class="secondary-btn" type="button" data-drive-open="${index}">Open</button>
           <a class="primary-btn" href="${file.dataUrl}" download="${escapeHTML(file.name)}">Download</a>
         </div>
       </article>
@@ -2269,6 +2366,17 @@ if (chatAttachmentPreview) {
     if (event.target instanceof Element && event.target.closest(".composer-preview-remove")) {
       clearPrivateAttachmentPreview();
     }
+  });
+}
+
+if (driveFileGrid) {
+  driveFileGrid.addEventListener("click", (event) => {
+    const openButton = event.target instanceof Element ? event.target.closest("[data-drive-open]") : null;
+    if (!openButton) return;
+
+    const index = Number(openButton.getAttribute("data-drive-open"));
+    const file = Number.isInteger(index) ? currentDriveFiles[index] : null;
+    openDriveFilePreview(file);
   });
 }
 
