@@ -36,6 +36,7 @@ const groupSendBtn = document.getElementById("group-send-btn");
 const groupFileInput = document.getElementById("group-file-input");
 const groupAttachBtn = document.getElementById("group-attach-btn");
 const groupRecordBtn = document.getElementById("group-record-btn");
+const groupMeetNowBtn = document.getElementById("group-meet-now-btn");
 const groupAttachmentPreview = document.getElementById("group-attachment-preview");
 const groupVoicePanel = document.getElementById("group-voice-panel");
 const groupVoiceStatus = document.getElementById("group-voice-status");
@@ -594,6 +595,21 @@ groupRoomButtons.forEach((button) => {
 
 if (groupSendBtn) {
   groupSendBtn.addEventListener("click", sendGroupMessage);
+}
+
+if (groupMeetNowBtn) {
+  groupMeetNowBtn.addEventListener("click", () => {
+    if (typeof window.startAppMeeting !== "function") {
+      alert("Meetings are not available in this browser.");
+      return;
+    }
+
+    window.startAppMeeting({
+      type: "group",
+      title: `${GROUP_ROOMS[activeGroupRoom].label} Meeting`,
+      target: activeGroupRoom
+    });
+  });
 }
 
 if (groupAttachBtn && groupFileInput) {

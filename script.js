@@ -32,6 +32,7 @@ const sendMessageBtn = document.getElementById("send-message-btn");
 const chatMessages = document.getElementById("chat-messages");
 const chatUsersList = document.getElementById("chat-users-list");
 const chatTypingIndicator = document.getElementById("chat-typing-indicator");
+const startCallBtn = document.getElementById("start-call-btn");
 const chatFileInput = document.getElementById("chat-file-input");
 const chatAttachBtn = document.getElementById("chat-attach-btn");
 const chatRecordBtn = document.getElementById("chat-record-btn");
@@ -226,6 +227,8 @@ let privateVoiceAttachment = null;
 let privateVoiceCancelled = false;
 let privateAttachmentPreviewUrls = [];
 let currentDriveFiles = [];
+let activeMeeting = null;
+let pendingMeetingFromHash = null;
 
 const defaultChatConversations = {
   Rahul: [
@@ -1442,6 +1445,419 @@ function sendPrivateVoiceMessage() {
 }
 
 // -----------------------------
+// MEETINGS / CALLS
+// -----------------------------
+const MEETING_CHANNEL_PREFIX = "ttm_meeting_";
+const MEETING_STORAGE_KEY = "ttm_meeting_sessions";
+const MEETING_RTC_CONFIG = {
+  iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
+};
+
+function getMeetingsFromStorage() {
+  try {
+    const saved = localStorage.getItem(MEETING_STORAGE_KEY);
+    const parsed = saved ? JSON.parse(saved) : {};
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveMeetingsToStorage(meetings) {
+  localStorage.setItem(MEETING_STORAGE_KEY, JSON.stringify(meetings));
+}
+
+function upsertMeetingSession(session) {
+  const meetings = getMeetingsFromStorage();
+  meetings[session.id] = session;
+  saveMeetingsToStorage(meetings);
+}
+
+function getMeetingById(sessionId) {
+  return getMeetingsFromStorage()[sessionId] || null;
+}
+
+function createMeetingSession(context) {
+  const session = {
+    id: `meet-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    type: context.type || "private",
+    title: context.title || "Meeting",
+    target: context.target || "",
+    createdBy: getCurrentUserName(),
+    createdAt: new Date().toISOString()
+  };
+  upsertMeetingSession(session);
+  return session;
+}
+
+function getMeetingLink(sessionId) {
+  const url = new URL(window.location.href);
+  url.hash = `meeting=${encodeURIComponent(sessionId)}`;
+  return url.toString();
+}
+
+function ensureMeetingModal() {
+  let modal = document.getElementById("meeting-modal");
+  if (modal) return modal;
+
+  modal = document.createElement("div");
+  modal.id = "meeting-modal";
+  modal.className = "modal-overlay hidden";
+  modal.innerHTML = `
+    <div class="meeting-modal" role="dialog" aria-modal="true" aria-labelledby="meeting-title">
+      <div class="meeting-header">
+        <div>
+          <h3 id="meeting-title">Meeting</h3>
+          <p id="meeting-status">Preparing meeting...</p>
+        </div>
+        <button type="button" class="secondary-btn meeting-copy-btn" id="meeting-copy-link-btn">Copy Link</button>
+      </div>
+      <div class="meeting-stage">
+        <div class="meeting-video-tile">
+          <video id="meeting-local-video" autoplay playsinline muted></video>
+          <span id="meeting-local-name">You</span>
+        </div>
+        <div class="meeting-video-tile">
+          <video id="meeting-remote-video" autoplay playsinline></video>
+          <span id="meeting-remote-name">Waiting for participant</span>
+        </div>
+      </div>
+      <div id="meeting-error" class="meeting-error hidden"></div>
+      <div class="meeting-controls">
+        <button type="button" class="secondary-btn" id="meeting-mute-btn">Mute</button>
+        <button type="button" class="secondary-btn" id="meeting-camera-btn">Camera Off</button>
+        <button type="button" class="secondary-btn" id="meeting-screen-btn">Share Screen</button>
+        <button type="button" class="danger-btn" id="meeting-leave-btn">Leave</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  return modal;
+}
+
+function getMeetingElements() {
+  const modal = ensureMeetingModal();
+  return {
+    modal,
+    title: modal.querySelector("#meeting-title"),
+    status: modal.querySelector("#meeting-status"),
+    error: modal.querySelector("#meeting-error"),
+    localVideo: modal.querySelector("#meeting-local-video"),
+    remoteVideo: modal.querySelector("#meeting-remote-video"),
+    localName: modal.querySelector("#meeting-local-name"),
+    remoteName: modal.querySelector("#meeting-remote-name"),
+    muteBtn: modal.querySelector("#meeting-mute-btn"),
+    cameraBtn: modal.querySelector("#meeting-camera-btn"),
+    screenBtn: modal.querySelector("#meeting-screen-btn"),
+    leaveBtn: modal.querySelector("#meeting-leave-btn"),
+    copyBtn: modal.querySelector("#meeting-copy-link-btn")
+  };
+}
+
+function setMeetingStatus(message, isError = false) {
+  const { status, error } = getMeetingElements();
+  if (status && !isError) status.textContent = message;
+  if (!error) return;
+  if (isError) {
+    error.textContent = message;
+    error.classList.remove("hidden");
+  } else {
+    error.textContent = "";
+    error.classList.add("hidden");
+  }
+}
+
+function stopStream(stream) {
+  if (stream) stream.getTracks().forEach((track) => track.stop());
+}
+
+async function getMeetingMedia() {
+  if (!navigator.mediaDevices?.getUserMedia) {
+    throw new Error("This browser does not support audio or video calls.");
+  }
+
+  try {
+    return await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+  } catch (videoError) {
+    try {
+      const audioOnly = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+      setMeetingStatus("Camera unavailable. Joined with audio only.", true);
+      return audioOnly;
+    } catch {
+      throw videoError;
+    }
+  }
+}
+
+function createMeetingPeerConnection() {
+  const peer = new RTCPeerConnection(MEETING_RTC_CONFIG);
+
+  peer.onicecandidate = (event) => {
+    if (event.candidate && activeMeeting?.channel) {
+      activeMeeting.channel.postMessage({
+        type: "ice-candidate",
+        sessionId: activeMeeting.session.id,
+        from: activeMeeting.peerId,
+        candidate: event.candidate
+      });
+    }
+  };
+
+  peer.ontrack = (event) => {
+    const { remoteVideo, remoteName } = getMeetingElements();
+    if (remoteVideo) remoteVideo.srcObject = event.streams[0];
+    if (remoteName && activeMeeting?.remoteName) remoteName.textContent = activeMeeting.remoteName;
+    setMeetingStatus("Connected.");
+  };
+
+  peer.onconnectionstatechange = () => {
+    if (peer.connectionState === "connected") setMeetingStatus("Connected.");
+    if (peer.connectionState === "disconnected") setMeetingStatus("Participant disconnected.");
+    if (peer.connectionState === "failed") setMeetingStatus("Connection failed. Try starting a new meeting.", true);
+  };
+
+  return peer;
+}
+
+function postMeetingSignal(payload) {
+  if (!activeMeeting?.channel) return;
+  activeMeeting.channel.postMessage({
+    ...payload,
+    sessionId: activeMeeting.session.id,
+    from: activeMeeting.peerId,
+    name: getCurrentUserName()
+  });
+}
+
+async function makeMeetingOffer() {
+  if (!activeMeeting?.peer) return;
+  const offer = await activeMeeting.peer.createOffer();
+  await activeMeeting.peer.setLocalDescription(offer);
+  postMeetingSignal({ type: "offer", description: offer });
+}
+
+async function handleMeetingSignal(data) {
+  if (!activeMeeting || data.sessionId !== activeMeeting.session.id || data.from === activeMeeting.peerId) return;
+
+  activeMeeting.remoteName = data.name || "Participant";
+  const { remoteName } = getMeetingElements();
+  if (remoteName) remoteName.textContent = activeMeeting.remoteName;
+
+  try {
+    if (data.type === "join-request" && activeMeeting.isHost) {
+      setMeetingStatus(`${activeMeeting.remoteName} is joining...`);
+      await makeMeetingOffer();
+      return;
+    }
+
+    if (data.type === "offer" && !activeMeeting.isHost) {
+      await activeMeeting.peer.setRemoteDescription(new RTCSessionDescription(data.description));
+      const answer = await activeMeeting.peer.createAnswer();
+      await activeMeeting.peer.setLocalDescription(answer);
+      postMeetingSignal({ type: "answer", description: answer });
+      return;
+    }
+
+    if (data.type === "answer" && activeMeeting.isHost) {
+      await activeMeeting.peer.setRemoteDescription(new RTCSessionDescription(data.description));
+      return;
+    }
+
+    if (data.type === "ice-candidate" && data.candidate) {
+      await activeMeeting.peer.addIceCandidate(new RTCIceCandidate(data.candidate));
+      return;
+    }
+
+    if (data.type === "leave") {
+      setMeetingStatus(`${activeMeeting.remoteName} left the meeting.`);
+    }
+  } catch (error) {
+    console.warn("Meeting signal failed:", error);
+    setMeetingStatus("Unable to connect this meeting. Please try again.", true);
+  }
+}
+
+async function openMeetingSession(session, isHost = false) {
+  if (!("RTCPeerConnection" in window)) {
+    alert("This browser does not support WebRTC meetings.");
+    return;
+  }
+
+  if (activeMeeting) leaveMeeting(false);
+
+  const elements = getMeetingElements();
+  elements.modal.classList.remove("hidden");
+  if (elements.title) elements.title.textContent = session.title;
+  if (elements.localName) elements.localName.textContent = getCurrentUserName();
+  if (elements.remoteName) elements.remoteName.textContent = "Waiting for participant";
+  setMeetingStatus("Requesting microphone and camera access...");
+
+  const peerId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  const channel = "BroadcastChannel" in window ? new BroadcastChannel(`${MEETING_CHANNEL_PREFIX}${session.id}`) : null;
+  const peer = createMeetingPeerConnection();
+
+  activeMeeting = {
+    session,
+    peerId,
+    channel,
+    peer,
+    localStream: null,
+    screenStream: null,
+    cameraTrack: null,
+    isHost,
+    muted: false,
+    cameraOff: false,
+    sharingScreen: false,
+    remoteName: ""
+  };
+
+  if (channel) {
+    channel.addEventListener("message", (event) => handleMeetingSignal(event.data || {}));
+  }
+
+  try {
+    const stream = await getMeetingMedia();
+    activeMeeting.localStream = stream;
+    activeMeeting.cameraTrack = stream.getVideoTracks()[0] || null;
+    stream.getTracks().forEach((track) => peer.addTrack(track, stream));
+    if (elements.localVideo) elements.localVideo.srcObject = stream;
+    setMeetingStatus(isHost ? "Meeting started. Share the link or wait for the participant." : "Joining meeting...");
+
+    if (!isHost) {
+      postMeetingSignal({ type: "join-request" });
+    }
+  } catch (error) {
+    console.warn("Meeting media failed:", error);
+    setMeetingStatus("Microphone or camera access was not granted. Check browser permissions and try again.", true);
+  }
+}
+
+function updateMeetingControls() {
+  if (!activeMeeting) return;
+  const { muteBtn, cameraBtn, screenBtn } = getMeetingElements();
+  if (muteBtn) muteBtn.textContent = activeMeeting.muted ? "Unmute" : "Mute";
+  if (cameraBtn) cameraBtn.textContent = activeMeeting.cameraOff ? "Camera On" : "Camera Off";
+  if (screenBtn) screenBtn.textContent = activeMeeting.sharingScreen ? "Stop Share" : "Share Screen";
+}
+
+function toggleMeetingMute() {
+  if (!activeMeeting?.localStream) return;
+  activeMeeting.muted = !activeMeeting.muted;
+  activeMeeting.localStream.getAudioTracks().forEach((track) => {
+    track.enabled = !activeMeeting.muted;
+  });
+  updateMeetingControls();
+}
+
+function toggleMeetingCamera() {
+  if (!activeMeeting?.localStream) return;
+  activeMeeting.cameraOff = !activeMeeting.cameraOff;
+  activeMeeting.localStream.getVideoTracks().forEach((track) => {
+    track.enabled = !activeMeeting.cameraOff;
+  });
+  updateMeetingControls();
+}
+
+async function toggleScreenShare() {
+  if (!activeMeeting) return;
+
+  if (activeMeeting.sharingScreen) {
+    stopScreenShare();
+    return;
+  }
+
+  if (!navigator.mediaDevices?.getDisplayMedia) {
+    setMeetingStatus("Screen sharing is not supported in this browser.", true);
+    return;
+  }
+
+  try {
+    const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
+    const screenTrack = screenStream.getVideoTracks()[0];
+    if (!screenTrack) throw new Error("No screen track was provided.");
+    const sender = activeMeeting.peer.getSenders().find((item) => item.track?.kind === "video");
+    if (sender) await sender.replaceTrack(screenTrack);
+    activeMeeting.screenStream = screenStream;
+    activeMeeting.sharingScreen = true;
+    const { localVideo } = getMeetingElements();
+    if (localVideo) localVideo.srcObject = screenStream;
+    screenTrack.onended = stopScreenShare;
+    setMeetingStatus("Screen sharing is active.");
+    updateMeetingControls();
+  } catch (error) {
+    console.warn("Screen share failed:", error);
+    setMeetingStatus("Screen sharing was cancelled or blocked.", true);
+  }
+}
+
+async function stopScreenShare() {
+  if (!activeMeeting?.sharingScreen) return;
+  const sender = activeMeeting.peer.getSenders().find((item) => item.track?.kind === "video");
+  if (sender) await sender.replaceTrack(activeMeeting.cameraTrack || null);
+  stopStream(activeMeeting.screenStream);
+  activeMeeting.screenStream = null;
+  activeMeeting.sharingScreen = false;
+  const { localVideo } = getMeetingElements();
+  if (localVideo) localVideo.srcObject = activeMeeting.localStream;
+  setMeetingStatus("Screen sharing stopped.");
+  updateMeetingControls();
+}
+
+function leaveMeeting(shouldSignal = true) {
+  if (!activeMeeting) return;
+  if (shouldSignal) postMeetingSignal({ type: "leave" });
+  stopStream(activeMeeting.localStream);
+  stopStream(activeMeeting.screenStream);
+  activeMeeting.peer?.close();
+  activeMeeting.channel?.close();
+  activeMeeting = null;
+  const { modal, localVideo, remoteVideo } = getMeetingElements();
+  if (localVideo) localVideo.srcObject = null;
+  if (remoteVideo) remoteVideo.srcObject = null;
+  modal.classList.add("hidden");
+}
+
+async function copyMeetingLink() {
+  if (!activeMeeting) return;
+  const link = getMeetingLink(activeMeeting.session.id);
+  try {
+    await navigator.clipboard.writeText(link);
+    setMeetingStatus("Meeting link copied.");
+  } catch {
+    window.prompt("Copy meeting link:", link);
+  }
+}
+
+function startAppMeeting(context) {
+  const session = createMeetingSession(context);
+  openMeetingSession(session, true);
+  addNotification("Meeting started", `${getCurrentUserName()} started ${session.title}.`);
+}
+
+function joinMeetingById(sessionId) {
+  const session = getMeetingById(sessionId) || {
+    id: sessionId,
+    type: "meeting",
+    title: "Team Meeting",
+    target: "",
+    createdBy: "",
+    createdAt: new Date().toISOString()
+  };
+  upsertMeetingSession(session);
+  openMeetingSession(session, false);
+}
+
+function maybeOpenMeetingFromHash() {
+  const match = window.location.hash.match(/^#meeting=([^&]+)/);
+  if (!match) return;
+  pendingMeetingFromHash = decodeURIComponent(match[1]);
+  window.history.replaceState(null, "", window.location.pathname + window.location.search);
+  joinMeetingById(pendingMeetingFromHash);
+}
+
+window.startAppMeeting = startAppMeeting;
+
+// -----------------------------
 // NOTIFICATIONS
 // -----------------------------
 function formatNotificationTime(timestamp) {
@@ -2353,6 +2769,16 @@ if (sendMessageBtn) {
   sendMessageBtn.addEventListener("click", sendMessage);
 }
 
+if (startCallBtn) {
+  startCallBtn.addEventListener("click", () => {
+    startAppMeeting({
+      type: "private",
+      title: `Call with ${selectedChatMember}`,
+      target: selectedChatMember
+    });
+  });
+}
+
 if (chatAttachBtn && chatFileInput) {
   chatAttachBtn.addEventListener("click", () => chatFileInput.click());
 }
@@ -2383,6 +2809,13 @@ if (driveFileGrid) {
 if (chatRecordBtn) {
   chatRecordBtn.addEventListener("click", startPrivateVoiceRecording);
 }
+
+const meetingElements = getMeetingElements();
+if (meetingElements.muteBtn) meetingElements.muteBtn.addEventListener("click", toggleMeetingMute);
+if (meetingElements.cameraBtn) meetingElements.cameraBtn.addEventListener("click", toggleMeetingCamera);
+if (meetingElements.screenBtn) meetingElements.screenBtn.addEventListener("click", toggleScreenShare);
+if (meetingElements.leaveBtn) meetingElements.leaveBtn.addEventListener("click", () => leaveMeeting(true));
+if (meetingElements.copyBtn) meetingElements.copyBtn.addEventListener("click", copyMeetingLink);
 
 if (chatStopRecordBtn) {
   chatStopRecordBtn.addEventListener("click", stopPrivateVoiceRecording);
@@ -2590,3 +3023,4 @@ renderChatUsers();
 renderAllTaskUI();
 renderNotifications();
 updateNotificationPermissionUI();
+maybeOpenMeetingFromHash();
