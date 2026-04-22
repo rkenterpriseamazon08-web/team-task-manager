@@ -1734,8 +1734,9 @@ select {
 
 .meeting-modal {
   display: flex;
-  width: min(940px, 96vw);
-  max-height: 90vh;
+  width: min(1180px, 98vw);
+  min-height: min(820px, 88vh);
+  max-height: 94vh;
   flex-direction: column;
   overflow: hidden;
   border: 1px solid rgba(226, 232, 240, 0.9);
@@ -1753,6 +1754,12 @@ select {
   border-bottom: 1px solid rgba(226, 232, 240, 0.86);
 }
 
+.meeting-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .meeting-header h3 {
   color: #111827;
   font-size: 18px;
@@ -1767,6 +1774,7 @@ select {
 .meeting-stage {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  flex: 1;
   gap: 12px;
   padding: 16px;
   background: #f8fafc;
@@ -1775,7 +1783,7 @@ select {
 .meeting-video-tile {
   position: relative;
   display: grid;
-  min-height: 260px;
+  min-height: 420px;
   overflow: hidden;
   place-items: center;
   border-radius: 16px;
@@ -1785,7 +1793,7 @@ select {
 .meeting-video-tile video {
   width: 100%;
   height: 100%;
-  min-height: 260px;
+  min-height: 420px;
   object-fit: cover;
 }
 
@@ -1816,9 +1824,67 @@ select {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 10px;
+  gap: 12px;
   padding: 16px;
   border-top: 1px solid rgba(226, 232, 240, 0.86);
+}
+
+.meeting-control-btn,
+.meeting-expand-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.meeting-control-btn {
+  min-width: 126px;
+  padding: 11px 14px;
+  font-weight: 800;
+}
+
+.meeting-expand-btn {
+  width: 42px;
+  height: 42px;
+  padding: 0;
+}
+
+.meeting-control-icon {
+  width: 18px;
+  height: 18px;
+  display: block;
+  flex: 0 0 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.meeting-expanded {
+  padding: 0;
+  background: #0f172a;
+}
+
+.meeting-expanded .meeting-modal,
+.meeting-modal:fullscreen {
+  width: 100vw;
+  height: 100vh;
+  min-height: 100vh;
+  max-height: 100vh;
+  border-radius: 0;
+}
+
+.meeting-expanded .meeting-stage,
+.meeting-modal:fullscreen .meeting-stage {
+  min-height: 0;
+}
+
+.meeting-expanded .meeting-video-tile,
+.meeting-expanded .meeting-video-tile video,
+.meeting-modal:fullscreen .meeting-video-tile,
+.meeting-modal:fullscreen .meeting-video-tile video {
+  min-height: 0;
 }
 
 .task-board {
@@ -1865,6 +1931,30 @@ select {
   font-size: 13px;
   color: #6b7280;
   margin-bottom: 4px;
+}
+
+.task-card-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+
+.success-action-btn {
+  border: 1px solid rgba(34, 197, 94, 0.28);
+  border-radius: 12px;
+  background: linear-gradient(135deg, #16a34a, #22c55e);
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 9px 12px;
+  box-shadow: 0 10px 24px rgba(34, 197, 94, 0.18);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.success-action-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 28px rgba(34, 197, 94, 0.24);
 }
 
 .empty-task-text {

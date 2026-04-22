@@ -1510,7 +1510,14 @@ function ensureMeetingModal() {
           <h3 id="meeting-title">Meeting</h3>
           <p id="meeting-status">Preparing meeting...</p>
         </div>
-        <button type="button" class="secondary-btn meeting-copy-btn" id="meeting-copy-link-btn">Copy Link</button>
+        <div class="meeting-header-actions">
+          <button type="button" class="secondary-btn meeting-copy-btn" id="meeting-copy-link-btn">Copy Link</button>
+          <button type="button" class="secondary-btn meeting-expand-btn" id="meeting-expand-btn" aria-label="Expand meeting" title="Expand meeting">
+            <svg class="meeting-control-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M8 3H3v5M16 3h5v5M8 21H3v-5M21 16v5h-5M3 3l6 6M21 3l-6 6M3 21l6-6M21 21l-6-6" />
+            </svg>
+          </button>
+        </div>
       </div>
       <div class="meeting-stage">
         <div class="meeting-video-tile">
@@ -1524,10 +1531,10 @@ function ensureMeetingModal() {
       </div>
       <div id="meeting-error" class="meeting-error hidden"></div>
       <div class="meeting-controls">
-        <button type="button" class="secondary-btn" id="meeting-mute-btn">Mute</button>
-        <button type="button" class="secondary-btn" id="meeting-camera-btn">Camera Off</button>
-        <button type="button" class="secondary-btn" id="meeting-screen-btn">Share Screen</button>
-        <button type="button" class="danger-btn" id="meeting-leave-btn">Leave</button>
+        <button type="button" class="secondary-btn meeting-control-btn" id="meeting-mute-btn"></button>
+        <button type="button" class="secondary-btn meeting-control-btn" id="meeting-camera-btn"></button>
+        <button type="button" class="secondary-btn meeting-control-btn" id="meeting-screen-btn"></button>
+        <button type="button" class="danger-btn meeting-control-btn" id="meeting-leave-btn"></button>
       </div>
     </div>
   `;
@@ -1535,10 +1542,27 @@ function ensureMeetingModal() {
   return modal;
 }
 
+const meetingControlIcons = {
+  mute: '<svg class="meeting-control-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 14a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3Z" /><path d="M18 11a6 6 0 0 1-12 0M12 17v4M9 21h6" /></svg>',
+  unmute: '<svg class="meeting-control-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m4 4 16 16M9.5 5.4V11a2.5 2.5 0 0 0 3.7 2.2M15 9.5V6a3 3 0 0 0-5.2-2M18 11a6 6 0 0 1-2 4.5M6 11a6 6 0 0 0 8.4 5.5M12 17v4M9 21h6" /></svg>',
+  camera: '<svg class="meeting-control-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8.5A2.5 2.5 0 0 1 6.5 6h7A2.5 2.5 0 0 1 16 8.5v7a2.5 2.5 0 0 1-2.5 2.5h-7A2.5 2.5 0 0 1 4 15.5v-7Z" /><path d="m16 10 4-2.3v8.6L16 14" /></svg>',
+  cameraOff: '<svg class="meeting-control-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m4 4 16 16M4 8.5A2.5 2.5 0 0 1 6.5 6h4M16 10l4-2.3v7.1M13.5 18h-7A2.5 2.5 0 0 1 4 15.5v-7" /></svg>',
+  screen: '<svg class="meeting-control-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H4zM8 20h8M12 16v4M12 13V8M9 10l3-3 3 3" /></svg>',
+  stopShare: '<svg class="meeting-control-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m4 4 16 16M4 5h11M20 8v8H9M8 20h8M12 16v4" /></svg>',
+  leave: '<svg class="meeting-control-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7.5c.5 3.9 2.7 6.1 6.5 6.5l1.8-1.8a1.3 1.3 0 0 1 1.4-.32l2.7.9a1.4 1.4 0 0 1 .96 1.33v2.8a1.5 1.5 0 0 1-1.6 1.5C11.3 18.1 5.9 12.7 5.1 5.25A1.5 1.5 0 0 1 6.6 3.6h2.8a1.4 1.4 0 0 1 1.33.96l.9 2.7a1.3 1.3 0 0 1-.32 1.4L9.5 10.5" /></svg>'
+};
+
+function setMeetingControlContent(button, icon, label) {
+  if (!button) return;
+  button.innerHTML = `${icon}<span>${label}</span>`;
+}
+
 function getMeetingElements() {
   const modal = ensureMeetingModal();
+  const meetingWindow = modal.querySelector(".meeting-modal");
   return {
     modal,
+    meetingWindow,
     title: modal.querySelector("#meeting-title"),
     status: modal.querySelector("#meeting-status"),
     error: modal.querySelector("#meeting-error"),
@@ -1550,7 +1574,8 @@ function getMeetingElements() {
     cameraBtn: modal.querySelector("#meeting-camera-btn"),
     screenBtn: modal.querySelector("#meeting-screen-btn"),
     leaveBtn: modal.querySelector("#meeting-leave-btn"),
-    copyBtn: modal.querySelector("#meeting-copy-link-btn")
+    copyBtn: modal.querySelector("#meeting-copy-link-btn"),
+    expandBtn: modal.querySelector("#meeting-expand-btn")
   };
 }
 
@@ -1687,6 +1712,8 @@ async function openMeetingSession(session, isHost = false) {
 
   const elements = getMeetingElements();
   elements.modal.classList.remove("hidden");
+  elements.modal.classList.add("meeting-open-view");
+  elements.modal.classList.remove("meeting-expanded");
   if (elements.title) elements.title.textContent = session.title;
   if (elements.localName) elements.localName.textContent = getCurrentUserName();
   if (elements.remoteName) elements.remoteName.textContent = "Waiting for participant";
@@ -1710,6 +1737,7 @@ async function openMeetingSession(session, isHost = false) {
     sharingScreen: false,
     remoteName: ""
   };
+  updateMeetingControls();
 
   if (channel) {
     channel.addEventListener("message", (event) => handleMeetingSignal(event.data || {}));
@@ -1733,11 +1761,14 @@ async function openMeetingSession(session, isHost = false) {
 }
 
 function updateMeetingControls() {
-  if (!activeMeeting) return;
-  const { muteBtn, cameraBtn, screenBtn } = getMeetingElements();
-  if (muteBtn) muteBtn.textContent = activeMeeting.muted ? "Unmute" : "Mute";
-  if (cameraBtn) cameraBtn.textContent = activeMeeting.cameraOff ? "Camera On" : "Camera Off";
-  if (screenBtn) screenBtn.textContent = activeMeeting.sharingScreen ? "Stop Share" : "Share Screen";
+  const { muteBtn, cameraBtn, screenBtn, leaveBtn } = getMeetingElements();
+  const muted = Boolean(activeMeeting?.muted);
+  const cameraOff = Boolean(activeMeeting?.cameraOff);
+  const sharingScreen = Boolean(activeMeeting?.sharingScreen);
+  setMeetingControlContent(muteBtn, muted ? meetingControlIcons.unmute : meetingControlIcons.mute, muted ? "Unmute" : "Mute");
+  setMeetingControlContent(cameraBtn, cameraOff ? meetingControlIcons.camera : meetingControlIcons.cameraOff, cameraOff ? "Camera On" : "Camera Off");
+  setMeetingControlContent(screenBtn, sharingScreen ? meetingControlIcons.stopShare : meetingControlIcons.screen, sharingScreen ? "Stop Share" : "Share Screen");
+  setMeetingControlContent(leaveBtn, meetingControlIcons.leave, "Leave");
 }
 
 function toggleMeetingMute() {
@@ -1814,7 +1845,34 @@ function leaveMeeting(shouldSignal = true) {
   const { modal, localVideo, remoteVideo } = getMeetingElements();
   if (localVideo) localVideo.srcObject = null;
   if (remoteVideo) remoteVideo.srcObject = null;
+  if (document.fullscreenElement === modal || document.fullscreenElement?.classList?.contains("meeting-modal")) {
+    document.exitFullscreen().catch(() => {});
+  }
+  modal.classList.remove("meeting-expanded", "meeting-open-view");
   modal.classList.add("hidden");
+}
+
+async function toggleMeetingExpand() {
+  const { modal, meetingWindow } = getMeetingElements();
+  const target = meetingWindow || modal;
+
+  try {
+    if (document.fullscreenElement) {
+      await document.exitFullscreen();
+      modal.classList.remove("meeting-expanded");
+      return;
+    }
+
+    if (target.requestFullscreen) {
+      await target.requestFullscreen();
+      modal.classList.add("meeting-expanded");
+      return;
+    }
+  } catch (error) {
+    console.warn("Fullscreen toggle failed:", error);
+  }
+
+  modal.classList.toggle("meeting-expanded");
 }
 
 async function copyMeetingLink() {
@@ -2119,6 +2177,7 @@ function addCommentToTask(taskId, commentText) {
 function getTaskCardMarkup(task, variant = "recent") {
   const titleTag = variant === "recent" ? "h4" : "h5";
   const priorityClass = getPriorityBadgeClass(task.severity);
+  const showDoneAction = variant === "kanban" && task.status !== "Completed";
 
   return `
     <div class="${variant === "recent" ? "task-item-main" : "kanban-card-main"}">
@@ -2137,7 +2196,26 @@ function getTaskCardMarkup(task, variant = "recent") {
     ${renderTaskTags(task.tags)}
     ${renderTaskAttachments(task)}
     ${renderTaskComments(task)}
+    ${showDoneAction ? `
+      <div class="task-card-actions">
+        <button type="button" class="success-action-btn mark-done-btn" data-task-id="${escapeHTML(task.id)}">Mark as Done</button>
+      </div>
+    ` : ""}
   `;
+}
+
+function markTaskAsDone(taskId) {
+  const tasks = getTasksFromStorage();
+  const task = tasks.find((item) => String(item.id) === String(taskId));
+  if (!task || task.status === "Completed") return;
+
+  task.status = "Completed";
+  saveTasksToStorage(tasks);
+  renderAllTaskUI();
+
+  if (taskSearchInput?.value.trim()) {
+    renderTaskSearchResults(taskSearchInput.value);
+  }
 }
 
 function isTaskDueSoon(task) {
@@ -2811,11 +2889,18 @@ if (chatRecordBtn) {
 }
 
 const meetingElements = getMeetingElements();
+updateMeetingControls();
 if (meetingElements.muteBtn) meetingElements.muteBtn.addEventListener("click", toggleMeetingMute);
 if (meetingElements.cameraBtn) meetingElements.cameraBtn.addEventListener("click", toggleMeetingCamera);
 if (meetingElements.screenBtn) meetingElements.screenBtn.addEventListener("click", toggleScreenShare);
 if (meetingElements.leaveBtn) meetingElements.leaveBtn.addEventListener("click", () => leaveMeeting(true));
 if (meetingElements.copyBtn) meetingElements.copyBtn.addEventListener("click", copyMeetingLink);
+if (meetingElements.expandBtn) meetingElements.expandBtn.addEventListener("click", toggleMeetingExpand);
+
+document.addEventListener("fullscreenchange", () => {
+  const { modal } = getMeetingElements();
+  modal.classList.toggle("meeting-expanded", Boolean(document.fullscreenElement));
+});
 
 if (chatStopRecordBtn) {
   chatStopRecordBtn.addEventListener("click", stopPrivateVoiceRecording);
@@ -2852,6 +2937,16 @@ if (taskForm) {
     submitTaskForm().catch(() => alert("Unable to save this task. Please try again."));
   });
 }
+
+[pendingTaskColumn, inprogressTaskColumn].forEach((column) => {
+  if (!column) return;
+
+  column.addEventListener("click", (event) => {
+    const button = event.target instanceof Element ? event.target.closest(".mark-done-btn") : null;
+    if (!button) return;
+    markTaskAsDone(button.getAttribute("data-task-id"));
+  });
+});
 
 if (openTaskModalBtn) {
   openTaskModalBtn.addEventListener("click", openTaskModal);
