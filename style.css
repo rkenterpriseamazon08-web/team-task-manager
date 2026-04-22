@@ -310,6 +310,22 @@ select {
   border-radius: 3px 3px 0 0;
 }
 
+.nav-calendar::before {
+  inset: 2px;
+  border: 2px solid currentColor;
+  border-radius: 4px;
+}
+
+.nav-calendar::after {
+  left: 5px;
+  top: 1px;
+  width: 8px;
+  height: 7px;
+  border-top: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  box-shadow: 0 8px 0 -3px currentColor;
+}
+
 .nav-notifications::before {
   left: 4px;
   top: 2px;
@@ -671,10 +687,26 @@ select {
 }
 
 .meeting-entry-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   flex: 0 0 auto;
+  gap: 8px;
   padding: 10px 14px;
   font-size: 13px;
   font-weight: 800;
+}
+
+.meeting-entry-icon {
+  width: 17px;
+  height: 17px;
+  display: block;
+  flex: 0 0 17px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .task-list {
@@ -1022,6 +1054,139 @@ select {
 
 .timeline-empty h4 {
   margin-bottom: 6px;
+}
+
+.today-meetings-widget {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(226, 232, 240, 0.72);
+}
+
+.meeting-widget-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.meeting-widget-header h4 {
+  font-size: 15px;
+}
+
+.meeting-widget-header span {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.today-meetings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.today-meeting-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid rgba(226, 232, 240, 0.76);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.62);
+}
+
+.today-meeting-item h4 {
+  margin-bottom: 4px;
+  font-size: 14px;
+}
+
+.today-meeting-item p,
+.today-meetings-empty p {
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.today-meeting-item .primary-btn {
+  flex: 0 0 auto;
+  padding: 9px 12px;
+  font-size: 12px;
+  text-decoration: none;
+}
+
+.today-meetings-empty {
+  padding: 12px;
+  border-radius: 14px;
+  background: rgba(248, 250, 252, 0.62);
+  border: 1px solid rgba(255, 255, 255, 0.72);
+}
+
+.calendar-layout {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.9fr) minmax(320px, 1.1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.calendar-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.calendar-error {
+  display: block;
+  min-height: 16px;
+  margin-top: 6px;
+  color: #dc2626;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.calendar-invalid {
+  border-color: #ef4444 !important;
+}
+
+.calendar-meetings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.calendar-meeting-card,
+.calendar-empty {
+  padding: 14px;
+  border: 1px solid rgba(226, 232, 240, 0.78);
+  border-radius: 16px;
+  background: rgba(248, 250, 252, 0.68);
+}
+
+.calendar-meeting-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.calendar-meeting-card h4,
+.calendar-empty h4 {
+  margin-bottom: 5px;
+  color: #111827;
+  font-size: 15px;
+}
+
+.calendar-meeting-card p,
+.calendar-empty p {
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.calendar-meeting-card .primary-btn {
+  flex: 0 0 auto;
+  padding: 10px 14px;
+  text-decoration: none;
 }
 
 .task-workspace-grid {
@@ -1875,6 +2040,7 @@ select {
   }
 
   .dashboard-grid,
+  .calendar-layout,
   .task-workspace-grid,
   .task-board,
   .team-grid {
@@ -1922,6 +2088,12 @@ select {
 
   .meeting-entry-btn {
     width: 100%;
+  }
+
+  .calendar-meeting-card,
+  .today-meeting-item {
+    align-items: stretch;
+    flex-direction: column;
   }
 
   .meeting-stage {
@@ -2803,6 +2975,10 @@ html[data-theme="dark"] .insight-card,
 html[data-theme="dark"] .insight-list-block,
 html[data-theme="dark"] .timeline-content,
 html[data-theme="dark"] .timeline-empty,
+html[data-theme="dark"] .today-meetings-empty,
+html[data-theme="dark"] .today-meeting-item,
+html[data-theme="dark"] .calendar-meeting-card,
+html[data-theme="dark"] .calendar-empty,
 html[data-theme="dark"] .task-column {
   background: linear-gradient(145deg, rgba(30, 41, 59, 0.82), rgba(15, 23, 42, 0.62));
   border-color: rgba(148, 163, 184, 0.28);
@@ -2819,6 +2995,10 @@ html[data-theme="dark"] .team-card h4,
 html[data-theme="dark"] .settings-card h4,
 html[data-theme="dark"] .timeline-content h4,
 html[data-theme="dark"] .timeline-empty h4,
+html[data-theme="dark"] .meeting-widget-header h4,
+html[data-theme="dark"] .today-meeting-item h4,
+html[data-theme="dark"] .calendar-meeting-card h4,
+html[data-theme="dark"] .calendar-empty h4,
 html[data-theme="dark"] .insight-card h4,
 html[data-theme="dark"] .insight-list-header h4,
 html[data-theme="dark"] .insight-row-top span,
@@ -2840,6 +3020,11 @@ html[data-theme="dark"] .kanban-card p,
 html[data-theme="dark"] .timeline-content p,
 html[data-theme="dark"] .timeline-empty p,
 html[data-theme="dark"] .timeline-meta,
+html[data-theme="dark"] .meeting-widget-header span,
+html[data-theme="dark"] .today-meeting-item p,
+html[data-theme="dark"] .today-meetings-empty p,
+html[data-theme="dark"] .calendar-meeting-card p,
+html[data-theme="dark"] .calendar-empty p,
 html[data-theme="dark"] .insight-card p,
 html[data-theme="dark"] .insight-list-header span,
 html[data-theme="dark"] .insight-row p,
