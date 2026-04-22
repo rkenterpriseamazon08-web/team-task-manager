@@ -109,6 +109,11 @@ const themeToggle = document.getElementById("theme-toggle");
 const themeStatusText = document.getElementById("theme-status-text");
 const clearNotificationsBtn = document.getElementById("clear-notifications-btn");
 const resetAppDataBtn = document.getElementById("reset-app-data-btn");
+const teamMembersList = document.getElementById("team-members-list");
+const teamMemberForm = document.getElementById("team-member-form");
+const teamMemberNameInput = document.getElementById("team-member-name");
+const teamMemberEmailInput = document.getElementById("team-member-email");
+const teamMemberRoleInput = document.getElementById("team-member-role");
 
 // -----------------------------
 // TOAST CONTAINER
@@ -124,12 +129,14 @@ if (!toastContainer) {
 // -----------------------------
 // DATA
 // -----------------------------
-const groupMembers = [
-  { name: "Rahul", role: "Project Manager", active: true },
-  { name: "Sneha", role: "Business Analyst", active: true },
-  { name: "Amit", role: "Developer", active: true },
-  { name: "Priya", role: "Designer", active: true }
+const defaultGroupMembers = [
+  { name: "Rahul", email: "rahul@example.com", role: "Admin", active: true },
+  { name: "Sneha", email: "sneha@example.com", role: "Member", active: true },
+  { name: "Amit", email: "amit@example.com", role: "Member", active: true },
+  { name: "Priya", email: "priya@example.com", role: "Member", active: true }
 ];
+
+let groupMembers = getTeamMembersForApp();
 
 const PRESENCE_STORAGE_KEY = "ttm_user_presence";
 const PRESENCE_ONLINE_WINDOW_MS = 120000;
@@ -257,6 +264,8 @@ function showLoginScreen() {
 function showAppScreen() {
   if (loginScreen) loginScreen.classList.add("hidden");
   if (appScreen) appScreen.classList.remove("hidden");
+  window.TeamDirectory?.ensureLoggedInMember?.(getUserFromLocalStorage());
+  refreshTeamDirectoryUI();
   showDashboardSection();
 }
 
@@ -368,7 +377,11 @@ function showToast(title, message) {
 // LOCAL STORAGE HELPERS
 // -----------------------------
 function saveUserToLocalStorage(user) {
+  const teamMember = (window.TeamDirectory?.getTeamMembers?.() || [])
+    .find((member) => window.TeamDirectory.normalizeEmail(member.email) === window.TeamDirectory.normalizeEmail(user?.email));
+  if (teamMember) user.role = teamMember.role;
   localStorage.setItem("ttm_logged_in_user", JSON.stringify(user));
+  window.TeamDirectory?.ensureLoggedInMember?.(user);
 }
 
 function getUserFromLocalStorage() {
@@ -392,6 +405,68 @@ function normalizeUserRole(role) {
   if (["admin", "manager", "project manager"].includes(normalizedRole)) return "Admin";
   if (["member", "employee", "developer", "designer", "business analyst"].includes(normalizedRole)) return "Member";
   return "Admin";
+}
+
+function getTeamMembersForApp() {
+  const members = window.TeamDirectory?.getTeamMembers?.() || defaultGroupMembers;
+  return members.map((member) => ({
+    name: member.name,
+    email: member.email || "",
+    role: normalizeUserRole(member.role),
+    active: true
+  }));
+}
+
+function syncTaskAssigneeOptions() {
+  if (!taskAssignedToInput) return;
+
+  const selected = new Set(Array.from(taskAssignedToInput.selectedOptions || []).map((option) => option.value));
+  taskAssignedToInput.innerHTML = groupMembers.map((member) => `
+    <option value="${escapeHTML(member.name)}" ${selected.has(member.name) ? "selected" : ""}>${escapeHTML(member.name)}</option>
+  `).join("");
+}
+
+function renderTeamMembers() {
+  if (!teamMembersList) return;
+
+  if (!groupMembers.length) {
+    teamMembersList.innerHTML = `
+      <div class="team-empty">
+        <h4>No members yet</h4>
+        <p>Add a member by email to start building your team.</p>
+      </div>
+    `;
+    return;
+  }
+
+  teamMembersList.innerHTML = groupMembers.map((member) => `
+    <div class="team-card managed-team-card" data-team-member="${escapeHTML(member.name)}" data-team-email="${escapeHTML(member.email)}">
+      <div class="team-avatar">${escapeHTML(member.name.charAt(0).toUpperCase())}</div>
+      <h4>${escapeHTML(member.name)}</h4>
+      <p>${escapeHTML(member.email || "No email")}</p>
+      <span class="role-chip">${escapeHTML(member.role)}</span>
+      <select class="team-role-select" data-team-email="${escapeHTML(member.email)}" aria-label="Role for ${escapeHTML(member.name)}">
+        <option value="Admin" ${member.role === "Admin" ? "selected" : ""}>Admin</option>
+        <option value="Member" ${member.role === "Member" ? "selected" : ""}>Member</option>
+      </select>
+      ${renderPresenceBadge(member.name)}
+      <button type="button" class="danger-btn team-remove-btn" data-team-email="${escapeHTML(member.email)}">Remove</button>
+    </div>
+  `).join("");
+}
+
+function refreshTeamDirectoryUI() {
+  groupMembers = getTeamMembersForApp();
+  syncTaskAssigneeOptions();
+  renderTeamMembers();
+  renderChatUsers();
+  renderPresenceUI();
+  updateDashboardInsights();
+  updateDashboardCounts();
+  applyRoleBasedUI();
+
+  if (typeof window.renderGroupManagement === "function") window.renderGroupManagement();
+  if (typeof window.refreshGroupRooms === "function") window.refreshGroupRooms();
 }
 
 function canAssignTasks(user = getUserFromLocalStorage()) {
@@ -1163,6 +1238,9 @@ function renderChatUsers() {
   chatUsersList.innerHTML = "";
 
   const activeMembers = groupMembers.filter((member) => member.active);
+  if (activeMembers.length && !activeMembers.some((member) => member.name === selectedChatMember)) {
+    selectedChatMember = activeMembers[0].name;
+  }
 
   activeMembers.forEach((member) => {
     const unreadCount = getUnreadChatCount(member.name);
@@ -2938,6 +3016,85 @@ if (taskForm) {
   });
 }
 
+if (teamMemberForm) {
+  teamMemberForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const email = window.TeamDirectory?.normalizeEmail?.(teamMemberEmailInput?.value) || "";
+    if (!email) {
+      alert("Please enter a member email.");
+      teamMemberEmailInput?.focus();
+      return;
+    }
+
+    const members = window.TeamDirectory?.getTeamMembers?.() || [];
+    const existing = members.find((member) => window.TeamDirectory.normalizeEmail(member.email) === email);
+    if (existing) {
+      existing.name = teamMemberNameInput?.value.trim() || existing.name;
+      existing.role = teamMemberRoleInput?.value || existing.role;
+    } else {
+      members.push({
+        id: `member-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        name: teamMemberNameInput?.value.trim() || window.TeamDirectory.nameFromEmail(email),
+        email,
+        role: teamMemberRoleInput?.value || "Member"
+      });
+    }
+
+    window.TeamDirectory?.saveTeamMembers?.(members);
+    teamMemberForm.reset();
+    refreshTeamDirectoryUI();
+  });
+}
+
+if (teamMembersList) {
+  teamMembersList.addEventListener("click", (event) => {
+    const removeButton = event.target instanceof Element ? event.target.closest(".team-remove-btn") : null;
+    if (!removeButton) return;
+
+    const email = removeButton.getAttribute("data-team-email");
+    if (!email) return;
+
+    const currentUser = getUserFromLocalStorage();
+    if (window.TeamDirectory?.normalizeEmail?.(currentUser?.email) === email) {
+      alert("You cannot remove the currently logged-in user.");
+      return;
+    }
+
+    const members = (window.TeamDirectory?.getTeamMembers?.() || [])
+      .filter((member) => window.TeamDirectory.normalizeEmail(member.email) !== email);
+    window.TeamDirectory?.saveTeamMembers?.(members);
+    const groups = (window.TeamDirectory?.getTeamGroups?.() || []).map((group) => ({
+      ...group,
+      members: (group.members || []).filter((memberEmail) => window.TeamDirectory.normalizeEmail(memberEmail) !== email)
+    }));
+    window.TeamDirectory?.saveTeamGroups?.(groups);
+    refreshTeamDirectoryUI();
+  });
+
+  teamMembersList.addEventListener("change", (event) => {
+    const roleSelect = event.target instanceof Element ? event.target.closest(".team-role-select") : null;
+    if (!roleSelect) return;
+
+    const email = roleSelect.getAttribute("data-team-email");
+    if (!email) return;
+
+    const members = window.TeamDirectory?.getTeamMembers?.() || [];
+    const member = members.find((item) => window.TeamDirectory.normalizeEmail(item.email) === email);
+    if (!member) return;
+
+    member.role = roleSelect.value === "Admin" ? "Admin" : "Member";
+    window.TeamDirectory?.saveTeamMembers?.(members);
+
+    const currentUser = getUserFromLocalStorage();
+    if (window.TeamDirectory?.normalizeEmail?.(currentUser?.email) === email) {
+      currentUser.role = member.role;
+      localStorage.setItem("ttm_logged_in_user", JSON.stringify(currentUser));
+    }
+
+    refreshTeamDirectoryUI();
+  });
+}
+
 [pendingTaskColumn, inprogressTaskColumn].forEach((column) => {
   if (!column) return;
 
@@ -3112,9 +3269,8 @@ setupPrivateChatChannel();
 setupPresenceTracking();
 checkExistingLogin();
 applyRoleBasedUI();
-renderChatUsers();
+refreshTeamDirectoryUI();
 renderSelectedChatMessages();
-renderChatUsers();
 renderAllTaskUI();
 renderNotifications();
 updateNotificationPermissionUI();

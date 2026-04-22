@@ -4,7 +4,7 @@
 // Uses localStorage for persistence and BroadcastChannel for same-browser-tab
 // real-time updates. This avoids external Firebase import failures breaking the UI.
 
-const GROUP_ROOMS = {
+const BASE_GROUP_ROOMS = {
   general: {
     label: "General",
     seed: [
@@ -26,6 +26,7 @@ const GROUP_ROOMS = {
     ]
   }
 };
+let GROUP_ROOMS = getAvailableGroupRooms();
 
 const GROUP_STORAGE_KEY = "ttm_group_messages";
 const GROUP_CHANNEL_NAME = "ttm_group_chat_channel";
@@ -58,6 +59,22 @@ let groupAttachmentPreviewUrls = [];
 
 const GROUP_MAX_ATTACHMENT_SIZE = 750 * 1024;
 const GROUP_MAX_VOICE_SIZE = 1200 * 1024;
+
+function getAvailableGroupRooms() {
+  return {
+    ...BASE_GROUP_ROOMS,
+    ...(window.TeamDirectory?.getGroupRoomsForChat?.() || {})
+  };
+}
+
+function refreshGroupRooms(preferredRoom = activeGroupRoom) {
+  GROUP_ROOMS = getAvailableGroupRooms();
+  if (!GROUP_ROOMS[preferredRoom]) {
+    preferredRoom = GROUP_ROOMS.general ? "general" : Object.keys(GROUP_ROOMS)[0];
+  }
+  if (preferredRoom) setActiveRoom(preferredRoom);
+  if (typeof window.renderGroupManagement === "function") window.renderGroupManagement();
+}
 
 function getInitial(name) {
   return (name || "U").trim().charAt(0).toUpperCase() || "U";
@@ -383,6 +400,7 @@ function renderGroupMessages() {
 }
 
 function setActiveRoom(room) {
+  GROUP_ROOMS = getAvailableGroupRooms();
   if (!GROUP_ROOMS[room]) return;
 
   activeGroupRoom = room;
@@ -401,6 +419,7 @@ function setActiveRoom(room) {
 
   renderTypingIndicator("");
   renderGroupMessages();
+  if (typeof window.renderGroupManagement === "function") window.renderGroupManagement();
 }
 
 function appendGroupMessage(room, message, shouldBroadcast = true) {
@@ -661,3 +680,7 @@ if (groupChatInput) {
 
 setupGroupChannel();
 setActiveRoom(activeGroupRoom);
+
+window.setGroupChatRoom = setActiveRoom;
+window.refreshGroupRooms = refreshGroupRooms;
+window.getActiveGroupRoom = () => activeGroupRoom;

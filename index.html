@@ -15,7 +15,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=task-meeting-polish-20260422" />
+  <link rel="stylesheet" href="style.css?v=team-groups-20260422" />
 </head>
 <body>
   <!-- Login Screen -->
@@ -82,6 +82,10 @@
           <button class="nav-item" data-section="group-chat-section">
             <span class="nav-icon nav-group-chat" aria-hidden="true"></span>
             <span class="nav-label">Group Chat</span>
+          </button>
+          <button class="nav-item" data-section="groups-section">
+            <span class="nav-icon nav-groups" aria-hidden="true"></span>
+            <span class="nav-label">Groups</span>
           </button>
           <button class="nav-item" data-section="tasks-section">
             <span class="nav-icon nav-task" aria-hidden="true"></span>
@@ -464,39 +468,65 @@
       </section>
 
       <section id="team-section" class="content-section">
-        <div class="panel">
-          <div class="panel-header">
-            <h3>Team Members</h3>
+        <div class="team-management-layout">
+          <div class="panel team-invite-panel">
+            <div class="panel-header">
+              <h3>Invite Member</h3>
+            </div>
+            <form id="team-member-form" class="team-member-form">
+              <div class="form-group">
+                <label for="team-member-name">Name</label>
+                <input type="text" id="team-member-name" placeholder="Member name" />
+              </div>
+              <div class="form-group">
+                <label for="team-member-email">Email</label>
+                <input type="email" id="team-member-email" placeholder="member@example.com" required />
+              </div>
+              <div class="form-group">
+                <label for="team-member-role">Role</label>
+                <select id="team-member-role">
+                  <option value="Member">Member</option>
+                  <option value="Admin">Admin</option>
+                </select>
+              </div>
+              <button class="primary-btn" type="submit">Add Member</button>
+            </form>
           </div>
 
-          <div class="team-grid">
-            <div class="team-card" data-team-member="Rahul">
-              <div class="team-avatar">R</div>
-              <h4>Rahul</h4>
-              <p>Project Manager</p>
-              <span class="presence-badge presence-offline">Offline</span>
+          <div class="panel team-list-panel">
+            <div class="panel-header">
+              <h3>Team Members</h3>
             </div>
+            <div id="team-members-list" class="team-grid"></div>
+          </div>
+        </div>
+      </section>
 
-            <div class="team-card" data-team-member="Sneha">
-              <div class="team-avatar">S</div>
-              <h4>Sneha</h4>
-              <p>Business Analyst</p>
-              <span class="presence-badge presence-offline">Offline</span>
+      <section id="groups-section" class="content-section">
+        <div class="groups-layout">
+          <div class="panel groups-list-panel">
+            <div class="panel-header meeting-panel-header">
+              <h3>Groups</h3>
+              <button class="primary-btn" type="button" id="create-group-toggle-btn">Create Group</button>
             </div>
+            <div id="groups-list" class="groups-list"></div>
+          </div>
 
-            <div class="team-card" data-team-member="Amit">
-              <div class="team-avatar">A</div>
-              <h4>Amit</h4>
-              <p>Developer</p>
-              <span class="presence-badge presence-offline">Offline</span>
+          <div class="panel group-create-panel">
+            <div class="panel-header">
+              <h3>Create Group</h3>
             </div>
-
-            <div class="team-card" data-team-member="Priya">
-              <div class="team-avatar">P</div>
-              <h4>Priya</h4>
-              <p>Designer</p>
-              <span class="presence-badge presence-offline">Offline</span>
-            </div>
+            <form id="group-create-form" class="group-create-form">
+              <div class="form-group">
+                <label for="group-name-input">Group Name</label>
+                <input type="text" id="group-name-input" placeholder="Design Sprint" required />
+              </div>
+              <div class="form-group">
+                <label>Members</label>
+                <div id="group-member-options" class="group-member-options"></div>
+              </div>
+              <button class="primary-btn" type="submit">Save Group</button>
+            </form>
           </div>
         </div>
       </section>
@@ -642,8 +672,9 @@
   </div>
 
   <div id="toast-container" class="toast-container"></div>
-  <script src="script.js?v=task-meeting-polish-20260422"></script>
-  <script src="group-chat.js"></script>
+  <script src="team-groups.js?v=team-groups-20260422"></script>
+  <script src="script.js?v=team-groups-20260422"></script>
+  <script src="group-chat.js?v=team-groups-20260422"></script>
   <script src="calendar.js"></script>
 </body>
 </html>
