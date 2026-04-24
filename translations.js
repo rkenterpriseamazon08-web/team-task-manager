@@ -4,8 +4,8 @@
 
   const dictionaries = {
     en: {
-      "app.title": "Team Task Manager",
-      "app.workspace": "Company Workspace",
+      "app.title": "Taskify",
+      "app.workspace": "Personal Company Workspace",
       "auth.signIn": "Sign in to continue",
       "auth.email": "Email",
       "auth.password": "Password",
@@ -263,8 +263,8 @@
       "settings.playSound": "Play notification sound"
     },
     hi: {
-      "app.title": "टीम टास्क मैनेजर",
-      "app.workspace": "कंपनी वर्कस्पेस",
+      "app.title": "Taskify",
+      "app.workspace": "Personal Company Workspace",
       "auth.signIn": "जारी रखने के लिए साइन इन करें",
       "auth.email": "ईमेल",
       "auth.password": "पासवर्ड",
@@ -522,8 +522,8 @@
       "settings.playSound": "नोटिफिकेशन ध्वनि चलाएं"
     },
     bn: {
-      "app.title": "টিম টাস্ক ম্যানেজার",
-      "app.workspace": "কোম্পানি ওয়ার্কস্পেস",
+      "app.title": "Taskify",
+      "app.workspace": "Personal Company Workspace",
       "auth.signIn": "চালিয়ে যেতে সাইন ইন করুন",
       "auth.email": "ইমেল",
       "auth.password": "পাসওয়ার্ড",
