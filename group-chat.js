@@ -7,6 +7,7 @@
 const BASE_GROUP_ROOMS = {
   general: {
     label: "General",
+    i18nKey: "chat.roomGeneral",
     seed: [
       { sender: "Rahul", text: "Please review the latest task updates." },
       { sender: "Sneha", text: "Pricing sheet has been updated." }
@@ -14,6 +15,7 @@ const BASE_GROUP_ROOMS = {
   },
   tasks: {
     label: "Tasks",
+    i18nKey: "chat.roomTasks",
     seed: [
       { sender: "Rahul", text: "Please update your task status before EOD." },
       { sender: "Amit", text: "Development tasks are on track." }
@@ -21,6 +23,7 @@ const BASE_GROUP_ROOMS = {
   },
   announcements: {
     label: "Announcements",
+    i18nKey: "chat.roomAnnouncements",
     seed: [
       { sender: "Rahul", text: "Sprint review is scheduled for Friday at 3 PM." }
     ]
@@ -60,11 +63,21 @@ let groupAttachmentPreviewUrls = [];
 const GROUP_MAX_ATTACHMENT_SIZE = 750 * 1024;
 const GROUP_MAX_VOICE_SIZE = 1200 * 1024;
 
+function groupT(key, params = {}) {
+  return window.AppI18n?.t?.(key, params) || key;
+}
+
 function getAvailableGroupRooms() {
   return {
     ...BASE_GROUP_ROOMS,
     ...(window.TeamDirectory?.getGroupRoomsForChat?.() || {})
   };
+}
+
+function getGroupRoomLabel(room) {
+  const roomConfig = GROUP_ROOMS[room];
+  if (!roomConfig) return "";
+  return roomConfig.i18nKey ? groupT(roomConfig.i18nKey) : roomConfig.label;
 }
 
 function refreshGroupRooms(preferredRoom = activeGroupRoom) {
@@ -367,7 +380,7 @@ function renderGroupMessages() {
   if (messages.length === 0) {
     groupChatMessages.innerHTML = `
       <div class="message-bubble received">
-        <strong>System:</strong> No messages yet in ${escapeHTML(GROUP_ROOMS[activeGroupRoom].label)}.
+        <strong>${escapeHTML(groupT("chat.system"))}:</strong> ${escapeHTML(groupT("chat.noMessagesInRoom", { room: getGroupRoomLabel(activeGroupRoom) }))}
       </div>
     `;
     return;
@@ -410,11 +423,11 @@ function setActiveRoom(room) {
   });
 
   if (activeGroupRoomLabel) {
-    activeGroupRoomLabel.textContent = `Active room: ${GROUP_ROOMS[room].label}`;
+    activeGroupRoomLabel.textContent = groupT("chat.activeRoom", { room: getGroupRoomLabel(room) });
   }
 
   if (groupChatInput) {
-    groupChatInput.placeholder = `Type ${GROUP_ROOMS[room].label.toLowerCase()} message...`;
+    groupChatInput.placeholder = groupT("chat.roomPlaceholder", { room: getGroupRoomLabel(room).toLowerCase() });
   }
 
   renderTypingIndicator("");
@@ -684,3 +697,4 @@ setActiveRoom(activeGroupRoom);
 window.setGroupChatRoom = setActiveRoom;
 window.refreshGroupRooms = refreshGroupRooms;
 window.getActiveGroupRoom = () => activeGroupRoom;
+window.refreshGroupChatLanguage = () => setActiveRoom(activeGroupRoom);

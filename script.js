@@ -107,10 +107,12 @@ const notificationPermissionStatus = document.getElementById("notification-permi
 const inAppToastToggle = document.getElementById("in-app-toast-toggle");
 const notificationSoundToggle = document.getElementById("notification-sound-toggle");
 const themeToggle = document.getElementById("theme-toggle");
+const themeModeState = document.getElementById("theme-mode-state");
 const themeStatusText = document.getElementById("theme-status-text");
 const clearNotificationsBtn = document.getElementById("clear-notifications-btn");
 const resetAppDataBtn = document.getElementById("reset-app-data-btn");
 const settingsCategoryCards = document.querySelectorAll(".settings-category-card[data-settings-pane]");
+const languageOptions = document.querySelectorAll('input[name="settings-language"]');
 const settingsProfileForm = document.getElementById("settings-profile-form");
 const settingsFirstNameInput = document.getElementById("settings-first-name");
 const settingsLastNameInput = document.getElementById("settings-last-name");
@@ -142,6 +144,79 @@ if (!toastContainer) {
   toastContainer.id = "toast-container";
   toastContainer.className = "toast-container";
   document.body.appendChild(toastContainer);
+}
+
+function t(key, params = {}) {
+  return window.AppI18n?.t?.(key, params) || key;
+}
+
+function translateStatusLabel(status) {
+  const statusKeys = {
+    Pending: "common.pending",
+    "In Progress": "common.inProgress",
+    Completed: "common.completed"
+  };
+
+  return statusKeys[status] ? t(statusKeys[status]) : status;
+}
+
+function translateSeverityLabel(severity) {
+  const severityKeys = {
+    High: "common.high",
+    Medium: "common.medium",
+    Low: "common.low"
+  };
+
+  return severityKeys[severity] ? t(severityKeys[severity]) : severity;
+}
+
+function updatePageTitleTranslation() {
+  if (!pageTitle) return;
+
+  const activeItem = document.querySelector(".nav-item.active .nav-label");
+  if (activeItem) {
+    pageTitle.textContent = activeItem.textContent;
+  }
+}
+
+function updateThemeText(theme = getSavedTheme()) {
+  const normalizedTheme = theme === "dark" ? "dark" : "light";
+  if (themeModeState) {
+    themeModeState.textContent = normalizedTheme === "dark"
+      ? t("settings.theme.on")
+      : t("settings.theme.off");
+  }
+  if (themeStatusText) {
+    themeStatusText.textContent = normalizedTheme === "dark"
+      ? t("settings.theme.statusDark")
+      : t("settings.theme.statusLight");
+  }
+}
+
+function updateLanguageControls() {
+  const selectedLanguage = window.AppI18n?.getLanguage?.() || "en";
+  languageOptions.forEach((option) => {
+    option.checked = option.value === selectedLanguage;
+  });
+}
+
+function refreshLocalizedDynamicUI() {
+  document.title = t("app.title");
+  updatePageTitleTranslation();
+  updateThemeText(getSavedTheme());
+  updateNotificationPermissionUI();
+  renderNotifications();
+  renderAllTaskUI();
+  renderSelectedChatMessages();
+  window.renderCalendarMeetings?.();
+  window.renderTeamGroupsUI?.();
+  window.refreshGroupChatLanguage?.();
+}
+
+function applyAppTranslations() {
+  window.AppI18n?.applyTranslations?.();
+  updateLanguageControls();
+  refreshLocalizedDynamicUI();
 }
 
 // -----------------------------
@@ -352,9 +427,7 @@ function applyTheme(theme) {
   localStorage.setItem("ttm_theme", normalizedTheme);
 
   if (themeToggle) themeToggle.checked = normalizedTheme === "dark";
-  if (themeStatusText) {
-    themeStatusText.textContent = `Theme: ${normalizedTheme === "dark" ? "Dark" : "Light"}`;
-  }
+  updateThemeText(normalizedTheme);
 }
 
 function getSettingsPreferences() {
@@ -601,7 +674,7 @@ function applyRoleBasedUI() {
 
   if (openTaskModalBtn) {
     openTaskModalBtn.disabled = !isAdmin;
-    openTaskModalBtn.title = isAdmin ? "Create and assign tasks" : "Members cannot assign tasks";
+    openTaskModalBtn.title = isAdmin ? t("task.createAssignTitle") : t("task.memberAssignTitle");
   }
 
   if (taskAssignedToInput) {
@@ -610,8 +683,8 @@ function applyRoleBasedUI() {
 
   if (taskAssignmentHelp) {
     taskAssignmentHelp.textContent = isAdmin
-      ? "Admins can assign one or more members."
-      : "Members can update tasks, but assigning is Admin-only.";
+      ? t("task.assignmentHelp")
+      : t("task.memberAssignmentHelp");
   }
 }
 
@@ -958,7 +1031,7 @@ function collectDriveFiles() {
 
 function formatDriveDate(timestamp) {
   const date = new Date(timestamp);
-  if (Number.isNaN(date.getTime())) return "Unknown date";
+  if (Number.isNaN(date.getTime())) return t("drive.unknownDate");
 
   return date.toLocaleDateString("en-GB", {
     day: "2-digit",
@@ -994,14 +1067,14 @@ function ensureDrivePreviewModal() {
     <div class="drive-preview-modal" role="dialog" aria-modal="true" aria-labelledby="drive-preview-title">
       <div class="drive-preview-header">
         <div>
-          <h3 id="drive-preview-title">File preview</h3>
+          <h3 id="drive-preview-title">${escapeHTML(t("drive.filePreview"))}</h3>
           <p id="drive-preview-meta"></p>
         </div>
-        <button type="button" class="secondary-btn drive-preview-close" aria-label="Close preview">Close</button>
+        <button type="button" class="secondary-btn drive-preview-close" aria-label="${escapeHTML(t("drive.closePreview"))}">${escapeHTML(t("actions.cancel"))}</button>
       </div>
       <div id="drive-preview-body" class="drive-preview-body"></div>
       <div class="drive-preview-footer">
-        <a id="drive-preview-download" class="primary-btn" href="#" download>Download</a>
+        <a id="drive-preview-download" class="primary-btn" href="#" download>${escapeHTML(t("drive.download"))}</a>
       </div>
     </div>
   `;
@@ -1030,6 +1103,7 @@ function openDriveFilePreview(file) {
   const meta = modal.querySelector("#drive-preview-meta");
   const body = modal.querySelector("#drive-preview-body");
   const download = modal.querySelector("#drive-preview-download");
+  const closeButton = modal.querySelector(".drive-preview-close");
 
   if (!body || !download) return;
 
@@ -1041,6 +1115,11 @@ function openDriveFilePreview(file) {
   if (title) title.textContent = file?.name || "Attachment";
   if (meta) meta.textContent = `${getFileTypeLabel(file?.type, file?.name)} • ${safeSize}`;
 
+  if (closeButton) {
+    closeButton.textContent = t("actions.cancel");
+    closeButton.setAttribute("aria-label", t("drive.closePreview"));
+  }
+  download.textContent = t("drive.download");
   download.href = isSafeDriveDataUrl(file?.dataUrl) ? file.dataUrl : "#";
   download.setAttribute("download", file?.name || "attachment");
 
@@ -1054,8 +1133,8 @@ function openDriveFilePreview(file) {
     body.innerHTML = `
       <div class="drive-preview-unavailable">
         <span>${safeType}</span>
-        <h4>Preview not available for this file type</h4>
-        <p>You can still download the file safely.</p>
+        <h4>${escapeHTML(t("drive.previewUnavailable"))}</h4>
+        <p>${escapeHTML(t("drive.downloadFallback"))}</p>
       </div>
     `;
   }
@@ -1070,8 +1149,8 @@ function renderGoogleDriveFiles() {
   if (currentDriveFiles.length === 0) {
     driveFileGrid.innerHTML = `
       <div class="drive-empty">
-        <h4>No shared files yet</h4>
-        <p>Files attached to tasks, chats, and group chats will appear here.</p>
+        <h4>${escapeHTML(t("drive.emptyTitle"))}</h4>
+        <p>${escapeHTML(t("drive.emptyBody"))}</p>
       </div>
     `;
     return;
@@ -1093,8 +1172,8 @@ function renderGoogleDriveFiles() {
           <p>${escapeHTML(getFileTypeLabel(file.type, file.name))} &bull; ${formatFileSize(file.size)} &bull; ${formatDriveDate(file.createdAt)}</p>
         </div>
         <div class="drive-file-actions">
-          <button class="secondary-btn" type="button" data-drive-open="${index}">Open</button>
-          <a class="primary-btn" href="${file.dataUrl}" download="${escapeHTML(file.name)}">Download</a>
+          <button class="secondary-btn" type="button" data-drive-open="${index}">${escapeHTML(t("drive.open"))}</button>
+          <a class="primary-btn" href="${file.dataUrl}" download="${escapeHTML(file.name)}">${escapeHTML(t("drive.download"))}</a>
         </div>
       </article>
     `;
@@ -1150,7 +1229,7 @@ function showDashboardSection() {
     section.classList.toggle("active-section", section.id === "dashboard-section");
   });
 
-  if (pageTitle) pageTitle.textContent = "Dashboard";
+  if (pageTitle) pageTitle.textContent = t("nav.dashboard");
   updateTopbarTaskAction("dashboard-section");
 }
 
@@ -2118,8 +2197,8 @@ function renderNotifications() {
   if (notifications.length === 0) {
     notificationList.innerHTML = `
       <div class="notification-item">
-        <h4>No notifications</h4>
-        <p>You do not have any notifications yet.</p>
+        <h4>${escapeHTML(t("notifications.noneTitle"))}</h4>
+        <p>${escapeHTML(t("notifications.noneBody"))}</p>
       </div>
     `;
     return;
@@ -2151,13 +2230,13 @@ function setBrowserNotificationEnabled(value) {
 function updateNotificationPermissionUI() {
   if (!notificationPermissionStatus) return;
 
-  let permissionText = "Permission status: Unsupported";
+  let permissionText = t("notifications.permissionUnsupported");
   if ("Notification" in window) {
-    permissionText = `Permission status: ${Notification.permission}`;
+    permissionText = t("notifications.permissionStatus", { permission: Notification.permission });
   }
 
-  const enabledText = isBrowserNotificationEnabled() ? "Enabled" : "Disabled";
-  notificationPermissionStatus.textContent = `${permissionText} | App notifications: ${enabledText}`;
+  const enabledText = isBrowserNotificationEnabled() ? t("notifications.enabled") : t("notifications.disabled");
+  notificationPermissionStatus.textContent = `${permissionText} | ${t("notifications.appStatus", { status: enabledText })}`;
 }
 
 async function enableBrowserNotifications() {
@@ -2224,7 +2303,7 @@ function getBadgeClass(status) {
 }
 
 function formatDate(dateString) {
-  if (!dateString) return "No deadline";
+  if (!dateString) return t("common.noDeadline");
 
   const date = new Date(dateString);
   if (Number.isNaN(date.getTime())) return dateString;
@@ -2286,12 +2365,12 @@ function renderTaskComments(task) {
   return `
     <div class="task-comments">
       <div class="task-comments-header">
-        <span>Comments</span>
+        <span>${escapeHTML(t("task.comments"))}</span>
         <small>${comments.length}</small>
       </div>
       <div class="task-comment-list">
         ${comments.length === 0
-          ? `<p class="task-comment-empty">No comments yet</p>`
+          ? `<p class="task-comment-empty">${escapeHTML(t("task.noComments"))}</p>`
           : comments.map((comment) => `
               <div class="task-comment">
                 <div class="task-comment-meta">
@@ -2304,8 +2383,8 @@ function renderTaskComments(task) {
         }
       </div>
       <div class="task-comment-form">
-        <input type="text" class="task-comment-input" placeholder="Add a comment..." />
-        <button type="button" class="task-comment-add" data-task-id="${escapeHTML(task.id)}">Add</button>
+        <input type="text" class="task-comment-input" placeholder="${escapeHTML(t("task.addComment"))}" />
+        <button type="button" class="task-comment-add" data-task-id="${escapeHTML(task.id)}">${escapeHTML(t("actions.add"))}</button>
       </div>
     </div>
   `;
@@ -2317,11 +2396,11 @@ function renderTaskAttachments(task) {
   return `
     <div class="task-attachments">
       <div class="task-comments-header">
-        <span>Attachments</span>
+        <span>${escapeHTML(t("task.attachments"))}</span>
         <small>${attachments.length}</small>
       </div>
       ${attachments.length === 0
-        ? `<p class="task-comment-empty">No attachments yet</p>`
+        ? `<p class="task-comment-empty">${escapeHTML(t("task.noAttachments"))}</p>`
         : renderAttachmentList(attachments, "task-attachment-list")
       }
     </div>
@@ -2361,14 +2440,14 @@ function getTaskCardMarkup(task, variant = "recent") {
     <div class="${variant === "recent" ? "task-item-main" : "kanban-card-main"}">
       <div>
         <${titleTag}>${escapeHTML(task.title)}</${titleTag}>
-        <p>Assigned to: ${escapeHTML(formatTaskAssignees(task))}</p>
+        <p>${escapeHTML(t("task.assignedToPrefix"))} ${escapeHTML(formatTaskAssignees(task))}</p>
         ${variant === "kanban" ? `
-          <p><strong>Deadline:</strong> ${formatDate(task.deadline)}</p>
+          <p><strong>${escapeHTML(t("task.deadline"))}:</strong> ${formatDate(task.deadline)}</p>
         ` : ""}
       </div>
       <div class="task-card-meta-stack">
-        <span class="priority-badge ${priorityClass}">${escapeHTML(task.severity || "No priority")}</span>
-        <span class="badge ${getBadgeClass(task.status)}">${escapeHTML(task.status)}</span>
+        <span class="priority-badge ${priorityClass}">${escapeHTML(task.severity ? translateSeverityLabel(task.severity) : t("task.noPriority"))}</span>
+        <span class="badge ${getBadgeClass(task.status)}">${escapeHTML(translateStatusLabel(task.status))}</span>
       </div>
     </div>
     ${renderTaskTags(task.tags)}
@@ -2376,7 +2455,7 @@ function getTaskCardMarkup(task, variant = "recent") {
     ${renderTaskComments(task)}
     ${showDoneAction ? `
       <div class="task-card-actions">
-        <button type="button" class="success-action-btn mark-done-btn" data-task-id="${escapeHTML(task.id)}">Mark as Done</button>
+        <button type="button" class="success-action-btn mark-done-btn" data-task-id="${escapeHTML(task.id)}">${escapeHTML(t("task.markDone"))}</button>
       </div>
     ` : ""}
   `;
@@ -2443,9 +2522,9 @@ function formatTimelineDay(date) {
   target.setHours(0, 0, 0, 0);
 
   const diffDays = Math.round((target - today) / (1000 * 60 * 60 * 24));
-  if (diffDays === 0) return "Today";
-  if (diffDays === 1) return "Tomorrow";
-  if (diffDays < 0) return "Overdue";
+  if (diffDays === 0) return t("timeline.today");
+  if (diffDays === 1) return t("timeline.tomorrow");
+  if (diffDays < 0) return t("timeline.overdue");
 
   return target.toLocaleDateString("en-GB", {
     day: "2-digit",
@@ -2461,8 +2540,8 @@ function renderUpcomingTimeline() {
   if (timelineTasks.length === 0) {
     upcomingEventsList.innerHTML = `
       <div class="timeline-empty">
-        <h4>No upcoming deadlines</h4>
-        <p>Your task timeline is clear for now.</p>
+        <h4>${escapeHTML(t("task.noUpcomingDeadlines"))}</h4>
+        <p>${escapeHTML(t("timeline.clear"))}</p>
       </div>
     `;
     return;
@@ -2478,7 +2557,7 @@ function renderUpcomingTimeline() {
         </div>
         <h4>${escapeHTML(task.title)}</h4>
         <p>${escapeHTML(formatTaskAssignees(task))}</p>
-        <span class="badge ${getBadgeClass(task.status)}">${escapeHTML(task.status)}</span>
+        <span class="badge ${getBadgeClass(task.status)}">${escapeHTML(translateStatusLabel(task.status))}</span>
       </div>
     </div>
   `).join("");
@@ -2488,7 +2567,7 @@ function renderTaskCardsIntoColumn(columnElement, tasks) {
   if (!columnElement) return;
 
   if (tasks.length === 0) {
-    columnElement.innerHTML = `<p class="empty-task-text">No tasks here.</p>`;
+    columnElement.innerHTML = `<p class="empty-task-text">${escapeHTML(t("task.noTasks"))}</p>`;
     return;
   }
 
@@ -2555,7 +2634,7 @@ function renderKpiTaskList(tasks, emptyText) {
       ${tasks.map((task) => `
         <li>
           <strong>${escapeHTML(task.title)}</strong>
-          <span>${escapeHTML(formatTaskAssignees(task))} · ${escapeHTML(task.status)}</span>
+          <span>${escapeHTML(formatTaskAssignees(task))} &middot; ${escapeHTML(translateStatusLabel(task.status))}</span>
         </li>
       `).join("")}
     </ul>
@@ -2563,7 +2642,7 @@ function renderKpiTaskList(tasks, emptyText) {
 }
 
 function renderKpiNotificationList(notifications) {
-  if (!notifications.length) return `<p class="kpi-empty">No recent notifications</p>`;
+  if (!notifications.length) return `<p class="kpi-empty">${escapeHTML(t("task.noRecentNotifications"))}</p>`;
 
   return `
     <ul class="kpi-detail-list">
@@ -2606,24 +2685,24 @@ function renderKpiHoverDetails(tasks) {
     return { name: member.name, activeTasks };
   });
 
-  setKpiDetail(totalTasksDetail, "Top recent tasks", renderKpiTaskList(recentTasks, "No recent tasks"));
-  setKpiDetail(progressTasksDetail, "In progress now", renderKpiTaskList(getRecentTasksByStatus(tasks, "In Progress"), "No in-progress tasks"));
-  setKpiDetail(completedTasksDetail, "Recently completed", renderKpiTaskList(getRecentTasksByStatus(tasks, "Completed"), "No completed tasks"));
-  setKpiDetail(notificationsDetail, "Recent notifications", renderKpiNotificationList(notifications.slice(0, 3)));
-  setKpiDetail(dueSoonDetail, "Due within 3 days", renderKpiTaskList(dueSoonTasks, "No tasks due soon"));
-  setKpiDetail(highPriorityDetail, "High priority work", renderKpiTaskList(highPriorityTasks, "No high-priority tasks"));
-  setKpiDetail(completionRateDetail, "Completion snapshot", `
+  setKpiDetail(totalTasksDetail, t("kpi.topRecent"), renderKpiTaskList(recentTasks, t("task.noRecentTasks")));
+  setKpiDetail(progressTasksDetail, t("kpi.inProgressNow"), renderKpiTaskList(getRecentTasksByStatus(tasks, "In Progress"), t("task.noInProgressTasks")));
+  setKpiDetail(completedTasksDetail, t("kpi.recentlyCompleted"), renderKpiTaskList(getRecentTasksByStatus(tasks, "Completed"), t("task.noCompletedTasks")));
+  setKpiDetail(notificationsDetail, t("kpi.recentNotifications"), renderKpiNotificationList(notifications.slice(0, 3)));
+  setKpiDetail(dueSoonDetail, t("kpi.dueWithin3Days"), renderKpiTaskList(dueSoonTasks, t("task.noDueSoon")));
+  setKpiDetail(highPriorityDetail, t("kpi.highPriorityWork"), renderKpiTaskList(highPriorityTasks, t("task.noHighPriority")));
+  setKpiDetail(completionRateDetail, t("kpi.completionSnapshot"), `
     <div class="kpi-mini-chart">
       <div class="mini-donut" style="--completed:${completionPercentage};"><span>${completionPercentage}%</span></div>
-      <p>${completed}/${total} tasks completed</p>
+      <p>${escapeHTML(t("dashboard.tasksCompletedSummary", { completed, assigned: total }))}</p>
     </div>
   `);
-  setKpiDetail(teamLoadDetail, "Team load", `
+  setKpiDetail(teamLoadDetail, t("kpi.teamLoad"), `
     <ul class="kpi-detail-list">
       ${loadItems.map((item) => `
         <li>
           <strong>${escapeHTML(item.name)}</strong>
-          <span>${item.activeTasks} active assignment${item.activeTasks === 1 ? "" : "s"}</span>
+          <span>${item.activeTasks} ${escapeHTML(t(item.activeTasks === 1 ? "kpi.activeAssignment" : "kpi.activeAssignments"))}</span>
         </li>
       `).join("")}
     </ul>
@@ -2675,7 +2754,10 @@ function updateDashboardInsights() {
   }
   if (completionDonutPercent) completionDonutPercent.textContent = `${completionPercent}%`;
   if (completionDonutDetail) {
-    completionDonutDetail.textContent = `${counts.completed} completed, ${remaining} remaining`;
+    completionDonutDetail.textContent = t("dashboard.productivitySummary", {
+      completed: counts.completed,
+      remaining
+    });
   }
 
   if (statusSegmentedBar) {
@@ -2702,8 +2784,8 @@ function updateDashboardInsights() {
       <div class="assignee-pie-card">
         <h5>${escapeHTML(assigneeLabel)}</h5>
         <div class="assignee-pie" style="--score:${item.productivity};"></div>
-        <strong>${label} done</strong>
-        <p>${item.completed}/${item.assigned} tasks completed</p>
+        <strong>${escapeHTML(t("dashboard.doneLabel", { percent: label.replace("%", "") }))}</strong>
+        <p>${escapeHTML(t("dashboard.tasksCompletedSummary", { completed: item.completed, assigned: item.assigned }))}</p>
       </div>
     `;
   });
@@ -2739,12 +2821,12 @@ function renderTaskSearchResults(query) {
     .slice(0, 6);
 
   if (matches.length === 0) {
-    taskSearchResults.innerHTML = `<div class="search-result-item">No tasks found</div>`;
+    taskSearchResults.innerHTML = `<div class="search-result-item">${escapeHTML(t("task.searchEmpty"))}</div>`;
   } else {
     taskSearchResults.innerHTML = matches.map((task) => `
       <div class="search-result-item">
         <strong>${task.title}</strong>
-        <span>${task.status} - ${formatTaskAssignees(task)} - ${formatDate(task.deadline)}</span>
+        <span>${escapeHTML(translateStatusLabel(task.status))} - ${escapeHTML(formatTaskAssignees(task))} - ${escapeHTML(formatDate(task.deadline))}</span>
       </div>
     `).join("");
   }
@@ -2906,7 +2988,7 @@ async function handleLoginSubmit(event) {
   const password = passwordField ? passwordField.value.trim() : "";
 
   if (!email || !password) {
-    setLoginMessage("Please enter both email and password.", "error");
+    setLoginMessage(t("auth.missingCredentials"), "error");
     return;
   }
 
@@ -2920,7 +3002,7 @@ async function handleLoginSubmit(event) {
 
     saveUserToLocalStorage(user);
     updateUserUI(user);
-    setLoginMessage("Login successful!", "success");
+    setLoginMessage(t("auth.success"), "success");
 
     setTimeout(() => {
       showAppScreen();
@@ -2930,17 +3012,17 @@ async function handleLoginSubmit(event) {
   }
 
   if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL === "PASTE_YOUR_WEB_APP_URL_HERE") {
-    setLoginMessage("Apps Script URL is missing in script.js.", "error");
+    setLoginMessage(t("auth.missingScriptUrl"), "error");
     return;
   }
 
   try {
     if (loginBtn) {
       loginBtn.disabled = true;
-      loginBtn.textContent = "Logging in...";
+      loginBtn.textContent = t("auth.loggingIn");
     }
 
-    setLoginMessage("Checking your credentials...");
+    setLoginMessage(t("auth.checking"));
 
     const response = await fetch(APPS_SCRIPT_URL, {
       method: "POST",
@@ -2965,7 +3047,7 @@ async function handleLoginSubmit(event) {
 
       saveUserToLocalStorage(user);
       updateUserUI(user);
-      setLoginMessage("Login successful!", "success");
+      setLoginMessage(t("auth.success"), "success");
 
       setTimeout(() => {
         showAppScreen();
@@ -2973,15 +3055,15 @@ async function handleLoginSubmit(event) {
         setLoginMessage("");
       }, 400);
     } else {
-      setLoginMessage(result.message || "Login failed.", "error");
+      setLoginMessage(result.message || t("auth.failed"), "error");
     }
   } catch (error) {
     console.error("Login error:", error);
-    setLoginMessage("Unable to connect to server. Please check your Apps Script URL and deployment.", "error");
+    setLoginMessage(t("auth.connectionError"), "error");
   } finally {
     if (loginBtn) {
       loginBtn.disabled = false;
-      loginBtn.textContent = "Login";
+      loginBtn.textContent = t("auth.login");
     }
   }
 }
@@ -3414,6 +3496,15 @@ if (themeToggle) {
   });
 }
 
+languageOptions.forEach((option) => {
+  option.addEventListener("change", () => {
+    if (!option.checked) return;
+    window.AppI18n?.setLanguage?.(option.value);
+    applyAppTranslations();
+    showToast(t("settings.language.changedTitle"), t("settings.language.changedBody"));
+  });
+});
+
 if (clearNotificationsBtn) {
   clearNotificationsBtn.addEventListener("click", function () {
     saveNotificationsToStorage([]);
@@ -3480,3 +3571,4 @@ renderAllTaskUI();
 renderNotifications();
 updateNotificationPermissionUI();
 maybeOpenMeetingFromHash();
+applyAppTranslations();

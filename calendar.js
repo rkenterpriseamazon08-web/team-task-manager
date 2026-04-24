@@ -24,6 +24,10 @@ function escapeCalendarHTML(value) {
     .replace(/'/g, "&#39;");
 }
 
+function calendarT(key, params = {}) {
+  return window.AppI18n?.t?.(key, params) || key;
+}
+
 function getCalendarMeetings() {
   try {
     const saved = localStorage.getItem(CALENDAR_STORAGE_KEY);
@@ -62,7 +66,7 @@ function normalizeMeetingLink(link) {
 
 function formatMeetingDate(dateString) {
   const date = new Date(`${dateString}T00:00`);
-  if (Number.isNaN(date.getTime())) return "No date";
+  if (Number.isNaN(date.getTime())) return calendarT("calendar.noDate");
   return date.toLocaleDateString("en-GB", {
     day: "2-digit",
     month: "short",
@@ -71,7 +75,7 @@ function formatMeetingDate(dateString) {
 }
 
 function formatMeetingTime(timeString) {
-  if (!timeString) return "No time";
+  if (!timeString) return calendarT("calendar.noTime");
   const date = new Date(`1970-01-01T${timeString}`);
   if (Number.isNaN(date.getTime())) return timeString;
   return date.toLocaleTimeString("en-US", {
@@ -97,30 +101,30 @@ function validateMeetingForm() {
   let isValid = true;
 
   if (!meetingTitleInput.value.trim()) {
-    setCalendarError(meetingTitleInput, "Title is required.");
+    setCalendarError(meetingTitleInput, calendarT("calendar.titleRequired"));
     isValid = false;
   }
 
   if (!meetingDateInput.value) {
-    setCalendarError(meetingDateInput, "Date is required.");
+    setCalendarError(meetingDateInput, calendarT("calendar.dateRequired"));
     isValid = false;
   }
 
   if (!meetingTimeInput.value) {
-    setCalendarError(meetingTimeInput, "Time is required.");
+    setCalendarError(meetingTimeInput, calendarT("calendar.timeRequired"));
     isValid = false;
   }
 
   const normalizedLink = normalizeMeetingLink(meetingLinkInput.value);
   if (!normalizedLink) {
-    setCalendarError(meetingLinkInput, "Google Meet link is required.");
+    setCalendarError(meetingLinkInput, calendarT("calendar.linkRequired"));
     isValid = false;
   } else {
     try {
       const url = new URL(normalizedLink);
       if (!["http:", "https:"].includes(url.protocol)) throw new Error("Invalid protocol");
     } catch {
-      setCalendarError(meetingLinkInput, "Enter a valid meeting link.");
+      setCalendarError(meetingLinkInput, calendarT("calendar.linkInvalid"));
       isValid = false;
     }
   }
@@ -148,7 +152,7 @@ function getMeetingParticipantsText(meeting) {
   const participants = Array.isArray(meeting.participants)
     ? meeting.participants
     : String(meeting.participants || "").split(",").map((name) => name.trim()).filter(Boolean);
-  return participants.length ? participants.join(", ") : "No participants added";
+  return participants.length ? participants.join(", ") : calendarT("calendar.noParticipants");
 }
 
 function getSafeMeetingLink(meeting) {
@@ -165,14 +169,14 @@ function renderMeetingCard(meeting, compact = false) {
   return `
     <article class="${compact ? "today-meeting-item" : "calendar-meeting-card"}">
       <div>
-        <h4>${escapeCalendarHTML(meeting.title || "Untitled meeting")}</h4>
-        <p>${escapeCalendarHTML(formatMeetingDate(meeting.date))} at ${escapeCalendarHTML(formatMeetingTime(meeting.time))}</p>
+        <h4>${escapeCalendarHTML(meeting.title || calendarT("calendar.untitled"))}</h4>
+        <p>${escapeCalendarHTML(formatMeetingDate(meeting.date))} ${escapeCalendarHTML(calendarT("calendar.at"))} ${escapeCalendarHTML(formatMeetingTime(meeting.time))}</p>
         <p>${escapeCalendarHTML(getMeetingParticipantsText(meeting))}</p>
         ${!compact && meeting.description ? `<p>${escapeCalendarHTML(meeting.description)}</p>` : ""}
       </div>
       ${safeLink
-        ? `<a class="primary-btn" href="${escapeCalendarHTML(safeLink)}" target="_blank" rel="noopener noreferrer">Join Meet</a>`
-        : `<button class="secondary-btn" type="button" disabled>Link unavailable</button>`
+        ? `<a class="primary-btn" href="${escapeCalendarHTML(safeLink)}" target="_blank" rel="noopener noreferrer">${escapeCalendarHTML(calendarT("calendar.joinMeet"))}</a>`
+        : `<button class="secondary-btn" type="button" disabled>${escapeCalendarHTML(calendarT("calendar.linkUnavailable"))}</button>`
       }
     </article>
   `;
@@ -188,8 +192,8 @@ function renderUpcomingMeetings() {
   if (!meetings.length) {
     upcomingMeetingsList.innerHTML = `
       <div class="calendar-empty">
-        <h4>No upcoming meetings</h4>
-        <p>Scheduled meetings will appear here.</p>
+        <h4>${escapeCalendarHTML(calendarT("calendar.noUpcoming"))}</h4>
+        <p>${escapeCalendarHTML(calendarT("calendar.emptyUpcomingBody"))}</p>
       </div>
     `;
     return;
@@ -209,7 +213,7 @@ function renderTodayMeetings() {
   if (!meetings.length) {
     todayMeetingsList.innerHTML = `
       <div class="today-meetings-empty">
-        <p>No meetings scheduled for today.</p>
+        <p>${escapeCalendarHTML(calendarT("calendar.noToday"))}</p>
       </div>
     `;
     return;

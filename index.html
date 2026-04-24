@@ -15,43 +15,45 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=settings-panes-20260424" />
+  <link rel="stylesheet" href="style.css?v=settings-language-20260424" />
 </head>
 <body>
   <!-- Login Screen -->
   <div id="login-screen" class="login-screen">
     <form id="login-form" class="login-card">
       <div class="login-logo">TT</div>
-      <h1>Team Task Manager</h1>
-      <p class="login-subtitle">Sign in to continue</p>
+      <h1 data-i18n="app.title">Team Task Manager</h1>
+      <p class="login-subtitle" data-i18n="auth.signIn">Sign in to continue</p>
 
       <div class="form-group">
-        <label for="email">Email</label>
+        <label for="email" data-i18n="auth.email">Email</label>
         <input
           type="email"
           id="email"
           name="email"
           placeholder="Enter your email"
+          data-i18n-placeholder="auth.emailPlaceholder"
           autocomplete="off"
         />
       </div>
 
       <div class="form-group">
-        <label for="password">Password</label>
+        <label for="password" data-i18n="auth.password">Password</label>
         <input
           type="password"
           id="password"
           name="password"
           placeholder="Enter your password"
+          data-i18n-placeholder="auth.passwordPlaceholder"
           autocomplete="off"
         />
       </div>
 
-      <button type="button" id="login-btn" class="login-btn">Login</button>
+      <button type="button" id="login-btn" class="login-btn" data-i18n="auth.login">Login</button>
       <p id="login-message" class="login-message"></p>
 
       <div class="demo-box">
-        <h4>Demo Credentials</h4>
+        <h4 data-i18n="auth.demo">Demo Credentials</h4>
         <p><strong>Email:</strong> demo@company.com</p>
         <p><strong>Password:</strong> 123456</p>
       </div>
@@ -65,51 +67,51 @@
         <div class="logo-section">
           <div class="logo-box">TT</div>
           <div>
-            <h2>Team Task Manager</h2>
-            <p>Company Workspace</p>
+            <h2 data-i18n="app.title">Team Task Manager</h2>
+            <p data-i18n="app.workspace">Company Workspace</p>
           </div>
         </div>
 
         <nav class="sidebar-nav">
           <button class="nav-item active" data-section="dashboard-section">
             <span class="nav-icon nav-dashboard" aria-hidden="true"></span>
-            <span class="nav-label">Dashboard</span>
+            <span class="nav-label" data-i18n="nav.dashboard">Dashboard</span>
           </button>
           <button class="nav-item" data-section="chat-section">
             <span class="nav-icon nav-chat" aria-hidden="true"></span>
-            <span class="nav-label">Chat</span>
+            <span class="nav-label" data-i18n="nav.chat">Chat</span>
           </button>
           <button class="nav-item" data-section="group-chat-section">
             <span class="nav-icon nav-group-chat" aria-hidden="true"></span>
-            <span class="nav-label">Group Chat</span>
+            <span class="nav-label" data-i18n="nav.groupChat">Group Chat</span>
           </button>
           <button class="nav-item" data-section="groups-section">
             <span class="nav-icon nav-groups" aria-hidden="true"></span>
-            <span class="nav-label">Groups</span>
+            <span class="nav-label" data-i18n="nav.groups">Groups</span>
           </button>
           <button class="nav-item" data-section="tasks-section">
             <span class="nav-icon nav-task" aria-hidden="true"></span>
-            <span class="nav-label">Task</span>
+            <span class="nav-label" data-i18n="nav.task">Task</span>
           </button>
           <button class="nav-item" data-section="drive-section">
             <span class="nav-icon nav-drive" aria-hidden="true"></span>
-            <span class="nav-label">Google Drive</span>
+            <span class="nav-label" data-i18n="nav.drive">Google Drive</span>
           </button>
           <button class="nav-item" data-section="calendar-section">
             <span class="nav-icon nav-calendar" aria-hidden="true"></span>
-            <span class="nav-label">Calendar</span>
+            <span class="nav-label" data-i18n="nav.calendar">Calendar</span>
           </button>
           <button class="nav-item" data-section="notifications-section">
             <span class="nav-icon nav-notifications" aria-hidden="true"></span>
-            <span class="nav-label">Notifications</span>
+            <span class="nav-label" data-i18n="nav.notifications">Notifications</span>
           </button>
           <button class="nav-item" data-section="team-section">
             <span class="nav-icon nav-team" aria-hidden="true"></span>
-            <span class="nav-label">Team</span>
+            <span class="nav-label" data-i18n="nav.team">Team</span>
           </button>
           <button class="nav-item" data-section="settings-section">
             <span class="nav-icon nav-settings" aria-hidden="true"></span>
-            <span class="nav-label">Settings</span>
+            <span class="nav-label" data-i18n="nav.settings">Settings</span>
           </button>
         </nav>
       </div>
@@ -129,73 +131,73 @@
     <main class="main-content">
       <header class="topbar">
         <div>
-          <h1 id="page-title">Dashboard</h1>
-          <p class="topbar-subtitle">Welcome Back <span id="topbar-user-name">Demo User</span></p>
+          <h1 id="page-title" data-i18n="nav.dashboard">Dashboard</h1>
+          <p class="topbar-subtitle"><span data-i18n="topbar.welcomeBack">Welcome Back</span> <span id="topbar-user-name">Demo User</span></p>
         </div>
 
         <div class="topbar-actions">
           <div class="search-wrap">
-            <input type="text" id="task-search-input" placeholder="Search tasks, assignees..." class="search-box" />
+            <input type="text" id="task-search-input" placeholder="Search tasks, assignees..." data-i18n-placeholder="topbar.searchPlaceholder" class="search-box" />
             <div id="task-search-results" class="search-results hidden"></div>
           </div>
-          <button class="primary-btn" id="open-task-modal-btn">+ New Task</button>
+          <button class="primary-btn" id="open-task-modal-btn" data-i18n="actions.newTask">+ New Task</button>
         </div>
       </header>
 
       <section id="dashboard-section" class="content-section active-section">
         <div class="stats-grid">
           <div class="stat-card kpi-card" tabindex="0" data-kpi-detail="total">
-            <h3>Total Tasks</h3>
+            <h3 data-i18n="dashboard.totalTasks">Total Tasks</h3>
             <p id="total-tasks-count">0</p>
-            <span>All assigned tasks</span>
+            <span data-i18n="dashboard.totalTasksHelp">All assigned tasks</span>
             <div class="kpi-hover-card" id="total-tasks-detail"></div>
           </div>
 
           <div class="stat-card kpi-card" tabindex="0" data-kpi-detail="progress">
-            <h3>In Progress</h3>
+            <h3 data-i18n="dashboard.inProgress">In Progress</h3>
             <p id="in-progress-count">0</p>
-            <span>Tasks being worked on</span>
+            <span data-i18n="dashboard.inProgressHelp">Tasks being worked on</span>
             <div class="kpi-hover-card" id="progress-tasks-detail"></div>
           </div>
 
           <div class="stat-card kpi-card" tabindex="0" data-kpi-detail="completed">
-            <h3>Completed</h3>
+            <h3 data-i18n="dashboard.completed">Completed</h3>
             <p id="completed-count">0</p>
-            <span>Finished successfully</span>
+            <span data-i18n="dashboard.completedHelp">Finished successfully</span>
             <div class="kpi-hover-card" id="completed-tasks-detail"></div>
           </div>
 
           <div class="stat-card kpi-card" tabindex="0" data-kpi-detail="notifications">
-            <h3>Notifications</h3>
+            <h3 data-i18n="notifications.title">Notifications</h3>
             <p id="notifications-count">0</p>
-            <span>Unread alerts</span>
+            <span data-i18n="dashboard.notificationsHelp">Unread alerts</span>
             <div class="kpi-hover-card" id="notifications-detail"></div>
           </div>
         </div>
 
         <div class="focus-grid">
           <div class="focus-card kpi-card" tabindex="0" data-kpi-detail="due">
-            <span>Due Soon</span>
+            <span data-i18n="dashboard.dueSoon">Due Soon</span>
             <strong id="due-soon-count">0</strong>
-            <p>Tasks due in the next 3 days</p>
+            <p data-i18n="dashboard.dueSoonHelp">Tasks due in the next 3 days</p>
             <div class="kpi-hover-card" id="due-soon-detail"></div>
           </div>
           <div class="focus-card kpi-card" tabindex="0" data-kpi-detail="priority">
-            <span>High Priority</span>
+            <span data-i18n="dashboard.highPriority">High Priority</span>
             <strong id="high-priority-count">0</strong>
-            <p>Important tasks needing attention</p>
+            <p data-i18n="dashboard.highPriorityHelp">Important tasks needing attention</p>
             <div class="kpi-hover-card" id="high-priority-detail"></div>
           </div>
           <div class="focus-card kpi-card" tabindex="0" data-kpi-detail="completion">
-            <span>Completion Rate</span>
+            <span data-i18n="dashboard.completionRate">Completion Rate</span>
             <strong id="completion-rate">0%</strong>
-            <p>Finished tasks across the board</p>
+            <p data-i18n="dashboard.completionRateHelp">Finished tasks across the board</p>
             <div class="kpi-hover-card" id="completion-rate-detail"></div>
           </div>
           <div class="focus-card kpi-card" tabindex="0" data-kpi-detail="load">
-            <span>Team Load</span>
+            <span data-i18n="dashboard.teamLoad">Team Load</span>
             <strong id="team-load-summary">0</strong>
-            <p>Active assignments still open</p>
+            <p data-i18n="dashboard.teamLoadHelp">Active assignments still open</p>
             <div class="kpi-hover-card" id="team-load-detail"></div>
           </div>
         </div>
@@ -203,12 +205,12 @@
         <div class="dashboard-grid">
           <div class="panel timeline-panel">
             <div class="panel-header">
-              <h3>Today's Timeline</h3>
+              <h3 data-i18n="dashboard.todayTimeline">Today's Timeline</h3>
             </div>
             <div class="timeline-list" id="upcoming-events-list"></div>
             <div class="today-meetings-widget">
               <div class="meeting-widget-header">
-                <h4>Today's Meetings</h4>
+                <h4 data-i18n="dashboard.todayMeetings">Today's Meetings</h4>
                 <span>Max 3</span>
               </div>
               <div id="today-meetings-list" class="today-meetings-list"></div>
@@ -217,7 +219,7 @@
 
           <div class="panel team-insights-panel">
             <div class="panel-header">
-              <h3>Team Insights</h3>
+              <h3 data-i18n="dashboard.teamInsights">Team Insights</h3>
             </div>
 
             <div class="insights-grid">
@@ -226,12 +228,12 @@
                   <span id="completion-donut-percent">0%</span>
                 </div>
                 <div>
-                  <h4>Overall Performance</h4>
+                  <h4 data-i18n="dashboard.taskCompletion">Overall Performance</h4>
                   <p><span id="completion-donut-detail">0 completed, 0 remaining</span></p>
                   <div class="status-legend">
-                    <span><i class="legend-dot status-pending-dot"></i>Pending <strong id="pending-insight-count">0</strong></span>
-                    <span><i class="legend-dot status-progress-dot"></i>In Progress <strong id="progress-insight-count">0</strong></span>
-                    <span><i class="legend-dot status-completed-dot"></i>Completed <strong id="completed-insight-count">0</strong></span>
+                    <span><i class="legend-dot status-pending-dot"></i><span data-i18n="common.pending">Pending</span> <strong id="pending-insight-count">0</strong></span>
+                    <span><i class="legend-dot status-progress-dot"></i><span data-i18n="common.inProgress">In Progress</span> <strong id="progress-insight-count">0</strong></span>
+                    <span><i class="legend-dot status-completed-dot"></i><span data-i18n="common.completed">Completed</span> <strong id="completed-insight-count">0</strong></span>
                   </div>
                 </div>
               </div>
@@ -239,8 +241,8 @@
 
             <div class="insight-list-block performance-pies-block">
               <div class="insight-list-header">
-                <h4>Team Performance</h4>
-                <span>Completed / assigned</span>
+                <h4 data-i18n="dashboard.teamPerformance">Team Performance</h4>
+                <span data-i18n="dashboard.completedTasks">Completed / assigned</span>
               </div>
               <div id="team-performance-list" class="performance-pie-grid"></div>
             </div>
@@ -251,12 +253,12 @@
       <section id="chat-section" class="content-section">
         <div class="panel full-height">
           <div class="panel-header meeting-panel-header">
-            <h3>1-to-1 Chat</h3>
+            <h3 data-i18n="chat.oneToOne">1-to-1 Chat</h3>
             <button class="secondary-btn meeting-entry-btn" type="button" id="start-call-btn">
               <svg class="meeting-entry-icon" viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M7 7.5c.5 3.9 2.7 6.1 6.5 6.5l1.9-1.9a1.4 1.4 0 0 1 1.4-.34l3.1 1a1.5 1.5 0 0 1 1.1 1.43v3.2a1.6 1.6 0 0 1-1.7 1.6C11.5 18.5 5.5 12.5 5 4.7A1.6 1.6 0 0 1 6.6 3h3.2a1.5 1.5 0 0 1 1.43 1.1l1 3.1a1.4 1.4 0 0 1-.34 1.4L10 10.5" />
               </svg>
-              <span>Start Call</span>
+              <span data-i18n="chat.startCall">Start Call</span>
             </button>
           </div>
 
@@ -277,19 +279,19 @@
 
                   <div class="chat-input-row">
                     <input type="file" id="chat-file-input" class="hidden" />
-                    <button class="secondary-btn chat-tool-btn attachment-tool-btn" type="button" id="chat-attach-btn" aria-label="Attach file" title="Attach file">
+                    <button class="secondary-btn chat-tool-btn attachment-tool-btn" type="button" id="chat-attach-btn" aria-label="Attach file" title="Attach file" data-i18n-title="chat.attachFile">
                       <svg class="composer-icon" viewBox="0 0 24 24" aria-hidden="true">
                         <path d="M21.4 11.2 12.2 20.4a6 6 0 0 1-8.5-8.5l9.2-9.2a4 4 0 1 1 5.7 5.7l-9.1 9.1a2 2 0 0 1-2.9-2.9l8.5-8.5" />
                       </svg>
                     </button>
-                    <button class="secondary-btn chat-tool-btn voice-tool-btn" type="button" id="chat-record-btn" aria-label="Record voice message" title="Record voice message">
+                    <button class="secondary-btn chat-tool-btn voice-tool-btn" type="button" id="chat-record-btn" aria-label="Record voice message" title="Record voice message" data-i18n-title="chat.recordVoice">
                       <svg class="composer-icon" viewBox="0 0 24 24" aria-hidden="true">
                         <path d="M12 14a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3Z" />
                         <path d="M18 11a6 6 0 0 1-12 0M12 17v4M9 21h6" />
                       </svg>
                     </button>
-                    <input type="text" id="chat-message-input" placeholder="Type your message..." />
-                    <button class="primary-btn" id="send-message-btn">Send</button>
+                    <input type="text" id="chat-message-input" placeholder="Type your message..." data-i18n-placeholder="chat.inputPlaceholder" />
+                    <button class="primary-btn" id="send-message-btn" data-i18n="actions.send">Send</button>
                   </div>
                   <div id="chat-voice-panel" class="voice-panel hidden">
                     <span id="chat-voice-status">Recording...</span>
@@ -307,20 +309,20 @@
       <section id="group-chat-section" class="content-section">
         <div class="panel" style="margin-top:20px;">
           <div class="panel-header meeting-panel-header">
-            <h3>Group Chat (Real-Time)</h3>
+            <h3 data-i18n="chat.groupTitle">Group Chat (Real-Time)</h3>
             <button class="secondary-btn meeting-entry-btn" type="button" id="group-meet-now-btn">
               <svg class="meeting-entry-icon" viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M4 8.5A2.5 2.5 0 0 1 6.5 6h7A2.5 2.5 0 0 1 16 8.5v7a2.5 2.5 0 0 1-2.5 2.5h-7A2.5 2.5 0 0 1 4 15.5v-7Z" />
                 <path d="m16 10 4-2.3v8.6L16 14" />
               </svg>
-              <span>Meet Now</span>
+              <span data-i18n="chat.meetNow">Meet Now</span>
             </button>
           </div>
 
           <div class="group-room-tabs">
-            <button class="group-room-btn active-room-btn" data-room="general">General</button>
-            <button class="group-room-btn" data-room="tasks">Tasks</button>
-            <button class="group-room-btn" data-room="announcements">Announcements</button>
+            <button class="group-room-btn active-room-btn" data-room="general" data-i18n="chat.roomGeneral">General</button>
+            <button class="group-room-btn" data-room="tasks" data-i18n="chat.roomTasks">Tasks</button>
+            <button class="group-room-btn" data-room="announcements" data-i18n="chat.roomAnnouncements">Announcements</button>
           </div>
 
           <div id="active-group-room-label" style="margin: 10px 0 14px; font-size: 14px; color: #6b7280;">
@@ -334,19 +336,19 @@
 
           <div class="chat-input-row">
             <input type="file" id="group-file-input" class="hidden" />
-            <button class="secondary-btn chat-tool-btn attachment-tool-btn" type="button" id="group-attach-btn" aria-label="Attach file" title="Attach file">
+            <button class="secondary-btn chat-tool-btn attachment-tool-btn" type="button" id="group-attach-btn" aria-label="Attach file" title="Attach file" data-i18n-title="chat.attachFile">
               <svg class="composer-icon" viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M21.4 11.2 12.2 20.4a6 6 0 0 1-8.5-8.5l9.2-9.2a4 4 0 1 1 5.7 5.7l-9.1 9.1a2 2 0 0 1-2.9-2.9l8.5-8.5" />
               </svg>
             </button>
-            <button class="secondary-btn chat-tool-btn voice-tool-btn" type="button" id="group-record-btn" aria-label="Record voice message" title="Record voice message">
+            <button class="secondary-btn chat-tool-btn voice-tool-btn" type="button" id="group-record-btn" aria-label="Record voice message" title="Record voice message" data-i18n-title="chat.recordVoice">
               <svg class="composer-icon" viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M12 14a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3Z" />
                 <path d="M18 11a6 6 0 0 1-12 0M12 17v4M9 21h6" />
               </svg>
             </button>
-            <input type="text" id="group-chat-input" placeholder="Type group message..." />
-            <button class="primary-btn" id="group-send-btn">Send</button>
+            <input type="text" id="group-chat-input" placeholder="Type group message..." data-i18n-placeholder="chat.inputPlaceholder" />
+            <button class="primary-btn" id="group-send-btn" data-i18n="actions.send">Send</button>
           </div>
           <div id="group-voice-panel" class="voice-panel hidden">
             <span id="group-voice-status">Recording...</span>
@@ -361,29 +363,29 @@
         <div class="task-workspace-grid">
           <div class="panel">
             <div class="panel-header">
-              <h3>Task List</h3>
+              <h3 data-i18n="task.list">Task List</h3>
             </div>
             <div class="task-list" id="recent-task-list"></div>
           </div>
 
           <div class="panel">
             <div class="panel-header">
-              <h3>Task Board</h3>
+              <h3 data-i18n="task.board">Task Board</h3>
             </div>
 
             <div class="task-board">
               <div class="task-column">
-                <h4>Pending</h4>
+                <h4 data-i18n="common.pending">Pending</h4>
                 <div id="pending-task-column"></div>
               </div>
 
               <div class="task-column">
-                <h4>In Progress</h4>
+                <h4 data-i18n="common.inProgress">In Progress</h4>
                 <div id="inprogress-task-column"></div>
               </div>
 
               <div class="task-column">
-                <h4>Completed</h4>
+                <h4 data-i18n="common.completed">Completed</h4>
                 <div id="completed-task-column"></div>
               </div>
             </div>
@@ -394,9 +396,9 @@
       <section id="drive-section" class="content-section">
         <div class="panel drive-panel">
           <div class="panel-header">
-            <h3>Google Drive</h3>
+            <h3 data-i18n="drive.title">Google Drive</h3>
           </div>
-          <p class="drive-subtitle">Files shared through tasks, chats, and group chats.</p>
+          <p class="drive-subtitle" data-i18n="drive.subtitle">Files shared through tasks, chats, and group chats.</p>
           <div id="drive-file-grid" class="drive-file-grid"></div>
         </div>
       </section>
@@ -405,51 +407,51 @@
         <div class="calendar-layout">
           <div class="panel calendar-form-panel">
             <div class="panel-header">
-              <h3>Schedule Meeting</h3>
+              <h3 data-i18n="calendar.scheduleMeeting">Schedule Meeting</h3>
             </div>
             <form id="calendar-meeting-form" class="calendar-form" novalidate>
               <div class="form-group">
-                <label for="meeting-title-input">Title</label>
+                <label for="meeting-title-input" data-i18n="calendar.meetingTitle">Title</label>
                 <input type="text" id="meeting-title-input" placeholder="Weekly team sync" />
                 <small class="calendar-error" data-error-for="meeting-title-input"></small>
               </div>
 
               <div class="form-row">
                 <div class="form-group">
-                  <label for="meeting-date-input">Date</label>
+                  <label for="meeting-date-input" data-i18n="calendar.date">Date</label>
                   <input type="date" id="meeting-date-input" />
                   <small class="calendar-error" data-error-for="meeting-date-input"></small>
                 </div>
                 <div class="form-group">
-                  <label for="meeting-time-input">Time</label>
+                  <label for="meeting-time-input" data-i18n="calendar.time">Time</label>
                   <input type="time" id="meeting-time-input" />
                   <small class="calendar-error" data-error-for="meeting-time-input"></small>
                 </div>
               </div>
 
               <div class="form-group">
-                <label for="meeting-link-input">Google Meet Link</label>
+                <label for="meeting-link-input" data-i18n="calendar.googleMeet">Google Meet Link</label>
                 <input type="url" id="meeting-link-input" placeholder="https://meet.google.com/abc-defg-hij" />
                 <small class="calendar-error" data-error-for="meeting-link-input"></small>
               </div>
 
               <div class="form-group">
-                <label for="meeting-participants-input">Participants</label>
+                <label for="meeting-participants-input" data-i18n="calendar.participants">Participants</label>
                 <input type="text" id="meeting-participants-input" placeholder="Rahul, Sneha, Amit" />
               </div>
 
               <div class="form-group">
-                <label for="meeting-description-input">Description</label>
+                <label for="meeting-description-input" data-i18n="calendar.description">Description</label>
                 <textarea id="meeting-description-input" rows="4" placeholder="Agenda, context, or notes"></textarea>
               </div>
 
-              <button class="primary-btn" type="submit">Save Meeting</button>
+              <button class="primary-btn" type="submit" data-i18n="calendar.saveMeeting">Save Meeting</button>
             </form>
           </div>
 
           <div class="panel calendar-list-panel">
             <div class="panel-header">
-              <h3>Upcoming Meetings</h3>
+              <h3 data-i18n="calendar.upcomingMeetings">Upcoming Meetings</h3>
             </div>
             <div id="upcoming-meetings-list" class="calendar-meetings-list"></div>
           </div>
@@ -459,7 +461,7 @@
       <section id="notifications-section" class="content-section">
         <div class="panel">
           <div class="panel-header">
-            <h3>Notifications</h3>
+            <h3 data-i18n="notifications.title">Notifications</h3>
           </div>
 
           <div class="notification-list" id="notification-list"></div>
@@ -470,31 +472,31 @@
         <div class="team-management-layout">
           <div class="panel team-invite-panel">
             <div class="panel-header">
-              <h3>Invite Member</h3>
+              <h3 data-i18n="team.inviteMember">Invite Member</h3>
             </div>
             <form id="team-member-form" class="team-member-form">
               <div class="form-group">
-                <label for="team-member-name">Name</label>
+                <label for="team-member-name" data-i18n="team.name">Name</label>
                 <input type="text" id="team-member-name" placeholder="Member name" />
               </div>
               <div class="form-group">
-                <label for="team-member-email">Email</label>
+                <label for="team-member-email" data-i18n="auth.email">Email</label>
                 <input type="email" id="team-member-email" placeholder="member@example.com" required />
               </div>
               <div class="form-group">
-                <label for="team-member-role">Role</label>
+                <label for="team-member-role" data-i18n="settings.role">Role</label>
                 <select id="team-member-role">
                   <option value="Member">Member</option>
                   <option value="Admin">Admin</option>
                 </select>
               </div>
-              <button class="primary-btn" type="submit">Add Member</button>
+              <button class="primary-btn" type="submit" data-i18n="team.addMember">Add Member</button>
             </form>
           </div>
 
           <div class="panel team-list-panel">
             <div class="panel-header">
-              <h3>Team Members</h3>
+              <h3 data-i18n="team.members">Team Members</h3>
             </div>
             <div id="team-members-list" class="team-grid"></div>
           </div>
@@ -505,26 +507,26 @@
         <div class="groups-layout">
           <div class="panel groups-list-panel">
             <div class="panel-header meeting-panel-header">
-              <h3>Groups</h3>
-              <button class="primary-btn" type="button" id="create-group-toggle-btn">Create Group</button>
+              <h3 data-i18n="groups.title">Groups</h3>
+              <button class="primary-btn" type="button" id="create-group-toggle-btn" data-i18n="groups.createGroup">Create Group</button>
             </div>
             <div id="groups-list" class="groups-list"></div>
           </div>
 
           <div class="panel group-create-panel">
             <div class="panel-header">
-              <h3>Create Group</h3>
+              <h3 data-i18n="groups.createGroup">Create Group</h3>
             </div>
             <form id="group-create-form" class="group-create-form">
               <div class="form-group">
-                <label for="group-name-input">Group Name</label>
+                <label for="group-name-input" data-i18n="groups.groupName">Group Name</label>
                 <input type="text" id="group-name-input" placeholder="Design Sprint" required />
               </div>
               <div class="form-group">
-                <label>Members</label>
+                <label data-i18n="groups.members">Members</label>
                 <div id="group-member-options" class="group-member-options"></div>
               </div>
-              <button class="primary-btn" type="submit">Save Group</button>
+              <button class="primary-btn" type="submit" data-i18n="groups.saveGroup">Save Group</button>
             </form>
           </div>
         </div>
@@ -533,7 +535,7 @@
       <section id="settings-section" class="content-section">
         <div class="panel">
           <div class="panel-header">
-            <h3>Settings</h3>
+            <h3 data-i18n="settings.title">Settings</h3>
           </div>
 
           <div class="settings-category-list">
@@ -541,20 +543,50 @@
               <span class="settings-category-icon settings-icon-general" aria-hidden="true"></span>
               <div class="settings-category-main">
                 <button class="settings-category-heading" type="button" aria-expanded="false">
-                  <h4>General</h4>
-                  <p>App startup, theme, storage preferences</p>
+                  <h4 data-i18n="settings.general.title">General</h4>
+                  <p data-i18n="settings.general.subtitle">App startup, theme, storage preferences</p>
                 </button>
                 <div class="settings-category-controls settings-category-details">
-                  <label class="settings-toggle theme-toggle-row">
-                    <input type="checkbox" id="theme-toggle" />
-                    <span>Dark mode</span>
+                  <label class="settings-switch-row theme-toggle-row">
+                    <span class="settings-switch-text"><span data-i18n="settings.theme.label">Turn to Dark Mode:</span> <strong id="theme-mode-state">Off</strong></span>
+                    <input type="checkbox" id="theme-toggle" class="settings-switch-input" />
+                    <span class="settings-switch-visual" aria-hidden="true">
+                      <span class="settings-switch-knob"></span>
+                    </span>
                   </label>
                   <p id="theme-status-text" class="settings-control-status">Theme: Light</p>
                   <label class="settings-toggle">
                     <input type="checkbox" id="remember-data-toggle" checked disabled />
-                    <span>Remember app data on this device</span>
+                    <span data-i18n="settings.rememberData">Remember app data on this device</span>
                   </label>
-                  <p id="storage-status-text" class="settings-control-status">Local storage status: Active</p>
+                  <p id="storage-status-text" class="settings-control-status" data-i18n="settings.storageStatus">Local storage status: Active</p>
+                </div>
+              </div>
+            </article>
+
+            <article class="settings-category-card" data-settings-pane="language">
+              <span class="settings-category-icon settings-icon-language" aria-hidden="true"></span>
+              <div class="settings-category-main">
+                <button class="settings-category-heading" type="button" aria-expanded="false">
+                  <h4 data-i18n="settings.language.title">Language</h4>
+                  <p data-i18n="settings.language.subtitle">App language and translation preferences</p>
+                </button>
+                <div class="settings-category-details">
+                  <div class="settings-language-options" role="radiogroup" aria-label="App language">
+                    <label class="language-option">
+                      <input type="radio" name="settings-language" value="en" id="settings-language-en" />
+                      <span data-i18n="settings.language.english">English</span>
+                    </label>
+                    <label class="language-option">
+                      <input type="radio" name="settings-language" value="hi" id="settings-language-hi" />
+                      <span data-i18n="settings.language.hindi">Hindi</span>
+                    </label>
+                    <label class="language-option">
+                      <input type="radio" name="settings-language" value="bn" id="settings-language-bn" />
+                      <span data-i18n="settings.language.bengali">Bengali</span>
+                    </label>
+                  </div>
+                  <p class="settings-control-status" data-i18n="settings.language.helper">Only static app text is translated. Names, task content, chat messages, file names, and links stay unchanged.</p>
                 </div>
               </div>
             </article>
@@ -563,28 +595,28 @@
               <span class="settings-category-icon settings-icon-profile" aria-hidden="true"></span>
               <div class="settings-category-main">
                 <button class="settings-category-heading" type="button" aria-expanded="false">
-                  <h4>Profile</h4>
-                  <p>Name, email, profile photo</p>
+                  <h4 data-i18n="settings.profile.title">Profile</h4>
+                  <p data-i18n="settings.profile.subtitle">Name, email, profile photo</p>
                 </button>
                 <form id="settings-profile-form" class="settings-category-details settings-form-grid">
                   <div class="settings-profile-photo-row">
                     <div class="settings-profile-preview" id="settings-profile-preview">U</div>
                     <div class="form-group">
-                      <label for="settings-profile-photo">Profile photo</label>
+                      <label for="settings-profile-photo" data-i18n="settings.profilePhoto">Profile photo</label>
                       <input type="file" id="settings-profile-photo" accept="image/*" />
                     </div>
                   </div>
                   <div class="settings-form-columns">
                     <div class="form-group">
-                      <label for="settings-first-name">First name</label>
-                      <input type="text" id="settings-first-name" placeholder="First name" />
+                      <label for="settings-first-name" data-i18n="settings.firstName">First name</label>
+                      <input type="text" id="settings-first-name" placeholder="First name" data-i18n-placeholder="settings.firstName" />
                     </div>
                     <div class="form-group">
-                      <label for="settings-last-name">Last name</label>
-                      <input type="text" id="settings-last-name" placeholder="Last name" />
+                      <label for="settings-last-name" data-i18n="settings.lastName">Last name</label>
+                      <input type="text" id="settings-last-name" placeholder="Last name" data-i18n-placeholder="settings.lastName" />
                     </div>
                   </div>
-                  <button class="primary-btn settings-inline-action" type="submit">Save Profile</button>
+                  <button class="primary-btn settings-inline-action" type="submit" data-i18n="actions.saveProfile">Save Profile</button>
                 </form>
               </div>
             </article>
@@ -593,25 +625,25 @@
               <span class="settings-category-icon settings-icon-account" aria-hidden="true"></span>
               <div class="settings-category-main">
                 <button class="settings-category-heading" type="button" aria-expanded="false">
-                  <h4>Account</h4>
-                  <p>Security, account info</p>
+                  <h4 data-i18n="settings.account.title">Account</h4>
+                  <p data-i18n="settings.account.subtitle">Security, account info</p>
                 </button>
                 <div class="settings-category-details settings-form-grid">
                   <div class="settings-form-columns">
                     <div class="form-group">
-                      <label for="settings-account-email">Account email</label>
+                      <label for="settings-account-email" data-i18n="settings.accountEmail">Account email</label>
                       <input type="email" id="settings-account-email" placeholder="you@example.com" />
                     </div>
                     <div class="form-group">
-                      <label for="settings-account-role">Role</label>
+                      <label for="settings-account-role" data-i18n="settings.role">Role</label>
                       <input type="text" id="settings-account-role" readonly />
                     </div>
                   </div>
                   <label class="settings-toggle">
                     <input type="checkbox" id="settings-login-alerts-toggle" />
-                    <span>Show account security alerts</span>
+                    <span data-i18n="settings.securityAlerts">Show account security alerts</span>
                   </label>
-                  <button class="primary-btn settings-inline-action" type="button" id="settings-save-account-btn">Save Account Info</button>
+                  <button class="primary-btn settings-inline-action" type="button" id="settings-save-account-btn" data-i18n="actions.saveAccount">Save Account Info</button>
                 </div>
               </div>
             </article>
@@ -620,20 +652,20 @@
               <span class="settings-category-icon settings-icon-privacy" aria-hidden="true"></span>
               <div class="settings-category-main">
                 <button class="settings-category-heading" type="button" aria-expanded="false">
-                  <h4>Privacy</h4>
-                  <p>Access, permissions, data control</p>
+                  <h4 data-i18n="settings.privacy.title">Privacy</h4>
+                  <p data-i18n="settings.privacy.subtitle">Access, permissions, data control</p>
                 </button>
                 <div class="settings-category-details">
                   <label class="settings-toggle">
                     <input type="checkbox" id="settings-local-data-toggle" checked />
-                    <span>Keep workspace data on this device</span>
+                    <span data-i18n="settings.keepLocalData">Keep workspace data on this device</span>
                   </label>
                   <label class="settings-toggle">
                     <input type="checkbox" id="settings-presence-toggle" checked />
-                    <span>Show online status to team members</span>
+                    <span data-i18n="settings.showPresence">Show online status to team members</span>
                   </label>
                   <div class="settings-actions-row">
-                    <button class="danger-btn" id="reset-app-data-btn">Reset App Data</button>
+                    <button class="danger-btn" id="reset-app-data-btn" data-i18n="actions.resetData">Reset App Data</button>
                   </div>
                 </div>
               </div>
@@ -643,21 +675,21 @@
               <span class="settings-category-icon settings-icon-chats" aria-hidden="true"></span>
               <div class="settings-category-main">
                 <button class="settings-category-heading" type="button" aria-expanded="false">
-                  <h4>Chats</h4>
-                  <p>Chat preferences, message settings</p>
+                  <h4 data-i18n="settings.chats.title">Chats</h4>
+                  <p data-i18n="settings.chats.subtitle">Chat preferences, message settings</p>
                 </button>
                 <div class="settings-category-details">
                   <label class="settings-toggle">
                     <input type="checkbox" id="settings-chat-timestamps-toggle" checked />
-                    <span>Show message timestamps</span>
+                    <span data-i18n="settings.showTimestamps">Show message timestamps</span>
                   </label>
                   <label class="settings-toggle">
                     <input type="checkbox" id="settings-chat-typing-toggle" checked />
-                    <span>Show typing indicators</span>
+                    <span data-i18n="settings.showTyping">Show typing indicators</span>
                   </label>
                   <label class="settings-toggle">
                     <input type="checkbox" id="settings-chat-previews-toggle" checked />
-                    <span>Show attachment previews</span>
+                    <span data-i18n="settings.showPreviews">Show attachment previews</span>
                   </label>
                 </div>
               </div>
@@ -667,17 +699,17 @@
               <span class="settings-category-icon settings-icon-video" aria-hidden="true"></span>
               <div class="settings-category-main">
                 <button class="settings-category-heading" type="button" aria-expanded="false">
-                  <h4>Video & Voice</h4>
-                  <p>Camera, microphone, speakers</p>
+                  <h4 data-i18n="settings.video.title">Video & Voice</h4>
+                  <p data-i18n="settings.video.subtitle">Camera, microphone, speakers</p>
                 </button>
                 <div class="settings-category-details">
                   <label class="settings-toggle">
                     <input type="checkbox" id="settings-camera-toggle" checked />
-                    <span>Enable camera before meetings</span>
+                    <span data-i18n="settings.enableCamera">Enable camera before meetings</span>
                   </label>
                   <label class="settings-toggle">
                     <input type="checkbox" id="settings-microphone-toggle" checked />
-                    <span>Enable microphone before meetings</span>
+                    <span data-i18n="settings.enableMicrophone">Enable microphone before meetings</span>
                   </label>
                 </div>
               </div>
@@ -687,23 +719,23 @@
               <span class="settings-category-icon settings-icon-notifications" aria-hidden="true"></span>
               <div class="settings-category-main">
                 <button class="settings-category-heading" type="button" aria-expanded="false">
-                  <h4>Notifications</h4>
-                  <p>Messages, groups, alerts</p>
+                  <h4 data-i18n="settings.notifications.title">Notifications</h4>
+                  <p data-i18n="settings.notifications.subtitle">Messages, groups, alerts</p>
                 </button>
                 <div class="settings-category-details">
-                  <p id="notification-permission-status" class="settings-control-status">Permission status: Not checked</p>
+                  <p id="notification-permission-status" class="settings-control-status" data-i18n="settings.permissionNotChecked">Permission status: Not checked</p>
                   <div class="settings-actions-row">
-                    <button class="primary-btn" id="enable-browser-notifications-btn">Enable Browser Notifications</button>
-                    <button class="secondary-btn" id="disable-browser-notifications-btn">Disable Browser Notifications</button>
-                    <button class="secondary-btn" id="clear-notifications-btn">Clear Notifications</button>
+                    <button class="primary-btn" id="enable-browser-notifications-btn" data-i18n="actions.enableBrowserNotifications">Enable Browser Notifications</button>
+                    <button class="secondary-btn" id="disable-browser-notifications-btn" data-i18n="actions.disableBrowserNotifications">Disable Browser Notifications</button>
+                    <button class="secondary-btn" id="clear-notifications-btn" data-i18n="actions.clearNotifications">Clear Notifications</button>
                   </div>
                   <label class="settings-toggle">
                     <input type="checkbox" id="in-app-toast-toggle" />
-                    <span>Show in-app popup alerts</span>
+                    <span data-i18n="settings.showPopupAlerts">Show in-app popup alerts</span>
                   </label>
                   <label class="settings-toggle">
                     <input type="checkbox" id="notification-sound-toggle" />
-                    <span>Play notification sound</span>
+                    <span data-i18n="settings.playSound">Play notification sound</span>
                   </label>
                 </div>
               </div>
@@ -713,13 +745,13 @@
               <span class="settings-category-icon settings-icon-help" aria-hidden="true"></span>
               <div class="settings-category-main">
                 <button class="settings-category-heading" type="button" aria-expanded="false">
-                  <h4>Help & Feedback</h4>
-                  <p>Support, feedback, help center</p>
+                  <h4 data-i18n="settings.help.title">Help & Feedback</h4>
+                  <p data-i18n="settings.help.subtitle">Support, feedback, help center</p>
                 </button>
                 <div class="settings-category-details">
                   <div class="settings-actions-row">
-                    <button class="secondary-btn" type="button">Contact Support</button>
-                    <button class="secondary-btn" type="button">Send Feedback</button>
+                    <button class="secondary-btn" type="button" data-i18n="actions.contactSupport">Contact Support</button>
+                    <button class="secondary-btn" type="button" data-i18n="actions.sendFeedback">Send Feedback</button>
                   </div>
                 </div>
               </div>
@@ -729,11 +761,11 @@
               <span class="settings-category-icon settings-icon-logout" aria-hidden="true"></span>
               <div class="settings-category-main">
                 <div class="settings-category-heading">
-                  <h4>Logout</h4>
-                  <p>Sign out of this workspace</p>
+                  <h4 data-i18n="settings.logout.title">Logout</h4>
+                  <p data-i18n="settings.logout.subtitle">Sign out of this workspace</p>
                 </div>
               </div>
-              <button id="logout-btn" class="danger-btn settings-category-action">Logout</button>
+              <button id="logout-btn" class="danger-btn settings-category-action" data-i18n="actions.logout">Logout</button>
             </article>
           </div>
         </div>
@@ -744,63 +776,63 @@
   <div id="task-modal-overlay" class="task-modal-overlay hidden">
     <div class="task-modal">
       <div class="task-modal-header">
-        <h3>Create New Task</h3>
+        <h3 data-i18n="task.createTitle">Create New Task</h3>
         <button id="close-task-modal-btn" class="close-modal-btn">&times;</button>
       </div>
 
       <form id="task-form" class="task-form">
         <div class="form-group">
-          <label for="task-title">Task Title</label>
-          <input type="text" id="task-title" placeholder="Enter task title" />
+          <label for="task-title" data-i18n="task.title">Task Title</label>
+          <input type="text" id="task-title" placeholder="Enter task title" data-i18n-placeholder="task.titlePlaceholder" />
         </div>
 
         <div class="form-group">
-          <label for="task-description">Description</label>
-          <textarea id="task-description" placeholder="Enter task description" rows="4"></textarea>
+          <label for="task-description" data-i18n="task.description">Description</label>
+          <textarea id="task-description" placeholder="Enter task description" data-i18n-placeholder="task.descriptionPlaceholder" rows="4"></textarea>
         </div>
 
         <div class="form-row">
           <div class="form-group">
-            <label for="task-severity">Severity</label>
+            <label for="task-severity" data-i18n="task.severity">Severity</label>
             <select id="task-severity">
-              <option value="">Select severity</option>
-              <option value="High">High</option>
-              <option value="Medium">Medium</option>
-              <option value="Low">Low</option>
+              <option value="" data-i18n="task.selectSeverity">Select severity</option>
+              <option value="High" data-i18n="common.high">High</option>
+              <option value="Medium" data-i18n="common.medium">Medium</option>
+              <option value="Low" data-i18n="common.low">Low</option>
             </select>
           </div>
 
           <div class="form-group">
-            <label for="task-status">Status</label>
+            <label for="task-status" data-i18n="task.status">Status</label>
             <select id="task-status">
-              <option value="">Select status</option>
-              <option value="Pending">Pending</option>
-              <option value="In Progress">In Progress</option>
-              <option value="Completed">Completed</option>
+              <option value="" data-i18n="task.selectStatus">Select status</option>
+              <option value="Pending" data-i18n="common.pending">Pending</option>
+              <option value="In Progress" data-i18n="common.inProgress">In Progress</option>
+              <option value="Completed" data-i18n="common.completed">Completed</option>
             </select>
           </div>
         </div>
 
         <div class="form-row">
           <div class="form-group">
-            <label for="task-deadline">Deadline</label>
+            <label for="task-deadline" data-i18n="task.deadline">Deadline</label>
             <input type="date" id="task-deadline" />
           </div>
 
           <div class="form-group">
-            <label for="task-assigned-to">Assigned To</label>
+            <label for="task-assigned-to" data-i18n="task.assignedTo">Assigned To</label>
             <select id="task-assigned-to" multiple size="4">
               <option value="Rahul">Rahul</option>
               <option value="Sneha">Sneha</option>
               <option value="Amit">Amit</option>
               <option value="Priya">Priya</option>
             </select>
-            <p id="task-assignment-help" class="field-help">Admins can assign one or more members.</p>
+            <p id="task-assignment-help" class="field-help" data-i18n="task.assignmentHelp">Admins can assign one or more members.</p>
           </div>
         </div>
 
         <div class="form-group">
-          <label>Tags</label>
+          <label data-i18n="task.tags">Tags</label>
           <div class="tag-checkbox-group">
             <label class="tag-checkbox">
               <input type="checkbox" name="task-tags" value="Frontend" />
@@ -818,20 +850,21 @@
         </div>
 
         <div class="form-group">
-          <label for="task-attachments">Attachments</label>
+          <label for="task-attachments" data-i18n="task.attachments">Attachments</label>
           <input type="file" id="task-attachments" multiple />
-          <small class="form-help">Optional. Attach up to 3 small reference files, 750 KB each.</small>
+          <small class="form-help" data-i18n="task.attachmentsHelp">Optional. Attach up to 3 small reference files, 750 KB each.</small>
         </div>
 
-        <button type="submit" class="primary-btn">Save Task</button>
+        <button type="submit" class="primary-btn" data-i18n="actions.saveTask">Save Task</button>
       </form>
     </div>
   </div>
 
   <div id="toast-container" class="toast-container"></div>
-  <script src="team-groups.js?v=team-groups-20260422"></script>
-  <script src="script.js?v=team-groups-20260422"></script>
-  <script src="group-chat.js?v=team-groups-20260422"></script>
-  <script src="calendar.js"></script>
+  <script src="translations.js?v=settings-language-20260424"></script>
+  <script src="team-groups.js?v=settings-language-20260424"></script>
+  <script src="script.js?v=settings-language-20260424"></script>
+  <script src="group-chat.js?v=settings-language-20260424"></script>
+  <script src="calendar.js?v=settings-language-20260424"></script>
 </body>
 </html>

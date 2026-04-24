@@ -177,12 +177,16 @@ function escapeTeamHTML(value) {
     .replace(/'/g, "&#39;");
 }
 
+function teamT(key, params = {}) {
+  return window.AppI18n?.t?.(key, params) || key;
+}
+
 function renderGroupMemberOptions() {
   if (!groupMemberOptions) return;
 
   const members = getTeamMembers();
   if (!members.length) {
-    groupMemberOptions.innerHTML = `<p class="groups-empty-text">Add team members before creating a group.</p>`;
+    groupMemberOptions.innerHTML = `<p class="groups-empty-text">${escapeTeamHTML(teamT("groups.addMembersFirst"))}</p>`;
     return;
   }
 
@@ -230,8 +234,8 @@ function renderGroupManagement() {
   if (!groups.length) {
     groupsList.innerHTML = `
       <div class="groups-empty-state">
-        <h4>No groups yet</h4>
-        <p>Create a group to start a dedicated team channel.</p>
+        <h4>${escapeTeamHTML(teamT("groups.noGroupsTitle"))}</h4>
+        <p>${escapeTeamHTML(teamT("groups.noGroupsBody"))}</p>
       </div>
     `;
     return;
@@ -244,10 +248,10 @@ function renderGroupManagement() {
       <article class="group-channel-card ${isActive ? "active-group-channel" : ""}" data-group-id="${escapeTeamHTML(group.id)}">
         <div>
           <h4>${escapeTeamHTML(group.name)}</h4>
-          <p>${memberNames.length ? escapeTeamHTML(memberNames.join(", ")) : "No members selected"}</p>
+          <p>${memberNames.length ? escapeTeamHTML(memberNames.join(", ")) : escapeTeamHTML(teamT("groups.noMembersSelected"))}</p>
         </div>
         <button type="button" class="secondary-btn group-open-btn" data-group-id="${escapeTeamHTML(group.id)}">
-          ${isActive ? "Active" : "Open Chat"}
+          ${escapeTeamHTML(teamT(isActive ? "groups.active" : "groups.openChat"))}
         </button>
       </article>
     `;
@@ -266,7 +270,7 @@ if (groupCreateForm) {
 
     const name = groupNameInput?.value.trim();
     if (!name) {
-      alert("Please enter a group name.");
+      alert(teamT("groups.enterName"));
       groupNameInput?.focus();
       return;
     }
@@ -276,7 +280,7 @@ if (groupCreateForm) {
       .filter(Boolean);
 
     if (!members.length) {
-      alert("Please select at least one member.");
+      alert(teamT("groups.selectMember"));
       return;
     }
 
@@ -310,4 +314,5 @@ if (groupsList) {
 }
 
 window.renderGroupManagement = renderGroupManagement;
+window.renderTeamGroupsUI = renderGroupManagement;
 renderGroupManagement();
