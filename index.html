@@ -15,7 +15,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=search-kpi-layer-20260422" />
+  <link rel="stylesheet" href="style.css?v=settings-panel-20260424" />
 </head>
 <body>
   <!-- Login Screen -->
@@ -123,7 +123,6 @@
             <span id="sidebar-presence-status" class="presence-badge presence-offline">Offline</span>
           </div>
         </div>
-        <button id="logout-btn" class="logout-btn">Logout</button>
       </div>
     </aside>
 
@@ -537,47 +536,126 @@
             <h3>Settings</h3>
           </div>
 
-          <div class="settings-grid">
-            <div class="settings-card">
-              <h4>Notifications</h4>
-              <p id="notification-permission-status">Permission status: Not checked</p>
-
-              <div class="settings-actions-row">
-                <button class="primary-btn" id="enable-browser-notifications-btn">Enable Browser Notifications</button>
-                <button class="secondary-btn" id="disable-browser-notifications-btn">Disable Browser Notifications</button>
+          <div class="settings-category-list">
+            <article class="settings-category-card">
+              <span class="settings-category-icon settings-icon-general" aria-hidden="true"></span>
+              <div class="settings-category-main">
+                <div class="settings-category-heading">
+                  <h4>General</h4>
+                  <p>App startup, theme, storage preferences</p>
+                </div>
+                <div class="settings-category-controls">
+                  <label class="settings-toggle theme-toggle-row">
+                    <input type="checkbox" id="theme-toggle" />
+                    <span>Dark mode</span>
+                  </label>
+                  <p id="theme-status-text" class="settings-control-status">Theme: Light</p>
+                  <label class="settings-toggle">
+                    <input type="checkbox" id="remember-data-toggle" checked disabled />
+                    <span>Remember app data on this device</span>
+                  </label>
+                  <p id="storage-status-text" class="settings-control-status">Local storage status: Active</p>
+                </div>
               </div>
+            </article>
 
-              <label class="settings-toggle">
-                <input type="checkbox" id="in-app-toast-toggle" />
-                <span>Show in-app popup alerts</span>
-              </label>
-
-              <label class="settings-toggle">
-                <input type="checkbox" id="notification-sound-toggle" />
-                <span>Play notification sound</span>
-              </label>
-            </div>
-
-            <div class="settings-card">
-              <h4>Storage & App Preferences</h4>
-              <p id="storage-status-text">Local storage status: Active</p>
-
-              <label class="settings-toggle theme-toggle-row">
-                <input type="checkbox" id="theme-toggle" />
-                <span>Dark mode</span>
-              </label>
-              <p id="theme-status-text">Theme: Light</p>
-
-              <label class="settings-toggle">
-                <input type="checkbox" id="remember-data-toggle" checked disabled />
-                <span>Remember app data on this device</span>
-              </label>
-
-              <div class="settings-actions-row">
-                <button class="secondary-btn" id="clear-notifications-btn">Clear Notifications</button>
-                <button class="danger-btn" id="reset-app-data-btn">Reset App Data</button>
+            <article class="settings-category-card">
+              <span class="settings-category-icon settings-icon-profile" aria-hidden="true"></span>
+              <div class="settings-category-main">
+                <div class="settings-category-heading">
+                  <h4>Profile</h4>
+                  <p>Name, email, profile photo</p>
+                </div>
               </div>
-            </div>
+            </article>
+
+            <article class="settings-category-card">
+              <span class="settings-category-icon settings-icon-account" aria-hidden="true"></span>
+              <div class="settings-category-main">
+                <div class="settings-category-heading">
+                  <h4>Account</h4>
+                  <p>Security, account info</p>
+                </div>
+              </div>
+            </article>
+
+            <article class="settings-category-card">
+              <span class="settings-category-icon settings-icon-privacy" aria-hidden="true"></span>
+              <div class="settings-category-main">
+                <div class="settings-category-heading">
+                  <h4>Privacy</h4>
+                  <p>Access, permissions, data control</p>
+                </div>
+                <div class="settings-actions-row">
+                  <button class="danger-btn" id="reset-app-data-btn">Reset App Data</button>
+                </div>
+              </div>
+            </article>
+
+            <article class="settings-category-card">
+              <span class="settings-category-icon settings-icon-chats" aria-hidden="true"></span>
+              <div class="settings-category-main">
+                <div class="settings-category-heading">
+                  <h4>Chats</h4>
+                  <p>Chat preferences, message settings</p>
+                </div>
+              </div>
+            </article>
+
+            <article class="settings-category-card">
+              <span class="settings-category-icon settings-icon-video" aria-hidden="true"></span>
+              <div class="settings-category-main">
+                <div class="settings-category-heading">
+                  <h4>Video & Voice</h4>
+                  <p>Camera, microphone, speakers</p>
+                </div>
+              </div>
+            </article>
+
+            <article class="settings-category-card">
+              <span class="settings-category-icon settings-icon-notifications" aria-hidden="true"></span>
+              <div class="settings-category-main">
+                <div class="settings-category-heading">
+                  <h4>Notifications</h4>
+                  <p>Messages, groups, alerts</p>
+                </div>
+                <p id="notification-permission-status" class="settings-control-status">Permission status: Not checked</p>
+                <div class="settings-actions-row">
+                  <button class="primary-btn" id="enable-browser-notifications-btn">Enable Browser Notifications</button>
+                  <button class="secondary-btn" id="disable-browser-notifications-btn">Disable Browser Notifications</button>
+                  <button class="secondary-btn" id="clear-notifications-btn">Clear Notifications</button>
+                </div>
+                <label class="settings-toggle">
+                  <input type="checkbox" id="in-app-toast-toggle" />
+                  <span>Show in-app popup alerts</span>
+                </label>
+                <label class="settings-toggle">
+                  <input type="checkbox" id="notification-sound-toggle" />
+                  <span>Play notification sound</span>
+                </label>
+              </div>
+            </article>
+
+            <article class="settings-category-card">
+              <span class="settings-category-icon settings-icon-help" aria-hidden="true"></span>
+              <div class="settings-category-main">
+                <div class="settings-category-heading">
+                  <h4>Help & Feedback</h4>
+                  <p>Support, feedback, help center</p>
+                </div>
+              </div>
+            </article>
+
+            <article class="settings-category-card settings-category-logout">
+              <span class="settings-category-icon settings-icon-logout" aria-hidden="true"></span>
+              <div class="settings-category-main">
+                <div class="settings-category-heading">
+                  <h4>Logout</h4>
+                  <p>Sign out of this workspace</p>
+                </div>
+              </div>
+              <button id="logout-btn" class="danger-btn settings-category-action">Logout</button>
+            </article>
           </div>
         </div>
       </section>
