@@ -1,5 +1,6 @@
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyvsOgYah2WrM4_r_yGMlZrRgg-HAs0A9_ZGt9n5yjfyxS8yhpC4eAlEDWAElJBzFKDsQ/exec";
 const APP_STORAGE_VERSION = "team-task-manager-dashboard-2026-04-19";
+const SETTINGS_PREFERENCES_KEY = "ttm_settings_preferences";
 const MAX_ATTACHMENT_SIZE = 750 * 1024;
 const MAX_VOICE_SIZE = 1200 * 1024;
 
@@ -109,6 +110,23 @@ const themeToggle = document.getElementById("theme-toggle");
 const themeStatusText = document.getElementById("theme-status-text");
 const clearNotificationsBtn = document.getElementById("clear-notifications-btn");
 const resetAppDataBtn = document.getElementById("reset-app-data-btn");
+const settingsCategoryCards = document.querySelectorAll(".settings-category-card[data-settings-pane]");
+const settingsProfileForm = document.getElementById("settings-profile-form");
+const settingsFirstNameInput = document.getElementById("settings-first-name");
+const settingsLastNameInput = document.getElementById("settings-last-name");
+const settingsProfilePhotoInput = document.getElementById("settings-profile-photo");
+const settingsProfilePreview = document.getElementById("settings-profile-preview");
+const settingsAccountEmailInput = document.getElementById("settings-account-email");
+const settingsAccountRoleInput = document.getElementById("settings-account-role");
+const settingsSaveAccountBtn = document.getElementById("settings-save-account-btn");
+const settingsLoginAlertsToggle = document.getElementById("settings-login-alerts-toggle");
+const settingsLocalDataToggle = document.getElementById("settings-local-data-toggle");
+const settingsPresenceToggle = document.getElementById("settings-presence-toggle");
+const settingsChatTimestampsToggle = document.getElementById("settings-chat-timestamps-toggle");
+const settingsChatTypingToggle = document.getElementById("settings-chat-typing-toggle");
+const settingsChatPreviewsToggle = document.getElementById("settings-chat-previews-toggle");
+const settingsCameraToggle = document.getElementById("settings-camera-toggle");
+const settingsMicrophoneToggle = document.getElementById("settings-microphone-toggle");
 const teamMembersList = document.getElementById("team-members-list");
 const teamMemberForm = document.getElementById("team-member-form");
 const teamMemberNameInput = document.getElementById("team-member-name");
@@ -137,6 +155,7 @@ const defaultGroupMembers = [
 ];
 
 let groupMembers = getTeamMembersForApp();
+let pendingProfilePhotoData = "";
 
 const PRESENCE_STORAGE_KEY = "ttm_user_presence";
 const PRESENCE_ONLINE_WINDOW_MS = 120000;
@@ -284,12 +303,23 @@ function updateUserUI(user) {
   if (sidebarUserName) sidebarUserName.textContent = userName;
   if (sidebarUserRole) sidebarUserRole.textContent = userRole;
   if (topbarUserName) topbarUserName.textContent = userName;
-  if (userAvatar) userAvatar.textContent = firstLetter;
+  if (userAvatar) {
+    if (user?.profilePhoto) {
+      userAvatar.textContent = "";
+      userAvatar.style.backgroundImage = `url("${user.profilePhoto}")`;
+      userAvatar.style.backgroundSize = "cover";
+      userAvatar.style.backgroundPosition = "center";
+    } else {
+      userAvatar.textContent = firstLetter;
+      userAvatar.style.backgroundImage = "";
+    }
+  }
 
   document.querySelectorAll(".current-user-chat-name").forEach((element) => {
     element.textContent = `${userName}:`;
   });
 
+  populateSettingsUserFields(user);
   applyRoleBasedUI();
   updateCurrentUserPresence();
   renderPresenceUI();
@@ -325,6 +355,76 @@ function applyTheme(theme) {
   if (themeStatusText) {
     themeStatusText.textContent = `Theme: ${normalizedTheme === "dark" ? "Dark" : "Light"}`;
   }
+}
+
+function getSettingsPreferences() {
+  const defaults = {
+    loginAlerts: true,
+    localData: true,
+    presence: true,
+    chatTimestamps: true,
+    chatTyping: true,
+    chatPreviews: true,
+    camera: true,
+    microphone: true
+  };
+
+  try {
+    const saved = JSON.parse(localStorage.getItem(SETTINGS_PREFERENCES_KEY) || "{}");
+    return { ...defaults, ...saved };
+  } catch {
+    return defaults;
+  }
+}
+
+function saveSettingsPreferences(preferences) {
+  localStorage.setItem(SETTINGS_PREFERENCES_KEY, JSON.stringify({
+    ...getSettingsPreferences(),
+    ...preferences
+  }));
+}
+
+function splitUserName(name) {
+  const parts = String(name || "").trim().split(/\s+/).filter(Boolean);
+  return {
+    firstName: parts[0] || "",
+    lastName: parts.slice(1).join(" ")
+  };
+}
+
+function setSettingsProfilePreview(user) {
+  if (!settingsProfilePreview) return;
+
+  const userName = user?.name || "User";
+  const photo = pendingProfilePhotoData || user?.profilePhoto;
+  if (photo) {
+    settingsProfilePreview.textContent = "";
+    settingsProfilePreview.style.backgroundImage = `url("${photo}")`;
+  } else {
+    settingsProfilePreview.textContent = userName.charAt(0).toUpperCase() || "U";
+    settingsProfilePreview.style.backgroundImage = "";
+  }
+}
+
+function populateSettingsUserFields(user = getUserFromLocalStorage()) {
+  const currentUser = user || {};
+  const nameParts = splitUserName(currentUser.name);
+  const preferences = getSettingsPreferences();
+
+  if (settingsFirstNameInput) settingsFirstNameInput.value = currentUser.firstName || nameParts.firstName;
+  if (settingsLastNameInput) settingsLastNameInput.value = currentUser.lastName || nameParts.lastName;
+  if (settingsAccountEmailInput) settingsAccountEmailInput.value = currentUser.email || "";
+  if (settingsAccountRoleInput) settingsAccountRoleInput.value = normalizeUserRole(currentUser.role);
+  if (settingsLoginAlertsToggle) settingsLoginAlertsToggle.checked = preferences.loginAlerts;
+  if (settingsLocalDataToggle) settingsLocalDataToggle.checked = preferences.localData;
+  if (settingsPresenceToggle) settingsPresenceToggle.checked = preferences.presence;
+  if (settingsChatTimestampsToggle) settingsChatTimestampsToggle.checked = preferences.chatTimestamps;
+  if (settingsChatTypingToggle) settingsChatTypingToggle.checked = preferences.chatTyping;
+  if (settingsChatPreviewsToggle) settingsChatPreviewsToggle.checked = preferences.chatPreviews;
+  if (settingsCameraToggle) settingsCameraToggle.checked = preferences.camera;
+  if (settingsMicrophoneToggle) settingsMicrophoneToggle.checked = preferences.microphone;
+
+  setSettingsProfilePreview(currentUser);
 }
 
 function playNotificationSound() {
@@ -2920,6 +3020,111 @@ if (logoutBtn) {
     showLoginScreen();
   });
 }
+
+settingsCategoryCards.forEach((card) => {
+  const trigger = card.querySelector(".settings-category-heading");
+  if (!trigger) return;
+
+  trigger.addEventListener("click", () => {
+    const isOpen = card.classList.toggle("is-open");
+    trigger.setAttribute("aria-expanded", isOpen ? "true" : "false");
+  });
+});
+
+if (settingsProfilePhotoInput) {
+  settingsProfilePhotoInput.addEventListener("change", () => {
+    const file = settingsProfilePhotoInput.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      alert("Please choose an image file.");
+      settingsProfilePhotoInput.value = "";
+      return;
+    }
+
+    if (file.size > 750 * 1024) {
+      alert("Please choose an image smaller than 750 KB.");
+      settingsProfilePhotoInput.value = "";
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      pendingProfilePhotoData = String(reader.result || "");
+      setSettingsProfilePreview({
+        ...getUserFromLocalStorage(),
+        profilePhoto: pendingProfilePhotoData
+      });
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+if (settingsProfileForm) {
+  settingsProfileForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const user = getUserFromLocalStorage();
+    if (!user) return;
+
+    const firstName = settingsFirstNameInput?.value.trim() || "";
+    const lastName = settingsLastNameInput?.value.trim() || "";
+    const name = [firstName, lastName].filter(Boolean).join(" ") || user.name || "User";
+    const updatedUser = {
+      ...user,
+      firstName,
+      lastName,
+      name,
+      profilePhoto: pendingProfilePhotoData || user.profilePhoto || ""
+    };
+
+    pendingProfilePhotoData = "";
+    saveUserToLocalStorage(updatedUser);
+    updateUserUI(updatedUser);
+    refreshTeamDirectoryUI();
+    showToast("Profile updated", "Your profile changes were saved.");
+  });
+}
+
+if (settingsSaveAccountBtn) {
+  settingsSaveAccountBtn.addEventListener("click", () => {
+    const user = getUserFromLocalStorage();
+    if (!user) return;
+
+    const email = settingsAccountEmailInput?.value.trim() || "";
+    if (!email) {
+      alert("Please enter an account email.");
+      settingsAccountEmailInput?.focus();
+      return;
+    }
+
+    const updatedUser = {
+      ...user,
+      email,
+      role: settingsAccountRoleInput?.value || user.role
+    };
+
+    saveUserToLocalStorage(updatedUser);
+    updateUserUI(updatedUser);
+    refreshTeamDirectoryUI();
+    showToast("Account updated", "Your account information was saved.");
+  });
+}
+
+[
+  [settingsLoginAlertsToggle, "loginAlerts"],
+  [settingsLocalDataToggle, "localData"],
+  [settingsPresenceToggle, "presence"],
+  [settingsChatTimestampsToggle, "chatTimestamps"],
+  [settingsChatTypingToggle, "chatTyping"],
+  [settingsChatPreviewsToggle, "chatPreviews"],
+  [settingsCameraToggle, "camera"],
+  [settingsMicrophoneToggle, "microphone"]
+].forEach(([toggle, key]) => {
+  if (!toggle) return;
+  toggle.addEventListener("change", () => {
+    saveSettingsPreferences({ [key]: toggle.checked });
+  });
+});
 
 if (sendMessageBtn) {
   sendMessageBtn.addEventListener("click", sendMessage);

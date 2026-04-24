@@ -15,7 +15,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=settings-panel-20260424" />
+  <link rel="stylesheet" href="style.css?v=settings-panes-20260424" />
 </head>
 <body>
   <!-- Login Screen -->
@@ -537,14 +537,14 @@
           </div>
 
           <div class="settings-category-list">
-            <article class="settings-category-card">
+            <article class="settings-category-card" data-settings-pane="general">
               <span class="settings-category-icon settings-icon-general" aria-hidden="true"></span>
               <div class="settings-category-main">
-                <div class="settings-category-heading">
+                <button class="settings-category-heading" type="button" aria-expanded="false">
                   <h4>General</h4>
                   <p>App startup, theme, storage preferences</p>
-                </div>
-                <div class="settings-category-controls">
+                </button>
+                <div class="settings-category-controls settings-category-details">
                   <label class="settings-toggle theme-toggle-row">
                     <input type="checkbox" id="theme-toggle" />
                     <span>Dark mode</span>
@@ -559,89 +559,168 @@
               </div>
             </article>
 
-            <article class="settings-category-card">
+            <article class="settings-category-card" data-settings-pane="profile">
               <span class="settings-category-icon settings-icon-profile" aria-hidden="true"></span>
               <div class="settings-category-main">
-                <div class="settings-category-heading">
+                <button class="settings-category-heading" type="button" aria-expanded="false">
                   <h4>Profile</h4>
                   <p>Name, email, profile photo</p>
-                </div>
+                </button>
+                <form id="settings-profile-form" class="settings-category-details settings-form-grid">
+                  <div class="settings-profile-photo-row">
+                    <div class="settings-profile-preview" id="settings-profile-preview">U</div>
+                    <div class="form-group">
+                      <label for="settings-profile-photo">Profile photo</label>
+                      <input type="file" id="settings-profile-photo" accept="image/*" />
+                    </div>
+                  </div>
+                  <div class="settings-form-columns">
+                    <div class="form-group">
+                      <label for="settings-first-name">First name</label>
+                      <input type="text" id="settings-first-name" placeholder="First name" />
+                    </div>
+                    <div class="form-group">
+                      <label for="settings-last-name">Last name</label>
+                      <input type="text" id="settings-last-name" placeholder="Last name" />
+                    </div>
+                  </div>
+                  <button class="primary-btn settings-inline-action" type="submit">Save Profile</button>
+                </form>
               </div>
             </article>
 
-            <article class="settings-category-card">
+            <article class="settings-category-card" data-settings-pane="account">
               <span class="settings-category-icon settings-icon-account" aria-hidden="true"></span>
               <div class="settings-category-main">
-                <div class="settings-category-heading">
+                <button class="settings-category-heading" type="button" aria-expanded="false">
                   <h4>Account</h4>
                   <p>Security, account info</p>
+                </button>
+                <div class="settings-category-details settings-form-grid">
+                  <div class="settings-form-columns">
+                    <div class="form-group">
+                      <label for="settings-account-email">Account email</label>
+                      <input type="email" id="settings-account-email" placeholder="you@example.com" />
+                    </div>
+                    <div class="form-group">
+                      <label for="settings-account-role">Role</label>
+                      <input type="text" id="settings-account-role" readonly />
+                    </div>
+                  </div>
+                  <label class="settings-toggle">
+                    <input type="checkbox" id="settings-login-alerts-toggle" />
+                    <span>Show account security alerts</span>
+                  </label>
+                  <button class="primary-btn settings-inline-action" type="button" id="settings-save-account-btn">Save Account Info</button>
                 </div>
               </div>
             </article>
 
-            <article class="settings-category-card">
+            <article class="settings-category-card" data-settings-pane="privacy">
               <span class="settings-category-icon settings-icon-privacy" aria-hidden="true"></span>
               <div class="settings-category-main">
-                <div class="settings-category-heading">
+                <button class="settings-category-heading" type="button" aria-expanded="false">
                   <h4>Privacy</h4>
                   <p>Access, permissions, data control</p>
-                </div>
-                <div class="settings-actions-row">
-                  <button class="danger-btn" id="reset-app-data-btn">Reset App Data</button>
+                </button>
+                <div class="settings-category-details">
+                  <label class="settings-toggle">
+                    <input type="checkbox" id="settings-local-data-toggle" checked />
+                    <span>Keep workspace data on this device</span>
+                  </label>
+                  <label class="settings-toggle">
+                    <input type="checkbox" id="settings-presence-toggle" checked />
+                    <span>Show online status to team members</span>
+                  </label>
+                  <div class="settings-actions-row">
+                    <button class="danger-btn" id="reset-app-data-btn">Reset App Data</button>
+                  </div>
                 </div>
               </div>
             </article>
 
-            <article class="settings-category-card">
+            <article class="settings-category-card" data-settings-pane="chats">
               <span class="settings-category-icon settings-icon-chats" aria-hidden="true"></span>
               <div class="settings-category-main">
-                <div class="settings-category-heading">
+                <button class="settings-category-heading" type="button" aria-expanded="false">
                   <h4>Chats</h4>
                   <p>Chat preferences, message settings</p>
+                </button>
+                <div class="settings-category-details">
+                  <label class="settings-toggle">
+                    <input type="checkbox" id="settings-chat-timestamps-toggle" checked />
+                    <span>Show message timestamps</span>
+                  </label>
+                  <label class="settings-toggle">
+                    <input type="checkbox" id="settings-chat-typing-toggle" checked />
+                    <span>Show typing indicators</span>
+                  </label>
+                  <label class="settings-toggle">
+                    <input type="checkbox" id="settings-chat-previews-toggle" checked />
+                    <span>Show attachment previews</span>
+                  </label>
                 </div>
               </div>
             </article>
 
-            <article class="settings-category-card">
+            <article class="settings-category-card" data-settings-pane="video">
               <span class="settings-category-icon settings-icon-video" aria-hidden="true"></span>
               <div class="settings-category-main">
-                <div class="settings-category-heading">
+                <button class="settings-category-heading" type="button" aria-expanded="false">
                   <h4>Video & Voice</h4>
                   <p>Camera, microphone, speakers</p>
+                </button>
+                <div class="settings-category-details">
+                  <label class="settings-toggle">
+                    <input type="checkbox" id="settings-camera-toggle" checked />
+                    <span>Enable camera before meetings</span>
+                  </label>
+                  <label class="settings-toggle">
+                    <input type="checkbox" id="settings-microphone-toggle" checked />
+                    <span>Enable microphone before meetings</span>
+                  </label>
                 </div>
               </div>
             </article>
 
-            <article class="settings-category-card">
+            <article class="settings-category-card" data-settings-pane="notifications">
               <span class="settings-category-icon settings-icon-notifications" aria-hidden="true"></span>
               <div class="settings-category-main">
-                <div class="settings-category-heading">
+                <button class="settings-category-heading" type="button" aria-expanded="false">
                   <h4>Notifications</h4>
                   <p>Messages, groups, alerts</p>
+                </button>
+                <div class="settings-category-details">
+                  <p id="notification-permission-status" class="settings-control-status">Permission status: Not checked</p>
+                  <div class="settings-actions-row">
+                    <button class="primary-btn" id="enable-browser-notifications-btn">Enable Browser Notifications</button>
+                    <button class="secondary-btn" id="disable-browser-notifications-btn">Disable Browser Notifications</button>
+                    <button class="secondary-btn" id="clear-notifications-btn">Clear Notifications</button>
+                  </div>
+                  <label class="settings-toggle">
+                    <input type="checkbox" id="in-app-toast-toggle" />
+                    <span>Show in-app popup alerts</span>
+                  </label>
+                  <label class="settings-toggle">
+                    <input type="checkbox" id="notification-sound-toggle" />
+                    <span>Play notification sound</span>
+                  </label>
                 </div>
-                <p id="notification-permission-status" class="settings-control-status">Permission status: Not checked</p>
-                <div class="settings-actions-row">
-                  <button class="primary-btn" id="enable-browser-notifications-btn">Enable Browser Notifications</button>
-                  <button class="secondary-btn" id="disable-browser-notifications-btn">Disable Browser Notifications</button>
-                  <button class="secondary-btn" id="clear-notifications-btn">Clear Notifications</button>
-                </div>
-                <label class="settings-toggle">
-                  <input type="checkbox" id="in-app-toast-toggle" />
-                  <span>Show in-app popup alerts</span>
-                </label>
-                <label class="settings-toggle">
-                  <input type="checkbox" id="notification-sound-toggle" />
-                  <span>Play notification sound</span>
-                </label>
               </div>
             </article>
 
-            <article class="settings-category-card">
+            <article class="settings-category-card" data-settings-pane="help">
               <span class="settings-category-icon settings-icon-help" aria-hidden="true"></span>
               <div class="settings-category-main">
-                <div class="settings-category-heading">
+                <button class="settings-category-heading" type="button" aria-expanded="false">
                   <h4>Help & Feedback</h4>
                   <p>Support, feedback, help center</p>
+                </button>
+                <div class="settings-category-details">
+                  <div class="settings-actions-row">
+                    <button class="secondary-btn" type="button">Contact Support</button>
+                    <button class="secondary-btn" type="button">Send Feedback</button>
+                  </div>
                 </div>
               </div>
             </article>

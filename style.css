@@ -2417,6 +2417,34 @@ select {
   font-size: 15px;
 }
 
+.settings-category-heading {
+  display: block;
+  width: 100%;
+  padding: 0 28px 0 0;
+  border: none;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.settings-category-heading::after {
+  content: "";
+  position: absolute;
+  top: 20px;
+  right: 18px;
+  width: 9px;
+  height: 9px;
+  border-right: 2px solid #64748b;
+  border-bottom: 2px solid #64748b;
+  transform: rotate(45deg);
+  transition: transform 0.18s ease;
+}
+
+.settings-category-card.is-open .settings-category-heading::after {
+  transform: rotate(225deg);
+}
+
 .settings-category-heading p,
 .settings-control-status {
   color: #64748b;
@@ -2432,6 +2460,58 @@ select {
   display: grid;
   gap: 8px;
   margin-top: 12px;
+}
+
+.settings-category-details {
+  display: none;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(226, 232, 240, 0.78);
+}
+
+.settings-category-card.is-open .settings-category-details {
+  display: block;
+}
+
+.settings-category-card.is-open .settings-category-controls,
+.settings-category-card.is-open .settings-form-grid {
+  display: grid;
+}
+
+.settings-form-grid {
+  gap: 12px;
+}
+
+.settings-form-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.settings-profile-photo-row {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  gap: 14px;
+  align-items: center;
+}
+
+.settings-profile-preview {
+  width: 72px;
+  height: 72px;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  color: #ffffff;
+  font-size: 22px;
+  font-weight: 800;
+  background-position: center;
+  background-size: cover;
+}
+
+.settings-inline-action {
+  width: max-content;
 }
 
 .settings-category-action {
@@ -2742,6 +2822,11 @@ select {
   .settings-category-action {
     grid-column: 2;
     justify-self: start;
+  }
+
+  .settings-form-columns,
+  .settings-profile-photo-row {
+    grid-template-columns: 1fr;
   }
 
   .toast-container {
@@ -3566,6 +3651,14 @@ html[data-theme="dark"] .settings-category-icon {
 
 html[data-theme="dark"] .settings-toggle {
   color: #f5f5f5;
+}
+
+html[data-theme="dark"] .settings-category-heading::after {
+  border-color: #a3a3a3;
+}
+
+html[data-theme="dark"] .settings-category-details {
+  border-top-color: #2a2a2a;
 }
 
 html[data-theme="dark"] .stat-card p,
