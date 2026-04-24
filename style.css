@@ -4404,3 +4404,473 @@ html[data-theme="dark"] .search-result-item span {
     right: 12px;
   }
 }
+
+/* Mobile responsiveness pass */
+.mobile-menu-btn,
+.mobile-sidebar-overlay {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  html,
+  body {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  body.mobile-nav-lock {
+    overflow: hidden;
+  }
+
+  .app-container {
+    display: block;
+    min-height: 100vh;
+  }
+
+  .mobile-menu-btn {
+    display: inline-flex;
+    width: 44px;
+    height: 44px;
+    flex: 0 0 44px;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 5px;
+    padding: 0;
+    border: 1px solid rgba(203, 213, 225, 0.72);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.78);
+    color: #1f2937;
+    cursor: pointer;
+    box-shadow: 0 10px 22px rgba(15, 23, 42, 0.08);
+  }
+
+  .mobile-menu-btn span {
+    display: block;
+    width: 18px;
+    height: 2px;
+    border-radius: 999px;
+    background: currentColor;
+  }
+
+  .mobile-sidebar-overlay {
+    position: fixed;
+    inset: 0;
+    display: block;
+    border: 0;
+    background: rgba(15, 23, 42, 0.48);
+    cursor: pointer;
+    z-index: 1090;
+  }
+
+  .sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 1100;
+    width: min(84vw, 300px) !important;
+    height: 100dvh;
+    max-height: 100dvh;
+    padding: 20px 16px;
+    overflow-y: auto;
+    transform: translateX(-105%);
+    transition: transform 0.22s ease;
+  }
+
+  .app-container.mobile-nav-open .sidebar {
+    transform: translateX(0);
+  }
+
+  .logo-section {
+    margin-bottom: 22px;
+  }
+
+  .sidebar-nav {
+    gap: 8px;
+  }
+
+  .nav-item {
+    min-height: 46px;
+    padding: 12px 14px;
+  }
+
+  .sidebar-footer {
+    margin-top: 22px;
+  }
+
+  .main-content {
+    width: 100%;
+    min-width: 0;
+    min-height: 100vh;
+    padding: 16px;
+  }
+
+  .topbar {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr);
+    gap: 12px;
+    align-items: center;
+    padding: 18px;
+    margin-bottom: 18px;
+  }
+
+  .topbar h1 {
+    font-size: 25px;
+    line-height: 1.12;
+    word-break: break-word;
+  }
+
+  .topbar-subtitle {
+    font-size: 13px;
+  }
+
+  .topbar-actions {
+    grid-column: 1 / -1;
+    display: grid;
+    width: 100%;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .search-wrap,
+  .search-box {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .topbar .search-results {
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-height: min(320px, 58vh);
+    overflow-y: auto;
+  }
+
+  .stats-grid,
+  .focus-grid,
+  .dashboard-grid,
+  .calendar-layout,
+  .task-workspace-grid,
+  .team-management-layout,
+  .groups-layout,
+  .settings-grid,
+  .performance-pie-grid,
+  .drive-file-grid,
+  .task-board,
+  .team-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .stats-grid,
+  .focus-grid {
+    gap: 14px;
+  }
+
+  .stats-grid > .stat-card.kpi-card,
+  .focus-grid > .focus-card.kpi-card {
+    height: auto !important;
+    min-height: 118px;
+    max-height: none;
+  }
+
+  .panel,
+  .stat-card,
+  .insight-card,
+  .insight-list-block,
+  .calendar-meeting-card,
+  .drive-file-card,
+  .drive-empty,
+  .settings-card,
+  .settings-category-card,
+  .task-column,
+  .kanban-card {
+    border-radius: 16px;
+  }
+
+  .panel,
+  .stat-card,
+  .settings-card {
+    padding: 18px;
+  }
+
+  .task-workspace-grid,
+  .dashboard-grid,
+  .calendar-layout,
+  .team-management-layout,
+  .groups-layout {
+    gap: 16px;
+  }
+
+  .task-column,
+  .kanban-card,
+  .task-item,
+  .task-item-main,
+  .kanban-card-main {
+    min-width: 0;
+  }
+
+  .task-item,
+  .calendar-meeting-card,
+  .today-meeting-item,
+  .insight-card,
+  .overall-performance-card {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .task-card-actions,
+  .drive-file-actions,
+  .meeting-header-actions,
+  .settings-category-action {
+    flex-wrap: wrap;
+  }
+
+  .chat-layout {
+    grid-template-columns: 1fr !important;
+    min-height: auto;
+  }
+
+  .chat-users {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding: 0 0 8px;
+    border-right: 0;
+    border-bottom: 1px solid rgba(226, 232, 240, 0.82);
+    scroll-snap-type: x proximity;
+  }
+
+  .chat-user {
+    flex: 0 0 min(240px, 78vw);
+    margin-bottom: 0;
+    scroll-snap-align: start;
+  }
+
+  .chat-messages {
+    max-height: min(56vh, 460px);
+  }
+
+  .message-bubble {
+    max-width: 92%;
+  }
+
+  .chat-input-row {
+    display: grid;
+    grid-template-columns: 44px 44px minmax(0, 1fr) auto;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .chat-input-row input,
+  .chat-input-row input[type="text"] {
+    width: 100%;
+    min-width: 0 !important;
+  }
+
+  .voice-panel {
+    align-items: stretch;
+    flex-wrap: wrap;
+  }
+
+  .composer-preview-header,
+  .composer-file-preview,
+  .attachment-card,
+  .task-attachment-list {
+    min-width: 0;
+  }
+
+  .drive-file-actions a,
+  .drive-file-actions button {
+    flex: 1 1 120px;
+    text-align: center;
+  }
+
+  .settings-category-card {
+    grid-template-columns: 44px minmax(0, 1fr);
+  }
+
+  .settings-category-action,
+  .settings-category-details {
+    grid-column: 1 / -1;
+  }
+
+  .settings-form-columns,
+  .settings-profile-photo-row,
+  .form-row {
+    grid-template-columns: 1fr !important;
+  }
+
+  .group-member-options {
+    grid-template-columns: 1fr;
+  }
+
+  .drive-preview-modal {
+    width: calc(100vw - 24px);
+    max-height: calc(100dvh - 24px);
+  }
+
+  .drive-preview-header,
+  .drive-preview-footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .meeting-modal {
+    width: calc(100vw - 20px);
+    min-height: calc(100dvh - 20px);
+    max-height: calc(100dvh - 20px);
+    border-radius: 18px;
+  }
+
+  .meeting-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .meeting-header-actions {
+    width: 100%;
+  }
+
+  .meeting-copy-btn {
+    flex: 1 1 auto;
+  }
+
+  .meeting-stage {
+    grid-template-columns: 1fr;
+    padding: 12px;
+  }
+
+  .meeting-video-tile,
+  .meeting-video-tile video {
+    min-height: 190px;
+  }
+
+  .meeting-controls {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .meeting-control-btn {
+    min-width: 0;
+    width: 100%;
+    padding: 11px 10px;
+  }
+
+  .primary-btn,
+  .secondary-btn,
+  .danger-btn,
+  .group-room-btn,
+  .logout-btn,
+  .welcome-cta,
+  .login-btn {
+    min-height: 44px;
+  }
+}
+
+@media (max-width: 430px) {
+  .welcome-screen,
+  .login-screen {
+    padding: 14px;
+  }
+
+  .welcome-card,
+  .login-card {
+    width: 100%;
+    padding: 28px 18px;
+    border-radius: 22px;
+  }
+
+  .welcome-logo {
+    width: 64px;
+    height: 64px;
+  }
+
+  .welcome-card h1 {
+    font-size: 34px;
+    line-height: 1.04;
+  }
+
+  .welcome-card h2 {
+    font-size: 20px;
+  }
+
+  .welcome-feature {
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .main-content {
+    padding: 12px;
+  }
+
+  .topbar {
+    padding: 16px;
+  }
+
+  .topbar h1 {
+    font-size: 23px;
+  }
+
+  .topbar-actions {
+    grid-template-columns: 1fr;
+  }
+
+  #open-task-modal-btn {
+    width: 100%;
+  }
+
+  .stats-grid > .stat-card.kpi-card,
+  .focus-grid > .focus-card.kpi-card {
+    min-height: 108px;
+  }
+
+  .chat-input-row {
+    grid-template-columns: 44px 44px minmax(0, 1fr);
+  }
+
+  .chat-input-row .primary-btn {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+
+  .message-bubble {
+    max-width: 96%;
+  }
+
+  .panel,
+  .stat-card,
+  .settings-card {
+    padding: 16px;
+  }
+
+  .settings-category-card {
+    grid-template-columns: 40px minmax(0, 1fr);
+    gap: 12px;
+    padding: 14px;
+  }
+
+  .drive-file-actions {
+    flex-direction: column;
+  }
+
+  .drive-file-actions a,
+  .drive-file-actions button {
+    width: 100%;
+  }
+
+  .meeting-controls {
+    grid-template-columns: 1fr;
+  }
+}
+
+html[data-theme="dark"] .mobile-menu-btn {
+  background: #171717;
+  border-color: #2a2a2a;
+  color: #f5f5f5;
+}
+
+html[data-theme="dark"] .mobile-sidebar-overlay {
+  background: rgba(0, 0, 0, 0.62);
+}

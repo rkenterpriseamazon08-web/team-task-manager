@@ -16,7 +16,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="icon" type="image/svg+xml" href="assets/taskify-logo.svg" />
-  <link rel="stylesheet" href="style.css?v=taskify-welcome-20260425" />
+  <link rel="stylesheet" href="style.css?v=taskify-mobile-20260425" />
 </head>
 <body>
   <!-- Welcome Screen -->
@@ -91,7 +91,8 @@
 
   <!-- Main App -->
   <div id="app-screen" class="app-container hidden">
-    <aside class="sidebar">
+    <button type="button" id="mobile-sidebar-overlay" class="mobile-sidebar-overlay hidden" aria-label="Close navigation"></button>
+    <aside id="app-sidebar" class="sidebar">
       <div>
         <div class="logo-section">
           <div class="logo-box"><img src="assets/taskify-logo.svg" alt="Taskify logo" /></div>
@@ -159,6 +160,11 @@
 
     <main class="main-content">
       <header class="topbar">
+        <button type="button" id="mobile-menu-btn" class="mobile-menu-btn" aria-label="Open navigation" aria-controls="app-sidebar" aria-expanded="false">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
         <div>
           <h1 id="page-title" data-i18n="nav.dashboard">Dashboard</h1>
           <p class="topbar-subtitle"><span data-i18n="topbar.welcomeBack">Welcome Back</span> <span id="topbar-user-name">Demo User</span></p>
@@ -892,7 +898,7 @@
   <div id="toast-container" class="toast-container"></div>
   <script src="translations.js?v=taskify-welcome-20260425"></script>
   <script src="team-groups.js?v=settings-language-20260424"></script>
-  <script src="script.js?v=taskify-welcome-20260425"></script>
+  <script src="script.js?v=taskify-mobile-20260425"></script>
   <script src="group-chat.js?v=settings-language-20260424"></script>
   <script src="calendar.js?v=settings-language-20260424"></script>
 </body>

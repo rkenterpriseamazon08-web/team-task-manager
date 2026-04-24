@@ -26,6 +26,9 @@ const logoutBtn = document.getElementById("logout-btn");
 const navItems = document.querySelectorAll(".nav-item");
 const sections = document.querySelectorAll(".content-section");
 const pageTitle = document.getElementById("page-title");
+const sidebar = document.getElementById("app-sidebar");
+const mobileMenuBtn = document.getElementById("mobile-menu-btn");
+const mobileSidebarOverlay = document.getElementById("mobile-sidebar-overlay");
 
 // -----------------------------
 // CHAT ELEMENTS
@@ -353,24 +356,40 @@ const defaultChatConversations = {
 // UI HELPERS
 // -----------------------------
 function showWelcomeScreen() {
+  closeMobileNav();
   if (welcomeScreen) welcomeScreen.classList.remove("hidden");
   if (loginScreen) loginScreen.classList.add("hidden");
   if (appScreen) appScreen.classList.add("hidden");
 }
 
 function showLoginScreen() {
+  closeMobileNav();
   if (welcomeScreen) welcomeScreen.classList.add("hidden");
   if (loginScreen) loginScreen.classList.remove("hidden");
   if (appScreen) appScreen.classList.add("hidden");
 }
 
 function showAppScreen() {
+  closeMobileNav();
   if (welcomeScreen) welcomeScreen.classList.add("hidden");
   if (loginScreen) loginScreen.classList.add("hidden");
   if (appScreen) appScreen.classList.remove("hidden");
   window.TeamDirectory?.ensureLoggedInMember?.(getUserFromLocalStorage());
   refreshTeamDirectoryUI();
   showDashboardSection();
+}
+
+function setMobileNavOpen(isOpen) {
+  if (!appScreen || !sidebar || !mobileMenuBtn || !mobileSidebarOverlay) return;
+
+  appScreen.classList.toggle("mobile-nav-open", isOpen);
+  mobileMenuBtn.setAttribute("aria-expanded", isOpen ? "true" : "false");
+  mobileSidebarOverlay.classList.toggle("hidden", !isOpen);
+  document.body.classList.toggle("mobile-nav-lock", isOpen);
+}
+
+function closeMobileNav() {
+  setMobileNavOpen(false);
 }
 
 function setLoginMessage(message, type = "") {
@@ -1414,6 +1433,7 @@ function setupNavigation() {
 
       if (pageTitle) pageTitle.textContent = item.querySelector(".nav-label")?.textContent || item.textContent.trim();
       updateTopbarTaskAction(targetSectionId);
+      closeMobileNav();
     });
   });
 }
@@ -3557,6 +3577,34 @@ document.addEventListener("click", function (event) {
   if (event.target === taskSearchInput || taskSearchResults.contains(event.target)) return;
   taskSearchResults.classList.add("hidden");
 });
+
+if (mobileMenuBtn) {
+  mobileMenuBtn.addEventListener("click", () => {
+    const isOpen = appScreen?.classList.contains("mobile-nav-open");
+    setMobileNavOpen(!isOpen);
+  });
+}
+
+if (mobileSidebarOverlay) {
+  mobileSidebarOverlay.addEventListener("click", closeMobileNav);
+}
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") closeMobileNav();
+});
+
+const mobileNavMedia = window.matchMedia?.("(min-width: 769px)");
+if (mobileNavMedia) {
+  const handleMobileNavBreakpoint = (event) => {
+    if (event.matches) closeMobileNav();
+  };
+
+  if (mobileNavMedia.addEventListener) {
+    mobileNavMedia.addEventListener("change", handleMobileNavBreakpoint);
+  } else if (mobileNavMedia.addListener) {
+    mobileNavMedia.addListener(handleMobileNavBreakpoint);
+  }
+}
 
 // -----------------------------
 // INIT
