@@ -8,10 +8,12 @@ const MAX_VOICE_SIZE = 1200 * 1024;
 // BASIC ELEMENTS
 // -----------------------------
 const loginScreen = document.getElementById("login-screen");
+const welcomeScreen = document.getElementById("welcome-screen");
 const appScreen = document.getElementById("app-screen");
 
 const loginForm = document.getElementById("login-form");
 const loginBtn = document.getElementById("login-btn");
+const welcomeStartBtn = document.getElementById("welcome-start-btn");
 const loginMessage = document.getElementById("login-message");
 
 const sidebarUserName = document.getElementById("sidebar-user-name");
@@ -350,12 +352,20 @@ const defaultChatConversations = {
 // -----------------------------
 // UI HELPERS
 // -----------------------------
+function showWelcomeScreen() {
+  if (welcomeScreen) welcomeScreen.classList.remove("hidden");
+  if (loginScreen) loginScreen.classList.add("hidden");
+  if (appScreen) appScreen.classList.add("hidden");
+}
+
 function showLoginScreen() {
+  if (welcomeScreen) welcomeScreen.classList.add("hidden");
   if (loginScreen) loginScreen.classList.remove("hidden");
   if (appScreen) appScreen.classList.add("hidden");
 }
 
 function showAppScreen() {
+  if (welcomeScreen) welcomeScreen.classList.add("hidden");
   if (loginScreen) loginScreen.classList.add("hidden");
   if (appScreen) appScreen.classList.remove("hidden");
   window.TeamDirectory?.ensureLoggedInMember?.(getUserFromLocalStorage());
@@ -3079,6 +3089,10 @@ if (loginBtn) {
   });
 }
 
+if (welcomeStartBtn) {
+  welcomeStartBtn.addEventListener("click", showLoginScreen);
+}
+
 const loginEmailInput = document.getElementById("email");
 const loginPasswordInput = document.getElementById("password");
 
@@ -3099,7 +3113,7 @@ if (logoutBtn) {
   logoutBtn.addEventListener("click", function () {
     updateCurrentUserPresence("offline");
     clearUserFromLocalStorage();
-    showLoginScreen();
+    showWelcomeScreen();
   });
 }
 
@@ -3554,7 +3568,7 @@ function checkExistingLogin() {
     updateUserUI(savedUser);
     showAppScreen();
   } else {
-    showLoginScreen();
+    showWelcomeScreen();
   }
 }
 
