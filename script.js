@@ -114,6 +114,8 @@ const notificationSoundToggle = document.getElementById("notification-sound-togg
 const themeToggle = document.getElementById("theme-toggle");
 const themeModeState = document.getElementById("theme-mode-state");
 const themeStatusText = document.getElementById("theme-status-text");
+const rememberDataToggle = document.getElementById("remember-data-toggle");
+const storageStatusText = document.getElementById("storage-status-text");
 const clearNotificationsBtn = document.getElementById("clear-notifications-btn");
 const resetAppDataBtn = document.getElementById("reset-app-data-btn");
 const settingsCategoryCards = document.querySelectorAll(".settings-category-card[data-settings-pane]");
@@ -209,6 +211,7 @@ function refreshLocalizedDynamicUI() {
   document.title = t("app.title");
   updatePageTitleTranslation();
   updateThemeText(getSavedTheme());
+  updateStorageStatusText();
   updateNotificationPermissionUI();
   renderNotifications();
   renderAllTaskUI();
@@ -484,6 +487,53 @@ function saveSettingsPreferences(preferences) {
     ...getSettingsPreferences(),
     ...preferences
   }));
+  updateStorageStatusText();
+}
+
+function getLocalStorageUsageBytes() {
+  try {
+    let total = 0;
+    for (let index = 0; index < localStorage.length; index += 1) {
+      const key = localStorage.key(index) || "";
+      const value = localStorage.getItem(key) || "";
+      total += new Blob([key, value]).size;
+    }
+    return total;
+  } catch {
+    return null;
+  }
+}
+
+function formatStorageSize(bytes) {
+  if (bytes === null) return "";
+  if (bytes < 1024) return `${bytes} B`;
+  const kilobytes = bytes / 1024;
+  if (kilobytes < 1024) return `${kilobytes.toFixed(kilobytes >= 10 ? 0 : 1)} KB`;
+  const megabytes = kilobytes / 1024;
+  return `${megabytes.toFixed(megabytes >= 10 ? 1 : 2)} MB`;
+}
+
+function updateStorageStatusText(preferences = getSettingsPreferences()) {
+  if (!storageStatusText) return;
+
+  const usageBytes = getLocalStorageUsageBytes();
+  if (usageBytes === null) {
+    storageStatusText.textContent = t("settings.storageStatusUnavailable");
+    return;
+  }
+
+  const statusKey = preferences.localData
+    ? "settings.storageStatusActiveDetail"
+    : "settings.storageStatusPausedDetail";
+  storageStatusText.textContent = t(statusKey, { size: formatStorageSize(usageBytes) });
+}
+
+function setLocalDataPreference(enabled) {
+  const nextValue = Boolean(enabled);
+  saveSettingsPreferences({ localData: nextValue });
+  if (rememberDataToggle) rememberDataToggle.checked = nextValue;
+  if (settingsLocalDataToggle) settingsLocalDataToggle.checked = nextValue;
+  updateStorageStatusText({ ...getSettingsPreferences(), localData: nextValue });
 }
 
 function splitUserName(name) {
@@ -518,6 +568,7 @@ function populateSettingsUserFields(user = getUserFromLocalStorage()) {
   if (settingsAccountEmailInput) settingsAccountEmailInput.value = currentUser.email || "";
   if (settingsAccountRoleInput) settingsAccountRoleInput.value = normalizeUserRole(currentUser.role);
   if (settingsLoginAlertsToggle) settingsLoginAlertsToggle.checked = preferences.loginAlerts;
+  if (rememberDataToggle) rememberDataToggle.checked = preferences.localData;
   if (settingsLocalDataToggle) settingsLocalDataToggle.checked = preferences.localData;
   if (settingsPresenceToggle) settingsPresenceToggle.checked = preferences.presence;
   if (settingsChatTimestampsToggle) settingsChatTimestampsToggle.checked = preferences.chatTimestamps;
@@ -527,6 +578,7 @@ function populateSettingsUserFields(user = getUserFromLocalStorage()) {
   if (settingsMicrophoneToggle) settingsMicrophoneToggle.checked = preferences.microphone;
 
   setSettingsProfilePreview(currentUser);
+  updateStorageStatusText(preferences);
 }
 
 function playNotificationSound() {
@@ -3228,6 +3280,7 @@ if (settingsSaveAccountBtn) {
 
 [
   [settingsLoginAlertsToggle, "loginAlerts"],
+  [rememberDataToggle, "localData"],
   [settingsLocalDataToggle, "localData"],
   [settingsPresenceToggle, "presence"],
   [settingsChatTimestampsToggle, "chatTimestamps"],
@@ -3238,6 +3291,10 @@ if (settingsSaveAccountBtn) {
 ].forEach(([toggle, key]) => {
   if (!toggle) return;
   toggle.addEventListener("change", () => {
+    if (key === "localData") {
+      setLocalDataPreference(toggle.checked);
+      return;
+    }
     saveSettingsPreferences({ [key]: toggle.checked });
   });
 });
@@ -3562,6 +3619,7 @@ if (resetAppDataBtn) {
     renderSelectedChatMessages();
     renderAllTaskUI();
     renderNotifications();
+    updateStorageStatusText();
     showToast("App data reset", "Default tasks, chats, and notifications were restored.");
   });
 }
