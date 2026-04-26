@@ -6,12 +6,7 @@
 const TEAM_MEMBERS_STORAGE_KEY = "ttm_team_members";
 const TEAM_GROUPS_STORAGE_KEY = "ttm_team_groups";
 
-const DEFAULT_TEAM_MEMBERS = [
-  { id: "member-rahul", name: "Rahul", email: "rahul@example.com", role: "Admin" },
-  { id: "member-sneha", name: "Sneha", email: "sneha@example.com", role: "Member" },
-  { id: "member-amit", name: "Amit", email: "amit@example.com", role: "Member" },
-  { id: "member-priya", name: "Priya", email: "priya@example.com", role: "Member" }
-];
+const DEFAULT_TEAM_MEMBERS = [];
 
 function safeParseTeamJSON(key, fallback) {
   try {

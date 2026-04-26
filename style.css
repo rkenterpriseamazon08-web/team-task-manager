@@ -275,26 +275,6 @@ select {
   color: #b91c1c;
 }
 
-.demo-box {
-  margin-top: 24px;
-  text-align: left;
-  background: rgba(248, 250, 252, 0.74);
-  border: 1px solid rgba(255, 255, 255, 0.72);
-  border-radius: 16px;
-  padding: 16px;
-}
-
-.demo-box h4 {
-  margin-bottom: 10px;
-  font-size: 14px;
-}
-
-.demo-box p {
-  font-size: 13px;
-  color: #4b5563;
-  margin-bottom: 4px;
-}
-
 .app-container {
   display: flex;
   min-height: 100vh;

@@ -1,5 +1,5 @@
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyvsOgYah2WrM4_r_yGMlZrRgg-HAs0A9_ZGt9n5yjfyxS8yhpC4eAlEDWAElJBzFKDsQ/exec";
-const APP_STORAGE_VERSION = "team-task-manager-dashboard-2026-04-19";
+const APP_STORAGE_VERSION = "taskify-client-clean-2026-04-26";
 const SETTINGS_PREFERENCES_KEY = "ttm_settings_preferences";
 const MAX_ATTACHMENT_SIZE = 750 * 1024;
 const MAX_VOICE_SIZE = 1200 * 1024;
@@ -230,12 +230,7 @@ function applyAppTranslations() {
 // -----------------------------
 // DATA
 // -----------------------------
-const defaultGroupMembers = [
-  { name: "Rahul", email: "rahul@example.com", role: "Admin", active: true },
-  { name: "Sneha", email: "sneha@example.com", role: "Member", active: true },
-  { name: "Amit", email: "amit@example.com", role: "Member", active: true },
-  { name: "Priya", email: "priya@example.com", role: "Member", active: true }
-];
+const defaultGroupMembers = [];
 
 let groupMembers = getTeamMembersForApp();
 let pendingProfilePhotoData = "";
@@ -246,88 +241,11 @@ const PRESENCE_HEARTBEAT_MS = 30000;
 let presenceChannel = null;
 let presenceHeartbeatTimer = null;
 
-const defaultTasks = [
-  {
-    id: 1,
-    title: "Prepare sales presentation",
-    description: "Prepare the sales presentation for leadership review",
-    severity: "High",
-    deadline: "2026-04-20",
-    assignedTo: "Rahul",
-    status: "In Progress"
-  },
-  {
-    id: 2,
-    title: "Update product pricing sheet",
-    description: "Refresh pricing sheet with latest numbers",
-    severity: "Low",
-    deadline: "2026-04-18",
-    assignedTo: "Sneha",
-    status: "Completed"
-  },
-  {
-    id: 3,
-    title: "Client follow-up email",
-    description: "Send follow-up email to the client",
-    severity: "Medium",
-    deadline: "2026-04-17",
-    assignedTo: "Amit",
-    status: "Pending"
-  },
-  {
-    id: 4,
-    title: "Prepare charts",
-    description: "Prepare charts for the team dashboard",
-    severity: "Medium",
-    deadline: "2026-04-22",
-    assignedTo: "Priya",
-    status: "Pending"
-  },
-  {
-    id: 5,
-    title: "Prepare charts",
-    description: "Prepare charts for the manager dashboard",
-    severity: "Medium",
-    deadline: "2026-04-23",
-    assignedTo: "priya",
-    status: "In Progress"
-  }
-];
+const defaultTasks = [];
 
-const defaultNotifications = [
-  {
-    id: 1,
-    title: "New task assigned",
-    message: 'You have been assigned "Prepare weekly status report"',
-    timestamp: new Date().toISOString()
-  },
-  {
-    id: 2,
-    title: "Task completed",
-    message: 'Sneha completed "Update pricing sheet"',
-    timestamp: new Date().toISOString()
-  },
-  {
-    id: 3,
-    title: "New message",
-    message: "Rahul sent you a message",
-    timestamp: new Date().toISOString()
-  },
-  {
-    id: 4,
-    title: "Task due soon",
-    message: '"Prepare sales presentation" is due soon',
-    timestamp: new Date().toISOString()
-  },
-  {
-    id: 5,
-    title: "Task updated",
-    message: 'Priya updated "Prepare charts"',
-    timestamp: new Date().toISOString()
-  }
-];
+const defaultNotifications = [];
 
-let selectedChatMember = "Rahul";
+let selectedChatMember = "";
 let privateChatChannel = null;
 let privateTypingTimer = null;
 let privateVoiceRecorder = null;
@@ -339,21 +257,7 @@ let currentDriveFiles = [];
 let activeMeeting = null;
 let pendingMeetingFromHash = null;
 
-const defaultChatConversations = {
-  Rahul: [
-    { sender: "Rahul", text: "Hi, please share the task status.", type: "received" },
-    { sender: "You", text: "I am working on it.", type: "sent" }
-  ],
-  Sneha: [
-    { sender: "Sneha", text: "Pricing sheet has been updated.", type: "received" }
-  ],
-  Amit: [
-    { sender: "Amit", text: "Okay, please update by evening.", type: "received" }
-  ],
-  Priya: [
-    { sender: "Priya", text: "Please share the latest design version.", type: "received" }
-  ]
-};
+const defaultChatConversations = {};
 
 // -----------------------------
 // UI HELPERS
@@ -1411,7 +1315,7 @@ function normalizeChatConversations(chats) {
   groupMembers.forEach((member) => {
     const messages = Array.isArray(sourceChats[member.name])
       ? sourceChats[member.name]
-      : (defaultChatConversations[member.name] || []);
+      : [];
 
     normalizedChats[member.name] = messages.map((message, index) => normalizeChatMessage(message, index));
   });
@@ -1431,6 +1335,137 @@ function normalizeChatMessage(message, index) {
     read: messageType === "sent" ? true : message?.read === true,
     attachments: normalizeAttachments(message?.attachments)
   };
+}
+
+function isKnownDemoName(value) {
+  return ["rahul", "sneha", "amit", "priya", "demo user", "you"]
+    .includes(String(value || "").trim().toLowerCase());
+}
+
+function isKnownDemoEmail(value) {
+  return [
+    "demo@company.com",
+    "rahul@example.com",
+    "sneha@example.com",
+    "amit@example.com",
+    "priya@example.com"
+  ].includes(String(value || "").trim().toLowerCase());
+}
+
+function isKnownDemoTask(task) {
+  const signature = [
+    task?.title,
+    task?.description,
+    task?.severity,
+    task?.status,
+    task?.deadline
+  ].map((part) => String(part || "").trim().toLowerCase()).join("|");
+
+  return new Set([
+    "prepare sales presentation|prepare the sales presentation for leadership review|high|in progress|2026-04-20",
+    "update product pricing sheet|refresh pricing sheet with latest numbers|low|completed|2026-04-18",
+    "client follow-up email|send follow-up email to the client|medium|pending|2026-04-17",
+    "prepare charts|prepare charts for the team dashboard|medium|pending|2026-04-22",
+    "prepare charts|prepare charts for the manager dashboard|medium|in progress|2026-04-23"
+  ]).has(signature);
+}
+
+function isKnownDemoNotification(notification) {
+  const signature = `${String(notification?.title || "").trim().toLowerCase()}|${String(notification?.message || "").trim().toLowerCase()}`;
+  return new Set([
+    'new task assigned|you have been assigned "prepare weekly status report"',
+    'task completed|sneha completed "update pricing sheet"',
+    "new message|rahul sent you a message",
+    'task due soon|"prepare sales presentation" is due soon',
+    'task updated|priya updated "prepare charts"'
+  ]).has(signature);
+}
+
+function isKnownDemoChatMessage(message) {
+  const signature = `${String(message?.sender || "").trim().toLowerCase()}|${String(message?.text || "").trim().toLowerCase()}`;
+  return new Set([
+    "rahul|hi, please share the task status.",
+    "you|i am working on it.",
+    "sneha|pricing sheet has been updated.",
+    "amit|okay, please update by evening.",
+    "priya|please share the latest design version.",
+    "rahul|please review the latest task updates.",
+    "rahul|please update your task status before eod.",
+    "amit|development tasks are on track.",
+    "rahul|sprint review is scheduled for friday at 3 pm."
+  ]).has(signature);
+}
+
+function safeReadStorageJSON(key, fallback) {
+  try {
+    const saved = localStorage.getItem(key);
+    return saved ? JSON.parse(saved) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function cleanupDemoDataFromStorage() {
+  const savedUser = safeReadStorageJSON("ttm_logged_in_user", null);
+  if (savedUser && (isKnownDemoEmail(savedUser.email) || String(savedUser.name || "").trim().toLowerCase() === "demo user")) {
+    localStorage.removeItem("ttm_logged_in_user");
+  }
+
+  const tasks = safeReadStorageJSON("ttm_tasks", []);
+  if (Array.isArray(tasks)) {
+    localStorage.setItem("ttm_tasks", JSON.stringify(tasks.filter((task) => !isKnownDemoTask(task))));
+  } else {
+    localStorage.setItem("ttm_tasks", JSON.stringify([]));
+  }
+
+  const notifications = safeReadStorageJSON("ttm_notifications", []);
+  if (Array.isArray(notifications)) {
+    localStorage.setItem("ttm_notifications", JSON.stringify(notifications.filter((notification) => !isKnownDemoNotification(notification))));
+  } else {
+    localStorage.setItem("ttm_notifications", JSON.stringify([]));
+  }
+
+  const chats = safeReadStorageJSON("ttm_chats", {});
+  const cleanedChats = {};
+  if (chats && typeof chats === "object") {
+    Object.entries(chats).forEach(([memberName, messages]) => {
+      if (isKnownDemoName(memberName)) return;
+      const cleanedMessages = Array.isArray(messages)
+        ? messages.filter((message) => !isKnownDemoChatMessage(message))
+        : [];
+      if (cleanedMessages.length) cleanedChats[memberName] = cleanedMessages;
+    });
+  }
+  localStorage.setItem("ttm_chats", JSON.stringify(cleanedChats));
+
+  const groupMessages = safeReadStorageJSON("ttm_group_messages", {});
+  const cleanedGroupMessages = {};
+  if (groupMessages && typeof groupMessages === "object") {
+    Object.entries(groupMessages).forEach(([room, messages]) => {
+      cleanedGroupMessages[room] = Array.isArray(messages)
+        ? messages.filter((message) => !isKnownDemoChatMessage(message))
+        : [];
+    });
+  }
+  localStorage.setItem("ttm_group_messages", JSON.stringify(cleanedGroupMessages));
+
+  const teamMembers = safeReadStorageJSON("ttm_team_members", []);
+  if (Array.isArray(teamMembers)) {
+    localStorage.setItem("ttm_team_members", JSON.stringify(teamMembers.filter((member) => !isKnownDemoEmail(member?.email))));
+  } else {
+    localStorage.setItem("ttm_team_members", JSON.stringify([]));
+  }
+
+  const teamGroups = safeReadStorageJSON("ttm_team_groups", []);
+  if (Array.isArray(teamGroups)) {
+    localStorage.setItem("ttm_team_groups", JSON.stringify(teamGroups.filter((group) => {
+      const members = Array.isArray(group?.members) ? group.members : [];
+      if (!members.length) return true;
+      return members.some((email) => !isKnownDemoEmail(email));
+    })));
+  } else {
+    localStorage.setItem("ttm_team_groups", JSON.stringify([]));
+  }
 }
 
 function getUnreadChatCount(memberName) {
@@ -1458,10 +1493,7 @@ function markConversationAsRead(memberName) {
 function migrateAppStorageIfNeeded() {
   if (localStorage.getItem("ttm_app_storage_version") === APP_STORAGE_VERSION) return;
 
-  localStorage.setItem("ttm_tasks", JSON.stringify(cloneDefaultTasks()));
-  localStorage.setItem("ttm_notifications", JSON.stringify(cloneDefaultNotifications()));
-  localStorage.setItem("ttm_chats", JSON.stringify(defaultChatConversations));
-  localStorage.removeItem("ttm_group_messages");
+  cleanupDemoDataFromStorage();
   localStorage.setItem("ttm_app_storage_version", APP_STORAGE_VERSION);
 }
 
@@ -1503,6 +1535,17 @@ function renderChatUsers() {
     selectedChatMember = activeMembers[0].name;
   }
 
+  if (!activeMembers.length) {
+    selectedChatMember = "";
+    chatUsersList.innerHTML = `
+      <div class="team-empty">
+        <h4>${escapeHTML(t("team.noMembersTitle"))}</h4>
+        <p>${escapeHTML(t("team.noMembersBody"))}</p>
+      </div>
+    `;
+    return;
+  }
+
   activeMembers.forEach((member) => {
     const unreadCount = getUnreadChatCount(member.name);
     const userDiv = document.createElement("div");
@@ -1534,7 +1577,7 @@ function scrollChatToBottom() {
 
 function getCurrentUserName() {
   const user = getUserFromLocalStorage();
-  return user?.name || user?.email || "Demo User";
+  return user?.name || user?.email || "User";
 }
 
 function formatChatMessageTime(timestamp) {
@@ -1625,10 +1668,30 @@ function setupPrivateChatChannel() {
 function renderSelectedChatMessages() {
   if (!chatMessages) return;
 
+  if (!selectedChatMember) {
+    chatMessages.innerHTML = `
+      <div class="message-bubble received">
+        <strong>${escapeHTML(t("chat.system"))}:</strong> ${escapeHTML(t("chat.noMembers"))}
+      </div>
+    `;
+    renderPrivateTypingIndicator("");
+    return;
+  }
+
   const chats = getChatsFromStorage();
   const selectedConversation = chats[selectedChatMember] || [];
 
   chatMessages.innerHTML = "";
+
+  if (!selectedConversation.length) {
+    chatMessages.innerHTML = `
+      <div class="message-bubble received">
+        <strong>${escapeHTML(t("chat.system"))}:</strong> ${escapeHTML(t("chat.noMessages"))}
+      </div>
+    `;
+    renderPrivateTypingIndicator("");
+    return;
+  }
 
   selectedConversation.forEach((message) => {
     const bubble = createMessageBubble(message);
@@ -1642,6 +1705,11 @@ function renderSelectedChatMessages() {
 
 async function sendMessage() {
   if (!chatInput) return;
+
+  if (!selectedChatMember) {
+    alert("Add a team member before sending a chat message.");
+    return;
+  }
 
   const messageText = chatInput.value.trim();
   let attachments = [];
@@ -2419,8 +2487,8 @@ function getCurrentCommentAuthor() {
   const user = getUserFromLocalStorage();
 
   return {
-    name: user?.name || "Demo User",
-    identifier: user?.email || "demo@company.com"
+    name: user?.name || user?.email || "User",
+    identifier: user?.email || "Current user"
   };
 }
 
@@ -2575,6 +2643,11 @@ function renderRecentTasks() {
 
   const tasks = getTasksFromStorage();
   recentTaskList.innerHTML = "";
+
+  if (!tasks.length) {
+    recentTaskList.innerHTML = `<p class="empty-task-text">${escapeHTML(t("task.noRecentTasks"))}</p>`;
+    return;
+  }
 
   tasks.slice().reverse().forEach((task) => {
     const taskDiv = document.createElement("div");
@@ -2818,6 +2891,11 @@ function getTeamAnalytics(tasks) {
 
 function renderTeamInsightList(container, items, renderItem) {
   if (!container) return;
+
+  if (!items.length) {
+    container.innerHTML = `<p class="kpi-empty">${escapeHTML(t("team.noMembersBody"))}</p>`;
+    return;
+  }
 
   container.innerHTML = items.map(renderItem).join("");
 }
@@ -3074,25 +3152,6 @@ async function handleLoginSubmit(event) {
     return;
   }
 
-  if (email.toLowerCase() === "demo@company.com" && password === "123456") {
-    const user = {
-      email,
-      name: "Demo User",
-      role: "Admin",
-      status: "Active"
-    };
-
-    saveUserToLocalStorage(user);
-    updateUserUI(user);
-    setLoginMessage(t("auth.success"), "success");
-
-    setTimeout(() => {
-      showAppScreen();
-      setLoginMessage("");
-    }, 200);
-    return;
-  }
-
   if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL === "PASTE_YOUR_WEB_APP_URL_HERE") {
     setLoginMessage(t("auth.missingScriptUrl"), "error");
     return;
@@ -3122,7 +3181,7 @@ async function handleLoginSubmit(event) {
     if (result.success) {
       const user = result.user || {
         email,
-        name: "User",
+        name: window.TeamDirectory?.nameFromEmail?.(email) || email,
         role: "Member",
         status: "Active"
       };
@@ -3620,7 +3679,7 @@ if (resetAppDataBtn) {
     renderAllTaskUI();
     renderNotifications();
     updateStorageStatusText();
-    showToast("App data reset", "Default tasks, chats, and notifications were restored.");
+    showToast("App data reset", "Local workspace data was cleared.");
   });
 }
 

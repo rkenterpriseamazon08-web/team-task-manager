@@ -8,25 +8,17 @@ const BASE_GROUP_ROOMS = {
   general: {
     label: "General",
     i18nKey: "chat.roomGeneral",
-    seed: [
-      { sender: "Rahul", text: "Please review the latest task updates." },
-      { sender: "Sneha", text: "Pricing sheet has been updated." }
-    ]
+    seed: []
   },
   tasks: {
     label: "Tasks",
     i18nKey: "chat.roomTasks",
-    seed: [
-      { sender: "Rahul", text: "Please update your task status before EOD." },
-      { sender: "Amit", text: "Development tasks are on track." }
-    ]
+    seed: []
   },
   announcements: {
     label: "Announcements",
     i18nKey: "chat.roomAnnouncements",
-    seed: [
-      { sender: "Rahul", text: "Sprint review is scheduled for Friday at 3 PM." }
-    ]
+    seed: []
   }
 };
 let GROUP_ROOMS = getAvailableGroupRooms();
@@ -280,9 +272,9 @@ function getCurrentGroupUserName() {
   try {
     const savedUser = localStorage.getItem("ttm_logged_in_user");
     const user = savedUser ? JSON.parse(savedUser) : null;
-    return user?.name || user?.email || "Demo User";
+    return user?.name || user?.email || "User";
   } catch {
-    return "Demo User";
+    return "User";
   }
 }
 
