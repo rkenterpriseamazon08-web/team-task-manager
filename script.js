@@ -3593,7 +3593,7 @@ document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") closeMobileNav();
 });
 
-const mobileNavMedia = window.matchMedia?.("(min-width: 769px)");
+const mobileNavMedia = window.matchMedia?.("(min-width: 1025px)");
 if (mobileNavMedia) {
   const handleMobileNavBreakpoint = (event) => {
     if (event.matches) closeMobileNav();
